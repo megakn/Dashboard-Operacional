@@ -1,0 +1,1307 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel Operacional</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --bg-0:#080C17;
+    --bg-1:#0F1728;
+    --bg-2:#161F38;
+    --border:#232D4A;
+    --border-soft:#1B2440;
+    --text-hi:#EEF2FB;
+    --text-mid:#A7B2CC;
+    --text-lo:#5F6C8C;
+    --amber:#F5A623;
+    --cyan:#3FD0E0;
+    --violet:#8B7CF6;
+    --green:#38D68B;
+    --red:#FF5D5D;
+    --mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse 1200px 600px at 15% -10%, rgba(139,124,246,0.10), transparent 60%),
+      radial-gradient(ellipse 900px 500px at 100% 0%, rgba(63,208,224,0.08), transparent 55%),
+      var(--bg-0);
+    color:var(--text-hi);
+    font-family:var(--sans);
+    min-height:100vh;
+    padding:28px 32px 60px;
+  }
+
+  /* ===== HEADER ===== */
+  .topbar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:24px;
+    padding-bottom:22px;
+    border-bottom:1px solid var(--border-soft);
+    margin-bottom:26px;
+    flex-wrap:wrap;
+  }
+  .brand-block .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.18em;
+    color:var(--cyan);
+    text-transform:uppercase;
+    margin:0 0 6px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .brand-block .eyebrow .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--green);
+    box-shadow:0 0 0 3px rgba(56,214,139,0.18);
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1;}
+    50%{opacity:.35;}
+  }
+  .brand-block h1{
+    margin:0;
+    font-size:26px;
+    font-weight:700;
+    letter-spacing:-0.01em;
+  }
+  .brand-block p{
+    margin:4px 0 0;
+    font-size:13px;
+    color:var(--text-mid);
+  }
+  .clock{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-mid);
+    text-align:right;
+  }
+  .clock strong{
+    display:block;
+    font-size:15px;
+    color:var(--text-hi);
+    letter-spacing:.02em;
+  }
+
+  /* ===== UPLOAD ZONE ===== */
+  .upload-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-bottom:28px;
+  }
+  .drop{
+    border:1px dashed var(--border);
+    background:linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    border-radius:10px;
+    padding:16px 18px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+    position:relative;
+  }
+  .drop:hover{ border-color:var(--cyan); }
+  .drop.is-dragover{ border-color:var(--amber); background:var(--bg-2); }
+  .drop.is-loaded{ border-color:var(--green); }
+  .drop input{ display:none; }
+  .drop-icon{
+    width:36px;height:36px;border-radius:8px;
+    display:flex;align-items:center;justify-content:center;
+    background:var(--bg-2);
+    border:1px solid var(--border);
+    flex-shrink:0;
+    font-family:var(--mono);
+    font-size:15px;
+    color:var(--cyan);
+  }
+  .drop.is-loaded .drop-icon{ color:var(--green); border-color:rgba(56,214,139,.4); }
+  .drop-text .label{
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--text-hi);
+    margin-bottom:2px;
+  }
+  .drop-text .sub{
+    font-size:11.5px;
+    color:var(--text-lo);
+    font-family:var(--mono);
+  }
+  .drop-status{
+    margin-left:auto;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text-lo);
+    text-align:right;
+    max-width:180px;
+  }
+
+  /* ===== CARDS ===== */
+  .cards{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:14px;
+  }
+  @media (max-width:1100px){
+    .cards{ grid-template-columns:repeat(2,1fr); }
+    .upload-row{ grid-template-columns:1fr; }
+  }
+  .card{
+    background:linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
+    border:1px solid var(--border-soft);
+    border-radius:12px;
+    padding:18px 18px 16px;
+    position:relative;
+    overflow:hidden;
+    min-height:132px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    top:0;left:0;right:0;height:2px;
+    background:var(--accent, var(--cyan));
+    opacity:.8;
+  }
+  .card.total::before{ background:var(--violet); }
+  .card.d1::before{ background:var(--amber); }
+  .card.onway::before{ background:var(--cyan); }
+  .card.recebido::before{ background:var(--green); }
+  .card.carrinho::before{ background:var(--red); }
+
+  .card .label{
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    color:var(--text-mid);
+    font-weight:600;
+  }
+  .card .value{
+    font-family:var(--mono);
+    font-size:34px;
+    font-weight:700;
+    letter-spacing:-0.02em;
+    color:var(--text-hi);
+    margin-top:6px;
+  }
+  .card.total .value{ color:var(--violet); }
+  .card.d1 .value{ color:var(--amber); }
+  .card.onway .value{ color:var(--cyan); }
+  .card.recebido .value{ color:var(--green); }
+  .card.carrinho .value{ color:var(--red); }
+
+  .card .foot{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-top:12px;
+  }
+  .card .pct{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--text-mid);
+  }
+  .bar-track{
+    height:4px;
+    border-radius:2px;
+    background:var(--bg-2);
+    overflow:hidden;
+    margin-top:8px;
+  }
+  .bar-fill{
+    height:100%;
+    width:0%;
+    background:var(--accent, var(--cyan));
+    transition:width .6s cubic-bezier(.4,0,.2,1);
+  }
+  .card.total .bar-fill{ background:var(--violet); }
+  .card.d1 .bar-fill{ background:var(--amber); }
+  .card.onway .bar-fill{ background:var(--cyan); }
+  .card.recebido .bar-fill{ background:var(--green); }
+  .card.carrinho .bar-fill{ background:var(--red); }
+
+  /* ===== PANELS (charts/tables) ===== */
+  .panels{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:16px;
+    margin-top:16px;
+  }
+  .panel{
+    background:linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
+    border:1px solid var(--border-soft);
+    border-radius:12px;
+    padding:18px 20px 12px;
+  }
+  .panel-title{
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:.02em;
+    color:var(--text-hi);
+    margin:0 0 14px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .panel-title .swatch{
+    width:8px;height:8px;border-radius:2px;
+    background:var(--cyan);
+  }
+  .chart-wrap{
+    position:relative;
+    height:320px;
+  }
+
+  .panels-row{
+    display:grid;
+    grid-template-columns:1.35fr 1fr;
+    gap:16px;
+  }
+  @media (max-width:1100px){
+    .panels-row{ grid-template-columns:1fr; }
+  }
+  .panel-title .total-badge{
+    margin-left:auto;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text-mid);
+    font-weight:500;
+  }
+
+  /* ===== TABLE PANEL ===== */
+  .data-table{
+    width:100%;
+    border-collapse:collapse;
+    font-family:var(--mono);
+    font-size:12px;
+  }
+  .data-table thead th{
+    text-align:left;
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    color:var(--text-lo);
+    font-weight:600;
+    padding:6px 10px;
+    border-bottom:1px solid var(--border-soft);
+  }
+  .data-table thead th.num{ text-align:right; }
+  .data-table tbody td{
+    padding:8px 10px;
+    color:var(--text-hi);
+    border-bottom:1px solid var(--border-soft);
+  }
+  .data-table tbody td.num{ text-align:right; }
+  .data-table tbody tr:nth-child(even){ background:rgba(255,255,255,0.015); }
+  .data-table tbody tr:hover{ background:var(--bg-2); }
+  .data-table .origin-cell{ font-weight:700; color:var(--text-hi); }
+  .data-table .c-early{ color:var(--text-mid); }
+  .data-table .c-ontime{ color:var(--amber); font-weight:700; }
+  .data-table .c-delay{ color:var(--cyan); font-weight:700; }
+  .data-table .c-pct{ color:var(--green); font-weight:700; }
+  .table-scroll{
+    max-height:280px;
+    overflow-y:auto;
+  }
+  .table-scroll::-webkit-scrollbar{ width:6px; }
+  .table-scroll::-webkit-scrollbar-thumb{ background:var(--border); border-radius:3px; }
+
+  .panels-row-3{
+    grid-template-columns:1.3fr 1.1fr 0.7fr;
+  }
+  @media (max-width:1300px){
+    .panels-row-3{ grid-template-columns:1fr; }
+  }
+  .data-table.compact{
+    font-size:11.5px;
+  }
+  .data-table.compact th,
+  .data-table.compact td{
+    padding:5px 8px;
+  }
+
+  /* ===== ACTIONS / EXPORT ===== */
+  .actions-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:22px;
+  }
+  .export-btn{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:linear-gradient(180deg, #1B2440, #121A2E);
+    border:1px solid var(--border);
+    color:var(--text-hi);
+    font-family:var(--sans);
+    font-size:13px;
+    font-weight:600;
+    padding:10px 18px;
+    border-radius:9px;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease, transform .1s ease;
+  }
+  .export-btn:hover:not(:disabled){
+    border-color:var(--green);
+    background:linear-gradient(180deg, #1E2C48, #121A2E);
+  }
+  .export-btn:active:not(:disabled){ transform:scale(0.98); }
+  .export-btn:disabled{
+    opacity:.4;
+    cursor:not-allowed;
+  }
+  .export-icon{ font-size:14px; }
+  .export-hint{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text-lo);
+  }
+
+  /* ===== ORIGIN FILTER ===== */
+  .filter-row{
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:22px;
+    padding:12px 16px;
+    background:var(--bg-1);
+    border:1px solid var(--border-soft);
+    border-radius:10px;
+  }
+  .filter-label{
+    font-size:12px;
+    color:var(--text-mid);
+    font-weight:600;
+    white-space:nowrap;
+  }
+  .filter-select{
+    background:var(--bg-2);
+    border:1px solid var(--border);
+    color:var(--text-hi);
+    font-family:var(--mono);
+    font-size:12px;
+    padding:6px 10px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  .filter-select:focus{ outline:none; border-color:var(--cyan); }
+  .chip-list{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+  .chip{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:rgba(255,93,93,0.12);
+    border:1px solid rgba(255,93,93,0.35);
+    color:#ffb3b3;
+    font-family:var(--mono);
+    font-size:11.5px;
+    padding:4px 6px 4px 10px;
+    border-radius:14px;
+  }
+  .chip button{
+    background:none;
+    border:none;
+    color:#ffb3b3;
+    cursor:pointer;
+    font-size:13px;
+    line-height:1;
+    padding:2px 4px;
+    border-radius:50%;
+  }
+  .chip button:hover{ background:rgba(255,93,93,0.25); }
+
+  .empty-hint{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--text-lo);
+    margin-top:22px;
+    text-align:center;
+    letter-spacing:.03em;
+  }
+
+  .error-box{
+    margin-top:16px;
+    border:1px solid rgba(255,93,93,.35);
+    background:rgba(255,93,93,.06);
+    color:#ffb3b3;
+    padding:12px 16px;
+    border-radius:8px;
+    font-size:12.5px;
+    font-family:var(--mono);
+    display:none;
+    white-space:pre-wrap;
+  }
+</style>
+</head>
+<body>
+
+  <div class="upload-row">
+    <label class="drop" id="dropBase1">
+      <input type="file" id="fileBase1" accept=".xlsx,.xls">
+      <div class="drop-icon">①</div>
+      <div class="drop-text">
+        <div class="label">Base estrutura (.xlsx)</div>
+        <div class="sub">abas: BASE + PLANIFICATION</div>
+      </div>
+      <div class="drop-status" id="statusBase1">arraste ou clique</div>
+    </label>
+
+    <label class="drop" id="dropBase2">
+      <input type="file" id="fileBase2" accept=".csv">
+      <div class="drop-icon">②</div>
+      <div class="drop-text">
+        <div class="label">Base faltantes (.csv)</div>
+        <div class="sub">ID do pacote + Localização</div>
+      </div>
+      <div class="drop-status" id="statusBase2">arraste ou clique</div>
+    </label>
+  </div>
+
+  <div class="actions-row">
+    <button class="export-btn" id="btnExport" disabled>
+      <span class="export-icon">📋</span> Copiar / Compartilhar
+    </button>
+    <span class="export-hint" id="exportHint">envie as duas bases para liberar</span>
+  </div>
+
+  <div class="filter-row" id="filterRow" style="display:none;">
+    <span class="filter-label">Excluir origens do card/gráfico "On Way":</span>
+    <select id="originFilterSelect" class="filter-select">
+      <option value="">+ selecionar origem…</option>
+    </select>
+    <div class="chip-list" id="excludedChips"></div>
+  </div>
+
+  <div id="captureArea">
+    <div class="topbar">
+      <div class="brand-block">
+        <p class="eyebrow"><span class="dot"></span>Painel operacional &middot; ao vivo</p>
+        <h1>Dashboard Operacional</h1>
+        <p>Ciclo PM &middot; SRJ1</p>
+      </div>
+      <div class="clock">
+        Última atualização
+        <strong id="clockTime">--:--</strong>
+      </div>
+    </div>
+
+    <div class="cards">
+    <div class="card total" style="--accent:var(--violet)">
+      <div class="label">Total Geral</div>
+      <div class="value" id="valTotal">—</div>
+      <div class="bar-track"><div class="bar-fill" id="barTotal"></div></div>
+    </div>
+
+    <div class="card d1" style="--accent:var(--amber)">
+      <div class="label">D-1</div>
+      <div class="value" id="valD1">—</div>
+      <div class="foot"><span class="pct" id="pctD1">0%</span></div>
+      <div class="bar-track"><div class="bar-fill" id="barD1"></div></div>
+    </div>
+
+    <div class="card onway" style="--accent:var(--cyan)">
+      <div class="label">On Way</div>
+      <div class="value" id="valOnWay">—</div>
+      <div class="foot"><span class="pct" id="pctOnWay">0%</span></div>
+      <div class="bar-track"><div class="bar-fill" id="barOnWay"></div></div>
+    </div>
+
+    <div class="card recebido" style="--accent:var(--green)">
+      <div class="label">Recebido do Dia</div>
+      <div class="value" id="valRecebido">—</div>
+      <div class="foot"><span class="pct" id="pctRecebido">0%</span></div>
+      <div class="bar-track"><div class="bar-fill" id="barRecebido"></div></div>
+    </div>
+
+    <div class="card carrinho" style="--accent:var(--red)">
+      <div class="label">No Carrinho</div>
+      <div class="value" id="valCarrinho">—</div>
+      <div class="foot"><span class="pct" id="pctCarrinho">0%</span></div>
+      <div class="bar-track"><div class="bar-fill" id="barCarrinho"></div></div>
+    </div>
+  </div>
+
+  <div class="panels" id="panelsWrap" style="display:none;">
+    <div class="panels-row">
+      <div class="panel">
+        <p class="panel-title"><span class="swatch"></span>Distribuição por Origem</p>
+        <div class="chart-wrap">
+          <canvas id="chartOrigem"></canvas>
+        </div>
+      </div>
+      <div class="panel">
+        <p class="panel-title">
+          <span class="swatch" style="background:var(--amber)"></span>Resumo Geral por Status
+          <span class="total-badge" id="statusTotalBadge"></span>
+        </p>
+        <div class="chart-wrap">
+          <canvas id="chartStatus"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="panels-row panels-row-3">
+      <div class="panel">
+        <p class="panel-title"><span class="swatch" style="background:var(--green)"></span>Origens Com % Mais Early</p>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Origem</th>
+                <th class="num">Early</th>
+                <th class="num">On Time</th>
+                <th class="num">Delay</th>
+                <th class="num">Total</th>
+                <th class="num">%</th>
+              </tr>
+            </thead>
+            <tbody id="tblEarly"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title">
+          <span class="swatch" style="background:var(--red)"></span>Recebidos Não Atrelados
+          <span class="total-badge" id="naoAtreladosBadge"></span>
+        </p>
+        <div class="table-scroll">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>ID do Pacote</th>
+                <th>Origem</th>
+                <th>Rota</th>
+                <th class="num">Tempo</th>
+              </tr>
+            </thead>
+            <tbody id="tblNaoAtrelados"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <p class="panel-title" style="color:var(--red)">
+          <span class="swatch" style="background:var(--red)"></span>
+          <span style="color:var(--red)">Mapa de Calor</span>
+          <span class="total-badge" id="ilhasBadge"></span>
+        </p>
+        <table class="data-table compact">
+          <thead>
+            <tr><th>Ilha</th><th class="num">Buffer</th><th>Ilha</th><th class="num">Buffer</th></tr>
+          </thead>
+          <tbody id="tblIlhas"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="empty-hint" id="emptyHint">Envie as duas bases acima para calcular os indicadores.</div>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+<script>
+  // ---------- clock ----------
+  function tickClock(){
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    document.getElementById('clockTime').textContent = hh+':'+mm;
+  }
+  tickClock();
+  setInterval(tickClock, 30000);
+
+  // ---------- state ----------
+  let base1Data = null; // { statusMap: Map(id->status), totalGeral: number }
+  let base2Rows = null; // [{id, loc}]
+  let excludedOrigins = new Set(); // origins hidden from the "Distribuição por Origem" chart
+
+  const errorBox = document.getElementById('errorBox');
+  function showError(msg){
+    errorBox.style.display = 'block';
+    errorBox.textContent = msg;
+  }
+  function clearError(){
+    errorBox.style.display = 'none';
+    errorBox.textContent = '';
+  }
+
+  function normId(v){
+    if(v === null || v === undefined) return null;
+    let s = String(v).trim();
+    // strip trailing .0 from numeric-looking ids
+    if(/^\d+\.0+$/.test(s)) s = s.split('.')[0];
+    return s;
+  }
+
+  function findHeaderIndex(headerRow, candidates){
+    const norm = headerRow.map(h => (h===undefined||h===null) ? '' : String(h).trim().toLowerCase());
+    for(const cand of candidates){
+      const idx = norm.indexOf(cand.toLowerCase());
+      if(idx !== -1) return idx;
+    }
+    return -1;
+  }
+
+  function findSheetName(workbook, candidates){
+    const names = workbook.SheetNames;
+    for(const cand of candidates){
+      const hit = names.find(n => n.trim().toLowerCase() === cand.toLowerCase());
+      if(hit) return hit;
+    }
+    return null;
+  }
+
+  // ---------- parse BASE1 (xlsx) ----------
+  function parseBase1(arrayBuffer){
+    const wb = XLSX.read(arrayBuffer, {type:'array', cellDates:true});
+
+    const baseSheetName = findSheetName(wb, ['BASE']);
+    const planSheetName = findSheetName(wb, ['PLANIFICATION']);
+    if(!baseSheetName) throw new Error('Não encontrei a aba "BASE" no arquivo.');
+    if(!planSheetName) throw new Error('Não encontrei a aba "PLANIFICATION" no arquivo.');
+
+    // Total geral = data rows in BASE sheet
+    const baseRows = XLSX.utils.sheet_to_json(wb.Sheets[baseSheetName], {header:1, raw:true, defval:null});
+    const totalGeral = Math.max(0, baseRows.length - 1); // minus header
+
+    // records map from PLANIFICATION: id -> {status, facility, promiseEnd}
+    const planRows = XLSX.utils.sheet_to_json(wb.Sheets[planSheetName], {header:1, raw:true, defval:null});
+    if(planRows.length < 1) throw new Error('Aba PLANIFICATION está vazia.');
+    const header = planRows[0];
+    const idIdx = findHeaderIndex(header, ['unit_id']);
+    const statusIdx = findHeaderIndex(header, ['status']);
+    const facilityIdx = findHeaderIndex(header, ['facility_origin']);
+    const promiseEndIdx = findHeaderIndex(header, ['promise_date_end']);
+    if(idIdx === -1) throw new Error('Não encontrei a coluna "unit_id" na aba PLANIFICATION.');
+    if(statusIdx === -1) throw new Error('Não encontrei a coluna "status" na aba PLANIFICATION.');
+
+    const records = new Map();
+    for(let i=1;i<planRows.length;i++){
+      const row = planRows[i];
+      if(!row) continue;
+      const id = normId(row[idIdx]);
+      if(id === null) continue;
+      const status = row[statusIdx] === null || row[statusIdx] === undefined ? '' : String(row[statusIdx]).trim();
+      const facility = (facilityIdx === -1 || row[facilityIdx] === null || row[facilityIdx] === undefined) ? null : String(row[facilityIdx]).trim();
+      let promiseEnd = null;
+      if(promiseEndIdx !== -1 && row[promiseEndIdx]){
+        const v = row[promiseEndIdx];
+        promiseEnd = (v instanceof Date) ? v : new Date(v);
+      }
+      records.set(id, { status, facility, promiseEnd });
+    }
+
+    // statusMap kept for backward compatibility with existing card logic
+    const statusMap = new Map();
+    records.forEach((rec, id) => statusMap.set(id, rec.status));
+
+    return { statusMap, records, totalGeral };
+  }
+
+  // ---------- parse BASE2 (csv) ----------
+  function parseCSVText(text){
+    // simple robust CSV parser (handles quoted fields with commas)
+    const rows = [];
+    let row = [], field = '', inQuotes = false;
+    for(let i=0;i<text.length;i++){
+      const c = text[i];
+      if(inQuotes){
+        if(c === '"'){
+          if(text[i+1] === '"'){ field+='"'; i++; }
+          else inQuotes = false;
+        } else field += c;
+      } else {
+        if(c === '"') inQuotes = true;
+        else if(c === ','){ row.push(field); field=''; }
+        else if(c === '\n'){ row.push(field); rows.push(row); row=[]; field=''; }
+        else if(c === '\r'){ /* skip */ }
+        else field += c;
+      }
+    }
+    if(field.length || row.length){ row.push(field); rows.push(row); }
+    return rows.filter(r => r.length>1 || (r.length===1 && r[0]!==''));
+  }
+
+  function parseInboundDate(raw){
+    if(!raw) return null;
+    // format: DD/MM/YYYY HH:mm
+    const m = String(raw).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
+    if(!m) return null;
+    const [, dd, mm, yyyy, hh, min] = m;
+    return new Date(Number(yyyy), Number(mm)-1, Number(dd), Number(hh), Number(min));
+  }
+
+  function parseBase2(text){
+    const rows = parseCSVText(text);
+    if(rows.length < 1) throw new Error('CSV vazio.');
+    const header = rows[0];
+    const idIdx = findHeaderIndex(header, ['id do pacote']);
+    const locIdx = findHeaderIndex(header, ['localização do pacote', 'localizacao do pacote']);
+    const rotaIdx = findHeaderIndex(header, ['n.º rota', 'numero rota', 'n° rota', 'rota']);
+    const inboundIdx = findHeaderIndex(header, ['data de inbound']);
+    if(idIdx === -1) throw new Error('Não encontrei a coluna "ID do pacote" no CSV.');
+    if(locIdx === -1) throw new Error('Não encontrei a coluna "Localização do pacote" no CSV.');
+
+    const out = [];
+    for(let i=1;i<rows.length;i++){
+      const r = rows[i];
+      if(!r || r.length===0) continue;
+      const id = normId(r[idIdx]);
+      if(id === null || id === '') continue;
+      const loc = (r[locIdx]||'').trim();
+      const rota = rotaIdx === -1 ? '' : (r[rotaIdx]||'').trim();
+      const inboundRaw = inboundIdx === -1 ? '' : (r[inboundIdx]||'').trim();
+      const inboundDate = parseInboundDate(inboundRaw);
+      out.push({id, loc, rota, inboundRaw, inboundDate});
+    }
+    return out;
+  }
+
+  // ---------- compute cards ----------
+  function compute(){
+    if(!base1Data || !base2Rows) return;
+    clearError();
+
+    populateOriginFilter();
+    recomputeAll();
+
+    document.getElementById('panelsWrap').style.display = 'grid';
+    document.getElementById('filterRow').style.display = 'flex';
+
+    const btn = document.getElementById('btnExport');
+    btn.disabled = false;
+    document.getElementById('exportHint').textContent = 'imagem pronta pra compartilhar';
+  }
+
+  function getVisibleRows(){
+    const { records } = base1Data;
+    if(excludedOrigins.size === 0) return base2Rows;
+    return base2Rows.filter(r => {
+      const rec = records.get(r.id);
+      const facility = rec && rec.facility;
+      // rows with unknown origin are kept (we can't tell if they belong to an excluded origin)
+      return !facility || !excludedOrigins.has(facility);
+    });
+  }
+
+  function recomputeAll(){
+    const { statusMap, totalGeral } = base1Data;
+    const D1_STATUSES = new Set(['at_station|sorting','at_station|buffered']);
+    const allRows = base2Rows;        // everything except On Way uses the full data
+    const visibleRows = getVisibleRows(); // filtered by excludedOrigins — only feeds On Way
+
+    let d1 = 0, recebido = 0;
+    for(const r of allRows){
+      const status = statusMap.get(r.id);
+      const isD1 = status !== undefined && D1_STATUSES.has(status);
+      if(isD1){
+        d1++;
+      } else if(r.loc === 'Na estação'){
+        recebido++;
+      }
+    }
+
+    let onWay = 0;
+    for(const r of visibleRows){
+      const status = statusMap.get(r.id);
+      const isD1 = status !== undefined && D1_STATUSES.has(status);
+      if(!isD1 && r.loc === 'Caminho para a estação') onWay++;
+    }
+
+    const noCarrinho = totalGeral - allRows.length;
+
+    renderCards({totalGeral, d1, onWay, recebido, noCarrinho});
+    renderOrigemChart(allRows);
+    renderStatusChart({d1, onWay, recebido, noCarrinho, totalGeral});
+    renderEarlyTable(allRows);
+    renderNaoAtreladosTable(allRows);
+    renderIlhasTable(allRows);
+  }
+
+  // ---------- Filtro de origens (afeta somente o card/valor "On Way") ----------
+  function populateOriginFilter(){
+    const { records } = base1Data;
+    const originsSet = new Set();
+    base2Rows.forEach(r => {
+      const rec = records.get(r.id);
+      if(rec && rec.facility) originsSet.add(rec.facility);
+    });
+    const allOrigins = Array.from(originsSet).sort();
+    const select = document.getElementById('originFilterSelect');
+    select.innerHTML = '<option value="">+ selecionar origem…</option>' +
+      allOrigins.map(o => `<option value="${o}">${o}</option>`).join('');
+    renderExcludedChips();
+  }
+
+  function renderExcludedChips(){
+    const container = document.getElementById('excludedChips');
+    container.innerHTML = Array.from(excludedOrigins).map(o => `
+      <span class="chip">${o}<button type="button" data-origin="${o}" title="Voltar ao painel">×</button></span>
+    `).join('');
+    container.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        excludedOrigins.delete(btn.dataset.origin);
+        renderExcludedChips();
+        recomputeAll();
+      });
+    });
+  }
+
+  document.getElementById('originFilterSelect').addEventListener('change', (e) => {
+    const val = e.target.value;
+    if(val){
+      excludedOrigins.add(val);
+      renderExcludedChips();
+      recomputeAll();
+    }
+    e.target.value = '';
+  });
+
+  // ---------- Distribuição por Origem (On Time / Early / Delay) ----------
+  function sameDay(a, b){
+    return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+  }
+
+  function classifyOrigem(rows){
+    const { records } = base1Data;
+    const today = new Date();
+    const byOrigin = new Map(); // origin -> {OnTime, Early, Delay}
+
+    for(const r of rows){
+      const rec = records.get(r.id);
+      if(!rec || !rec.facility || !rec.promiseEnd) continue;
+      const d = rec.promiseEnd;
+      if(isNaN(d.getTime())) continue;
+
+      let cls;
+      if(sameDay(d, today)) cls = 'OnTime';
+      else if(d.getTime() < today.getTime()) cls = 'Delay';
+      else cls = 'Early';
+
+      if(!byOrigin.has(rec.facility)) byOrigin.set(rec.facility, {OnTime:0, Early:0, Delay:0});
+      byOrigin.get(rec.facility)[cls]++;
+    }
+
+    // sort origins by total desc
+    const arr = Array.from(byOrigin.entries()).map(([origin, c]) => ({
+      origin, ...c, total: c.OnTime + c.Early + c.Delay
+    }));
+    arr.sort((a,b) => b.total - a.total);
+    return arr;
+  }
+
+  let origemChartInstance = null;
+  function renderOrigemChart(rows){
+    if(typeof Chart === 'undefined'){
+      showError('A biblioteca de gráficos não carregou (sem conexão com a internet ao abrir o arquivo?). Verifique sua conexão e recarregue a página.');
+      return;
+    }
+    if(typeof ChartDataLabels !== 'undefined'){
+      Chart.register(ChartDataLabels);
+    }
+    const data = classifyOrigem(rows);
+    const ctx = document.getElementById('chartOrigem').getContext('2d');
+
+    const labels = data.map(d => d.origin);
+    const onTime = data.map(d => d.OnTime);
+    const early = data.map(d => d.Early);
+    const delay = data.map(d => d.Delay);
+
+    if(origemChartInstance) origemChartInstance.destroy();
+
+    origemChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label:'On Time', data:onTime, backgroundColor:'#F5A623', stack:'s' },
+          { label:'Early', data:early, backgroundColor:'#5F6C8C', stack:'s' },
+          { label:'Delay', data:delay, backgroundColor:'#3FD0E0', stack:'s' },
+        ]
+      },
+      options: {
+        responsive:true,
+        maintainAspectRatio:false,
+        interaction:{ mode:'index', intersect:false },
+        plugins:{
+          legend:{
+            position:'top',
+            align:'end',
+            labels:{ color:'#A7B2CC', boxWidth:12, font:{ family:"'JetBrains Mono', monospace", size:11 } }
+          },
+          tooltip:{
+            backgroundColor:'#121A2E',
+            borderColor:'#232D4A',
+            borderWidth:1,
+            titleColor:'#EEF2FB',
+            bodyColor:'#A7B2CC',
+            bodyFont:{ family:"'JetBrains Mono', monospace" },
+            titleFont:{ family:"'JetBrains Mono', monospace" }
+          },
+          datalabels:{
+            display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
+            color: '#0A0F1E',
+            font:{ family:"'JetBrains Mono', monospace", size:9, weight:'700' },
+            formatter: (value) => value
+          }
+        },
+        scales:{
+          x:{
+            stacked:true,
+            ticks:{ color:'#8996B3', font:{ family:"'JetBrains Mono', monospace", size:10 } },
+            grid:{ color:'#1B2440' }
+          },
+          y:{
+            stacked:true,
+            ticks:{ color:'#8996B3', font:{ family:"'JetBrains Mono', monospace", size:10 } },
+            grid:{ color:'#1B2440' }
+          }
+        }
+      }
+    });
+  }
+
+  // ---------- Origens Com % Mais Early ----------
+  function renderEarlyTable(rows){
+    const data = classifyOrigem(rows); // already has {origin, OnTime, Early, Delay, total}
+    const ranked = data
+      .filter(d => d.total > 0)
+      .map(d => ({ ...d, pctEarly: d.Early / d.total }))
+      .sort((a,b) => b.pctEarly - a.pctEarly);
+
+    const tbody = document.getElementById('tblEarly');
+    tbody.innerHTML = ranked.map(d => `
+      <tr>
+        <td class="origin-cell">${d.origin}</td>
+        <td class="num c-early">${fmt(d.Early)}</td>
+        <td class="num c-ontime">${fmt(d.OnTime)}</td>
+        <td class="num c-delay">${fmt(d.Delay)}</td>
+        <td class="num">${fmt(d.total)}</td>
+        <td class="num c-pct">${(d.pctEarly*100).toFixed(1).replace('.', ',')}%</td>
+      </tr>
+    `).join('');
+  }
+  let statusChartInstance = null;
+  function renderStatusChart(d){
+    if(typeof Chart === 'undefined') return;
+    const ctx = document.getElementById('chartStatus').getContext('2d');
+    document.getElementById('statusTotalBadge').textContent = 'Total ' + fmt(d.totalGeral);
+
+    const labels = ['D-1', 'On Way', 'Recebido do dia', 'No Carrinho'];
+    const values = [d.d1, d.onWay, d.recebido, d.noCarrinho];
+    const colors = ['#F5A623', '#F5A623', '#F5A623', '#F5A623'];
+
+    if(statusChartInstance) statusChartInstance.destroy();
+
+    statusChartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{ data: values, backgroundColor: colors, borderRadius: 3, barThickness: 46 }]
+      },
+      options: {
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{
+          legend:{ display:false },
+          tooltip:{
+            backgroundColor:'#121A2E',
+            borderColor:'#232D4A',
+            borderWidth:1,
+            titleColor:'#EEF2FB',
+            bodyColor:'#A7B2CC',
+            bodyFont:{ family:"'JetBrains Mono', monospace" },
+            titleFont:{ family:"'JetBrains Mono', monospace" }
+          },
+          datalabels:{
+            anchor:'end',
+            align:'top',
+            color:'#EEF2FB',
+            font:{ family:"'JetBrains Mono', monospace", size:12, weight:'700' },
+            formatter: (value) => fmt(value)
+          }
+        },
+        scales:{
+          x:{
+            ticks:{ color:'#8996B3', font:{ family:"'JetBrains Mono', monospace", size:10 } },
+            grid:{ display:false }
+          },
+          y:{
+            ticks:{ color:'#8996B3', font:{ family:"'JetBrains Mono', monospace", size:10 } },
+            grid:{ color:'#1B2440' },
+            grace:'12%'
+          }
+        }
+      }
+    });
+  }
+
+  function fmt(n){ return n.toLocaleString('pt-BR'); }
+  function pct(part, whole){
+    if(!whole) return '0%';
+    return ((part/whole)*100).toFixed(1).replace('.', ',') + '%';
+  }
+
+  function renderCards(d){
+    document.getElementById('emptyHint').style.display = 'none';
+
+    document.getElementById('valTotal').textContent = fmt(d.totalGeral);
+    document.getElementById('valD1').textContent = fmt(d.d1);
+    document.getElementById('valOnWay').textContent = fmt(d.onWay);
+    document.getElementById('valRecebido').textContent = fmt(d.recebido);
+    document.getElementById('valCarrinho').textContent = fmt(d.noCarrinho);
+
+    document.getElementById('pctD1').textContent = pct(d.d1, d.totalGeral) + ' do total';
+    document.getElementById('pctOnWay').textContent = pct(d.onWay, d.totalGeral) + ' do total';
+    document.getElementById('pctRecebido').textContent = pct(d.recebido, d.totalGeral) + ' do total';
+    document.getElementById('pctCarrinho').textContent = pct(d.noCarrinho, d.totalGeral) + ' do total';
+
+    document.getElementById('barTotal').style.width = '100%';
+    document.getElementById('barD1').style.width = Math.min(100, (d.d1/d.totalGeral)*100) + '%';
+    document.getElementById('barOnWay').style.width = Math.min(100, (d.onWay/d.totalGeral)*100) + '%';
+    document.getElementById('barRecebido').style.width = Math.min(100, (d.recebido/d.totalGeral)*100) + '%';
+    document.getElementById('barCarrinho').style.width = Math.min(100, (d.noCarrinho/d.totalGeral)*100) + '%';
+
+    tickClock();
+  }
+
+  // ---------- Pacotes Recebidos e não Atrelados ----------
+  function formatElapsed(ms){
+    if(ms < 0) ms = 0;
+    const totalMin = Math.floor(ms / 60000);
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return h + ':' + String(m).padStart(2,'0');
+  }
+
+  function renderNaoAtreladosTable(visibleRows){
+    const { records } = base1Data;
+    const now = new Date();
+
+    const list = visibleRows
+      .filter(r => r.inboundDate)
+      .map(r => {
+        const rec = records.get(r.id);
+        const origin = rec && rec.facility ? rec.facility : '—';
+        const elapsedMs = now.getTime() - r.inboundDate.getTime();
+        return { id: r.id, origin, rota: r.rota || '—', elapsedMs };
+      })
+      .sort((a,b) => b.elapsedMs - a.elapsedMs);
+
+    document.getElementById('naoAtreladosBadge').textContent = fmt(list.length) + ' pacotes';
+
+    const tbody = document.getElementById('tblNaoAtrelados');
+    tbody.innerHTML = list.map((r, i) => `
+      <tr>
+        <td class="num">${i+1}</td>
+        <td class="origin-cell">${r.id}</td>
+        <td>${r.origin}</td>
+        <td>${r.rota}</td>
+        <td class="num c-pct">${formatElapsed(r.elapsedMs)}</td>
+      </tr>
+    `).join('');
+  }
+
+  // ---------- Mapa de Calor (Ilhas) ----------
+  function renderIlhasTable(visibleRows){
+    const counts = new Map();
+    for(const r of visibleRows){
+      if(!r.rota) continue;
+      const m = r.rota.match(/^([A-Za-z]+)/);
+      if(!m) continue;
+      const ilha = m[1][0].toUpperCase();
+      counts.set(ilha, (counts.get(ilha) || 0) + 1);
+    }
+
+    const ranked = Array.from(counts.entries())
+      .map(([ilha, buffer]) => ({ ilha, buffer }))
+      .sort((a,b) => b.buffer - a.buffer);
+
+    document.getElementById('ilhasBadge').textContent = ranked.length + ' ilhas';
+
+    const half = Math.ceil(ranked.length / 2);
+    const colA = ranked.slice(0, half);
+    const colB = ranked.slice(half);
+
+    const rowsHtml = [];
+    for(let i=0;i<half;i++){
+      const a = colA[i];
+      const b = colB[i];
+      rowsHtml.push(`
+        <tr>
+          <td class="origin-cell">${a ? a.ilha : ''}</td>
+          <td class="num c-pct">${a ? fmt(a.buffer) : ''}</td>
+          <td class="origin-cell">${b ? b.ilha : ''}</td>
+          <td class="num c-pct">${b ? fmt(b.buffer) : ''}</td>
+        </tr>
+      `);
+    }
+    document.getElementById('tblIlhas').innerHTML = rowsHtml.join('');
+  }
+
+  // ---------- export / share ----------
+  async function getDashboardBlob(){
+    const el = document.getElementById('captureArea');
+    const canvas = await html2canvas(el, {
+      backgroundColor: '#080C17',
+      scale: 3,
+      useCORS: true,
+      logging: false,
+      imageTimeout: 0
+    });
+    return await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+  }
+
+  async function exportDashboard(){
+    const btn = document.getElementById('btnExport');
+    const hint = document.getElementById('exportHint');
+
+    if(typeof html2canvas === 'undefined'){
+      showError('A biblioteca de exportação não carregou (sem conexão com a internet?). Verifique sua conexão e recarregue a página.');
+      return;
+    }
+
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="export-icon">⏳</span> Gerando imagem...';
+
+    try{
+      const blob = await getDashboardBlob();
+      const fileName = 'painel_operacional_' + new Date().toISOString().slice(0,10) + '.png';
+      const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+      const file = new File([blob], fileName, { type: 'image/png' });
+
+      // Mobile: native share sheet (WhatsApp shows up as a direct option there)
+      if(isMobile && navigator.canShare && navigator.canShare({ files:[file] })){
+        try{
+          await navigator.share({
+            files:[file],
+            title:'Painel Operacional',
+            text:'Painel Operacional — ' + new Date().toLocaleString('pt-BR')
+          });
+          hint.textContent = 'compartilhado!';
+          return;
+        }catch(shareErr){
+          if(shareErr && shareErr.name === 'AbortError') return; // user cancelled
+          // otherwise fall through to clipboard/download below
+        }
+      }
+
+      // Desktop (and mobile without a usable share target): copy straight to
+      // clipboard so it can be pasted (Ctrl+V) into WhatsApp Web directly.
+      if(navigator.clipboard && window.ClipboardItem){
+        try{
+          await navigator.clipboard.write([ new ClipboardItem({ 'image/png': blob }) ]);
+          hint.textContent = 'copiado! cole (Ctrl+V) — envie como arquivo/documento p/ manter qualidade';
+          return;
+        }catch(clipErr){
+          // clipboard blocked — fall through to download
+        }
+      }
+
+      // Last resort: download the file
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      hint.textContent = 'baixado — envie como arquivo/documento no WhatsApp p/ manter qualidade';
+    }catch(err){
+      showError('Não consegui gerar a imagem: ' + err.message);
+    }finally{
+      btn.disabled = false;
+      btn.innerHTML = original;
+    }
+  }
+
+  document.getElementById('btnExport').addEventListener('click', exportDashboard);
+
+  // ---------- file wiring ----------
+  function wireDrop(dropEl, inputEl, statusEl, onFile){
+    dropEl.addEventListener('click', (e)=>{ if(e.target !== inputEl) inputEl.click(); });
+    dropEl.addEventListener('dragover', (e)=>{ e.preventDefault(); dropEl.classList.add('is-dragover'); });
+    dropEl.addEventListener('dragleave', ()=> dropEl.classList.remove('is-dragover'));
+    dropEl.addEventListener('drop', (e)=>{
+      e.preventDefault();
+      dropEl.classList.remove('is-dragover');
+      if(e.dataTransfer.files && e.dataTransfer.files[0]){
+        onFile(e.dataTransfer.files[0]);
+      }
+    });
+    inputEl.addEventListener('change', (e)=>{
+      if(e.target.files && e.target.files[0]) onFile(e.target.files[0]);
+    });
+
+    dropEl._setStatus = (text, ok)=>{
+      statusEl.textContent = text;
+      dropEl.classList.toggle('is-loaded', !!ok);
+    };
+  }
+
+  const dropBase1 = document.getElementById('dropBase1');
+  const dropBase2 = document.getElementById('dropBase2');
+
+  wireDrop(dropBase1, document.getElementById('fileBase1'), document.getElementById('statusBase1'), (file)=>{
+    dropBase1._setStatus('lendo...', false);
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      try{
+        base1Data = parseBase1(e.target.result);
+        dropBase1._setStatus(file.name + ' · ' + fmt(base1Data.totalGeral) + ' pacotes', true);
+        compute();
+      }catch(err){
+        dropBase1._setStatus('erro ao ler arquivo', false);
+        showError('Base estrutura: ' + err.message);
+      }
+    };
+    reader.onerror = ()=>{ showError('Não consegui ler o arquivo da base estrutura.'); };
+    reader.readAsArrayBuffer(file);
+  });
+
+  wireDrop(dropBase2, document.getElementById('fileBase2'), document.getElementById('statusBase2'), (file)=>{
+    dropBase2._setStatus('lendo...', false);
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      try{
+        base2Rows = parseBase2(e.target.result);
+        dropBase2._setStatus(file.name + ' · ' + fmt(base2Rows.length) + ' linhas', true);
+        compute();
+      }catch(err){
+        dropBase2._setStatus('erro ao ler arquivo', false);
+        showError('Base faltantes: ' + err.message);
+      }
+    };
+    reader.onerror = ()=>{ showError('Não consegui ler o arquivo da base faltantes.'); };
+    reader.readAsText(file, 'utf-8');
+  });
+</script>
+
+</body>
+</html>
