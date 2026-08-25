@@ -3,26 +3,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Painel Operacional</title>
+<title>Kuehne+Nagel · Painel Operacional</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   :root{
-    --bg-0:#080C17;
-    --bg-1:#0F1728;
-    --bg-2:#161F38;
-    --border:#232D4A;
-    --border-soft:#1B2440;
-    --text-hi:#EEF2FB;
-    --text-mid:#A7B2CC;
-    --text-lo:#5F6C8C;
-    --amber:#F5A623;
-    --cyan:#3FD0E0;
-    --violet:#8B7CF6;
-    --green:#38D68B;
-    --red:#FF5D5D;
+    --bg-0:#EEF2F8;
+    --bg-1:#FFFFFF;
+    --bg-2:#F3F6FB;
+    --border:#D7E1EE;
+    --border-soft:#E6ECF5;
+    --text-hi:#0B2545;
+    --text-mid:#51617A;
+    --text-lo:#8E9BB0;
+    --amber:#C97D0C;
+    --cyan:#0B5FA5;
+    --violet:#003269;
+    --green:#1E9E63;
+    --red:#E0453F;
+    --kn-navy:#003269;
+    --kn-blue:#0B5FA5;
+    --kn-sky:#7FB3E8;
     --mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
     --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif;
   }
@@ -30,8 +33,8 @@
   body{
     margin:0;
     background:
-      radial-gradient(ellipse 1200px 600px at 15% -10%, rgba(139,124,246,0.10), transparent 60%),
-      radial-gradient(ellipse 900px 500px at 100% 0%, rgba(63,208,224,0.08), transparent 55%),
+      radial-gradient(ellipse 1200px 500px at 10% -10%, rgba(127,179,232,0.16), transparent 60%),
+      radial-gradient(ellipse 900px 400px at 100% 0%, rgba(11,95,165,0.06), transparent 55%),
       var(--bg-0);
     color:var(--text-hi);
     font-family:var(--sans);
@@ -40,21 +43,64 @@
   }
 
   /* ===== HEADER ===== */
+  /* ---------- Kuehne+Nagel brand bar ---------- */
+  .kn-brand-bar{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:20px;
+  }
+  .kn-logo-mark{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width:38px;
+    height:38px;
+    border-radius:8px;
+    background:linear-gradient(135deg, var(--kn-blue), var(--kn-navy));
+    color:#fff;
+    font-family:var(--sans);
+    font-weight:800;
+    font-size:15px;
+    letter-spacing:-0.03em;
+    flex-shrink:0;
+    box-shadow:0 4px 14px rgba(0,50,105,.25);
+  }
+  .kn-brand-text{
+    display:flex;
+    flex-direction:column;
+    line-height:1.15;
+  }
+  .kn-brand-text .kn-name{
+    font-size:15px;
+    font-weight:700;
+    color:var(--text-hi);
+    letter-spacing:-.01em;
+  }
+  .kn-brand-text .kn-tagline{
+    font-size:10.5px;
+    color:var(--text-lo);
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
   .topbar{
     display:flex;
     align-items:flex-start;
     justify-content:space-between;
     gap:24px;
-    padding-bottom:22px;
-    border-bottom:1px solid var(--border-soft);
+    padding:22px 26px;
+    border-radius:16px;
     margin-bottom:26px;
     flex-wrap:wrap;
+    background:linear-gradient(135deg, var(--kn-navy) 0%, var(--kn-blue) 100%);
+    box-shadow:0 10px 28px rgba(0,50,105,.22);
   }
   .brand-block .eyebrow{
     font-family:var(--mono);
     font-size:11px;
     letter-spacing:.18em;
-    color:var(--cyan);
+    color:rgba(255,255,255,.78);
     text-transform:uppercase;
     margin:0 0 6px;
     display:flex;
@@ -63,8 +109,8 @@
   }
   .brand-block .eyebrow .dot{
     width:6px;height:6px;border-radius:50%;
-    background:var(--green);
-    box-shadow:0 0 0 3px rgba(56,214,139,0.18);
+    background:#5FE0A3;
+    box-shadow:0 0 0 3px rgba(95,224,163,0.28);
     animation:pulse 2s infinite;
   }
   @keyframes pulse{
@@ -76,22 +122,23 @@
     font-size:26px;
     font-weight:700;
     letter-spacing:-0.01em;
+    color:#fff;
   }
   .brand-block p{
     margin:4px 0 0;
     font-size:13px;
-    color:var(--text-mid);
+    color:rgba(255,255,255,.72);
   }
   .clock{
     font-family:var(--mono);
     font-size:12px;
-    color:var(--text-mid);
+    color:rgba(255,255,255,.72);
     text-align:right;
   }
   .clock strong{
     display:block;
     font-size:15px;
-    color:var(--text-hi);
+    color:#fff;
     letter-spacing:.02em;
   }
 
@@ -103,8 +150,8 @@
     margin-bottom:28px;
   }
   .drop{
-    border:1px dashed var(--border);
-    background:linear-gradient(180deg, var(--bg-1), var(--bg-0));
+    border:1.5px dashed var(--border);
+    background:var(--bg-1);
     border-radius:10px;
     padding:16px 18px;
     display:flex;
@@ -113,6 +160,7 @@
     cursor:pointer;
     transition:border-color .15s ease, background .15s ease;
     position:relative;
+    box-shadow:0 1px 2px rgba(11,37,69,.04);
   }
   .drop:hover{ border-color:var(--cyan); }
   .drop.is-dragover{ border-color:var(--amber); background:var(--bg-2); }
@@ -128,7 +176,7 @@
     font-size:15px;
     color:var(--cyan);
   }
-  .drop.is-loaded .drop-icon{ color:var(--green); border-color:rgba(56,214,139,.4); }
+  .drop.is-loaded .drop-icon{ color:var(--green); border-color:rgba(30,158,99,.4); }
   .drop-text .label{
     font-size:12.5px;
     font-weight:600;
@@ -160,7 +208,7 @@
     .upload-row{ grid-template-columns:1fr; }
   }
   .card{
-    background:linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
+    background:var(--bg-1);
     border:1px solid var(--border-soft);
     border-radius:12px;
     padding:18px 18px 16px;
@@ -170,13 +218,14 @@
     display:flex;
     flex-direction:column;
     justify-content:space-between;
+    box-shadow:0 1px 3px rgba(11,37,69,.06), 0 1px 2px rgba(11,37,69,.04);
   }
   .card::before{
     content:"";
     position:absolute;
-    top:0;left:0;right:0;height:2px;
+    top:0;left:0;right:0;height:3px;
     background:var(--accent, var(--cyan));
-    opacity:.8;
+    opacity:.9;
   }
   .card.total::before{ background:var(--violet); }
   .card.d1::before{ background:var(--amber); }
@@ -243,10 +292,11 @@
     margin-top:16px;
   }
   .panel{
-    background:linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 100%);
+    background:var(--bg-1);
     border:1px solid var(--border-soft);
     border-radius:12px;
     padding:18px 20px 12px;
+    box-shadow:0 1px 3px rgba(11,37,69,.06), 0 1px 2px rgba(11,37,69,.04);
   }
   .panel-title{
     font-size:13px;
@@ -307,7 +357,7 @@
     border-bottom:1px solid var(--border-soft);
   }
   .data-table tbody td.num{ text-align:right; }
-  .data-table tbody tr:nth-child(even){ background:rgba(255,255,255,0.015); }
+  .data-table tbody tr:nth-child(even){ background:rgba(11,37,69,0.02); }
   .data-table tbody tr:hover{ background:var(--bg-2); }
   .data-table .origin-cell{ font-weight:700; color:var(--text-hi); }
   .data-table .c-early{ color:var(--text-mid); }
@@ -346,7 +396,7 @@
     display:flex;
     align-items:center;
     gap:8px;
-    background:linear-gradient(180deg, #1B2440, #121A2E);
+    background:var(--bg-1);
     border:1px solid var(--border);
     color:var(--text-hi);
     font-family:var(--sans);
@@ -355,15 +405,16 @@
     padding:10px 18px;
     border-radius:9px;
     cursor:pointer;
+    box-shadow:0 1px 2px rgba(11,37,69,.05);
     transition:border-color .15s ease, background .15s ease, transform .1s ease;
   }
   .export-btn:hover:not(:disabled){
-    border-color:var(--green);
-    background:linear-gradient(180deg, #1E2C48, #121A2E);
+    border-color:var(--kn-blue);
+    background:var(--bg-2);
   }
   .export-btn:active:not(:disabled){ transform:scale(0.98); }
   .export-btn:disabled{
-    opacity:.4;
+    opacity:.45;
     cursor:not-allowed;
   }
   .export-icon{ font-size:14px; }
@@ -384,6 +435,7 @@
     background:var(--bg-1);
     border:1px solid var(--border-soft);
     border-radius:10px;
+    box-shadow:0 1px 2px rgba(11,37,69,.04);
   }
   .filter-label{
     font-size:12px;
@@ -411,9 +463,9 @@
     display:flex;
     align-items:center;
     gap:6px;
-    background:rgba(255,93,93,0.12);
-    border:1px solid rgba(255,93,93,0.35);
-    color:#ffb3b3;
+    background:rgba(224,69,63,0.09);
+    border:1px solid rgba(224,69,63,0.32);
+    color:#B23B36;
     font-family:var(--mono);
     font-size:11.5px;
     padding:4px 6px 4px 10px;
@@ -422,14 +474,14 @@
   .chip button{
     background:none;
     border:none;
-    color:#ffb3b3;
+    color:#B23B36;
     cursor:pointer;
     font-size:13px;
     line-height:1;
     padding:2px 4px;
     border-radius:50%;
   }
-  .chip button:hover{ background:rgba(255,93,93,0.25); }
+  .chip button:hover{ background:rgba(224,69,63,0.18); }
 
   .empty-hint{
     font-family:var(--mono);
@@ -442,9 +494,9 @@
 
   .error-box{
     margin-top:16px;
-    border:1px solid rgba(255,93,93,.35);
-    background:rgba(255,93,93,.06);
-    color:#ffb3b3;
+    border:1px solid rgba(224,69,63,.35);
+    background:rgba(224,69,63,.07);
+    color:#B23B36;
     padding:12px 16px;
     border-radius:8px;
     font-size:12.5px;
@@ -452,9 +504,190 @@
     display:none;
     white-space:pre-wrap;
   }
+
+  /* ---------- app layout: sidebar + main content ---------- */
+  .app-layout{
+    display:flex;
+    align-items:flex-start;
+    gap:24px;
+    margin-top:16px;
+  }
+  .app-sidebar{
+    width:200px;
+    flex-shrink:0;
+    position:sticky;
+    top:16px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    border-right:1px solid var(--border-soft);
+    padding-right:16px;
+  }
+  .app-main{
+    flex:1;
+    min-width:0;
+  }
+  .tab-btn{
+    appearance:none;
+    border:1px solid transparent;
+    background:transparent;
+    color:var(--text-mid);
+    font-family:inherit;
+    font-size:13.5px;
+    font-weight:600;
+    text-align:left;
+    padding:11px 14px;
+    border-radius:9px;
+    cursor:pointer;
+    transition:color .15s ease, background .15s ease, border-color .15s ease;
+    white-space:nowrap;
+  }
+  .tab-btn:hover{ color:var(--text-hi); background:var(--bg-2); }
+  .tab-btn.active{
+    color:#fff;
+    background:var(--kn-navy);
+    border-color:var(--kn-navy);
+    box-shadow:0 2px 8px rgba(0,50,105,.25);
+  }
+  @media (max-width:760px){
+    .app-layout{ flex-direction:column; gap:8px; }
+    .app-sidebar{
+      width:100%;
+      position:static;
+      flex-direction:row;
+      border-right:none;
+      border-bottom:1px solid var(--border-soft);
+      padding-right:0;
+      padding-bottom:8px;
+      overflow-x:auto;
+    }
+    .tab-btn{ white-space:nowrap; }
+  }
+
+  /* ---------- goleiro (handheld scan) view ---------- */
+  .goleiro-wrap{
+    max-width:640px;
+    margin:0 auto;
+    padding-top:8px;
+  }
+  .goleiro-header{ margin-bottom:18px; }
+  .goleiro-header h1{ margin:4px 0; color:var(--text-hi); }
+  .goleiro-header p{ color:var(--text-mid); font-size:13px; margin:0; }
+
+  .goleiro-scan-box{ margin-bottom:16px; }
+  .goleiro-input{
+    width:100%;
+    box-sizing:border-box;
+    font-family:var(--mono);
+    font-size:22px;
+    letter-spacing:.03em;
+    padding:18px 16px;
+    border-radius:12px;
+    border:2px solid var(--border);
+    background:var(--bg-1);
+    color:var(--text-hi);
+    outline:none;
+    transition:border-color .15s ease;
+    box-shadow:0 1px 2px rgba(11,37,69,.04);
+  }
+  .goleiro-input:focus{ border-color:var(--kn-blue); }
+  .goleiro-input:disabled{ opacity:.5; cursor:not-allowed; }
+  .goleiro-hint{
+    margin-top:8px;
+    font-size:12px;
+    color:var(--text-lo);
+  }
+
+  .goleiro-result{
+    border-radius:14px;
+    padding:20px;
+    margin-bottom:20px;
+    text-align:center;
+    border:1px solid var(--border);
+    background:var(--bg-2);
+  }
+  .goleiro-result.ok{ border-color:rgba(30,158,99,.45); background:rgba(30,158,99,.08); }
+  .goleiro-result.no-rota{ border-color:rgba(201,125,12,.45); background:rgba(201,125,12,.08); }
+  .goleiro-result.not-found{ border-color:rgba(224,69,63,.45); background:rgba(224,69,63,.08); }
+  .goleiro-result-id{
+    font-family:var(--mono);
+    font-size:15px;
+    color:var(--text-mid);
+    margin-bottom:8px;
+    word-break:break-all;
+  }
+  .goleiro-result-status{
+    font-size:14px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    margin-bottom:6px;
+  }
+  .goleiro-result.ok .goleiro-result-status{ color:#1E9E63; }
+  .goleiro-result.no-rota .goleiro-result-status{ color:#C97D0C; }
+  .goleiro-result.not-found .goleiro-result-status{ color:#E0453F; }
+  .goleiro-result-rota{
+    font-size:34px;
+    font-weight:800;
+    font-family:var(--mono);
+    color:var(--text-hi);
+  }
+  .goleiro-release-btn{
+    appearance:none;
+    border:none;
+    margin-top:16px;
+    background:#1E9E63;
+    color:#fff;
+    font-family:inherit;
+    font-size:15px;
+    font-weight:700;
+    padding:14px 24px;
+    border-radius:10px;
+    cursor:pointer;
+    width:100%;
+  }
+  .goleiro-release-btn:hover{ filter:brightness(1.08); }
+  .goleiro-input.is-blocked{
+    border-color:rgba(30,158,99,.55);
+    background:var(--bg-2);
+    opacity:.6;
+    cursor:not-allowed;
+  }
+
+  .goleiro-history-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:8px;
+  }
+  .goleiro-clear-btn{
+    appearance:none;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--text-mid);
+    font-family:inherit;
+    font-size:11.5px;
+    padding:6px 12px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  .goleiro-clear-btn:hover{ color:var(--text-hi); border-color:var(--kn-blue); }
+  .goleiro-history-scroll{ max-height:340px; overflow-y:auto; }
+  .goleiro-history-scroll tr.row-ok td:first-child{ border-left:3px solid #1E9E63; }
+  .goleiro-history-scroll tr.row-no-rota td:first-child{ border-left:3px solid #C97D0C; }
+  .goleiro-history-scroll tr.row-not-found td:first-child{ border-left:3px solid #E0453F; }
 </style>
 </head>
+
 <body>
+
+  <div class="kn-brand-bar">
+    <div class="kn-logo-mark">K+N</div>
+    <div class="kn-brand-text">
+      <span class="kn-name">Kuehne+Nagel</span>
+      <span class="kn-tagline">Painel Operacional &middot; Logística</span>
+    </div>
+  </div>
 
   <div class="upload-row">
     <label class="drop" id="dropBase1">
@@ -478,9 +711,22 @@
     </label>
   </div>
 
+  <div class="app-layout">
+    <div class="app-sidebar">
+      <button class="tab-btn active" id="tabBtnDashboard" type="button">📊 Dashboard</button>
+      <button class="tab-btn" id="tabBtnGoleiro" type="button">🥅 Goleiro — Validação</button>
+    </div>
+
+    <div class="app-main">
+
+  <div id="viewDashboard">
+
   <div class="actions-row">
     <button class="export-btn" id="btnExport" disabled>
       <span class="export-icon">📋</span> Copiar / Compartilhar
+    </button>
+    <button class="export-btn" id="btnExtractData" disabled>
+      <span class="export-icon">🔢</span> Extrair IDs (D-1 / On Way / Recebido)
     </button>
     <span class="export-hint" id="exportHint">envie as duas bases para liberar</span>
   </div>
@@ -621,6 +867,51 @@
   <div class="empty-hint" id="emptyHint">Envie as duas bases acima para calcular os indicadores.</div>
   </div>
 
+  </div><!-- /viewDashboard -->
+
+  <div id="viewGoleiro" style="display:none;">
+    <div class="goleiro-wrap">
+      <div class="goleiro-header">
+        <p class="eyebrow"><span class="dot"></span>Validação no goleiro</p>
+        <h1>Bipagem de Pacotes</h1>
+        <p>Bipe o ID do pacote para saber se ele já tem uma rota atribuída.</p>
+      </div>
+
+      <div class="goleiro-scan-box" id="goleiroScanBox">
+        <input type="text" id="goleiroInput" class="goleiro-input" placeholder="Bipe ou digite o ID do pacote…" autocomplete="off" autocapitalize="off" spellcheck="false" disabled>
+        <div class="goleiro-hint" id="goleiroInputHint">envie a base estrutura (.xlsx) acima para liberar a bipagem</div>
+      </div>
+
+      <div class="goleiro-result" id="goleiroResult" style="display:none;">
+        <div class="goleiro-result-id" id="goleiroResultId">—</div>
+        <div class="goleiro-result-status" id="goleiroResultStatus">—</div>
+        <div class="goleiro-result-rota" id="goleiroResultRota">—</div>
+        <button class="goleiro-release-btn" id="goleiroReleaseBtn" type="button" style="display:none;">🔓 Liberar próxima bipagem</button>
+      </div>
+
+      <div class="goleiro-history-head">
+        <p class="panel-title"><span class="swatch"></span>Últimas bipagens<span class="total-badge" id="goleiroCountBadge">0</span></p>
+        <button class="goleiro-clear-btn" id="goleiroClearBtn" type="button">Limpar histórico</button>
+      </div>
+      <div class="table-scroll goleiro-history-scroll">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Horário</th>
+              <th>ID do Pacote</th>
+              <th>Rota</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tblGoleiroHistory"></tbody>
+        </table>
+      </div>
+    </div>
+  </div><!-- /viewGoleiro -->
+
+    </div><!-- /app-main -->
+  </div><!-- /app-layout -->
+
   <div class="error-box" id="errorBox"></div>
 
 <script>
@@ -688,7 +979,42 @@
     const baseRows = XLSX.utils.sheet_to_json(wb.Sheets[baseSheetName], {header:1, raw:true, defval:null});
     const totalGeral = Math.max(0, baseRows.length - 1); // minus header
 
-    // records map from PLANIFICATION: id -> {status, facility, promiseEnd}
+    // try to also capture package IDs from BASE sheet (used to list "Faltante" IDs, not just the count)
+    let baseIds = null;
+    if(baseRows.length > 0){
+      const baseHeader = baseRows[0];
+      const baseIdIdx = findHeaderIndex(baseHeader, ['rtg_unit_external_id','unit_id','id do pacote','id_pacote','pacote_id','id']);
+      if(baseIdIdx !== -1){
+        baseIds = new Set();
+        for(let i=1;i<baseRows.length;i++){
+          const row = baseRows[i];
+          if(!row) continue;
+          const id = normId(row[baseIdIdx]);
+          if(id !== null && id !== '') baseIds.add(id);
+        }
+      }
+    }
+
+    // goleiro lookup: BASE sheet, id = RTG_UNIT_EXTERNAL_ID, rota = Otimizado
+    let goleiroRecords = null;
+    if(baseRows.length > 0){
+      const baseHeader = baseRows[0];
+      const goIdIdx = findHeaderIndex(baseHeader, ['rtg_unit_external_id']);
+      const goRotaIdx = findHeaderIndex(baseHeader, ['otimizado']);
+      if(goIdIdx !== -1){
+        goleiroRecords = new Map();
+        for(let i=1;i<baseRows.length;i++){
+          const row = baseRows[i];
+          if(!row) continue;
+          const id = normId(row[goIdIdx]);
+          if(id === null || id === '') continue;
+          const rota = (goRotaIdx === -1 || row[goRotaIdx] === null || row[goRotaIdx] === undefined) ? '' : String(row[goRotaIdx]).trim();
+          goleiroRecords.set(id, { rota });
+        }
+      }
+    }
+
+    // records map from PLANIFICATION: id -> {status, facility, promiseEnd, rota}
     const planRows = XLSX.utils.sheet_to_json(wb.Sheets[planSheetName], {header:1, raw:true, defval:null});
     if(planRows.length < 1) throw new Error('Aba PLANIFICATION está vazia.');
     const header = planRows[0];
@@ -696,6 +1022,7 @@
     const statusIdx = findHeaderIndex(header, ['status']);
     const facilityIdx = findHeaderIndex(header, ['facility_origin']);
     const promiseEndIdx = findHeaderIndex(header, ['promise_date_end']);
+    const rotaIdx = findHeaderIndex(header, ['n.º rota', 'numero rota', 'n° rota', 'rota', 'route_id', 'route']);
     if(idIdx === -1) throw new Error('Não encontrei a coluna "unit_id" na aba PLANIFICATION.');
     if(statusIdx === -1) throw new Error('Não encontrei a coluna "status" na aba PLANIFICATION.');
 
@@ -712,14 +1039,15 @@
         const v = row[promiseEndIdx];
         promiseEnd = (v instanceof Date) ? v : new Date(v);
       }
-      records.set(id, { status, facility, promiseEnd });
+      const rota = (rotaIdx === -1 || row[rotaIdx] === null || row[rotaIdx] === undefined) ? '' : String(row[rotaIdx]).trim();
+      records.set(id, { status, facility, promiseEnd, rota });
     }
 
     // statusMap kept for backward compatibility with existing card logic
     const statusMap = new Map();
     records.forEach((rec, id) => statusMap.set(id, rec.status));
 
-    return { statusMap, records, totalGeral };
+    return { statusMap, records, totalGeral, baseIds, goleiroRecords };
   }
 
   // ---------- parse BASE2 (csv) ----------
@@ -794,7 +1122,10 @@
 
     const btn = document.getElementById('btnExport');
     btn.disabled = false;
+    document.getElementById('btnExtractData').disabled = false;
     document.getElementById('exportHint').textContent = 'imagem pronta pra compartilhar';
+
+    enableGoleiroScan();
   }
 
   function getVisibleRows(){
@@ -808,31 +1139,54 @@
     });
   }
 
+  let lastMetricIds = { d1: [], recebido: [], onWay: [], faltante: [], faltanteAvailable: false };
+
   function recomputeAll(){
-    const { statusMap, totalGeral } = base1Data;
+    const { statusMap, totalGeral, baseIds } = base1Data;
     const D1_STATUSES = new Set(['at_station|sorting','at_station|buffered']);
     const allRows = base2Rows;        // everything except On Way uses the full data
     const visibleRows = getVisibleRows(); // filtered by excludedOrigins — only feeds On Way
 
     let d1 = 0, recebido = 0;
+    const d1Ids = [], recebidoIds = [];
     for(const r of allRows){
       const status = statusMap.get(r.id);
       const isD1 = status !== undefined && D1_STATUSES.has(status);
       if(isD1){
         d1++;
+        d1Ids.push(r.id);
       } else if(r.loc === 'Na estação'){
         recebido++;
+        recebidoIds.push(r.id);
       }
     }
 
     let onWay = 0;
+    const onWayIds = [];
     for(const r of visibleRows){
       const status = statusMap.get(r.id);
       const isD1 = status !== undefined && D1_STATUSES.has(status);
-      if(!isD1 && r.loc === 'Caminho para a estação') onWay++;
+      if(!isD1 && r.loc === 'Caminho para a estação'){
+        onWay++;
+        onWayIds.push(r.id);
+      }
     }
 
     const noCarrinho = totalGeral - allRows.length;
+
+    // "Faltante" IDs = package IDs present in the BASE sheet but absent from the
+    // uploaded "faltantes" CSV (base2). Only possible if we could find an ID
+    // column in the BASE sheet — otherwise we only have the count.
+    let faltanteIds = [];
+    let faltanteAvailable = false;
+    if(baseIds){
+      const base2IdSet = new Set(allRows.map(r => r.id));
+      for(const id of baseIds){
+        if(!base2IdSet.has(id)) faltanteIds.push(id);
+      }
+      faltanteAvailable = true;
+    }
+    lastMetricIds = { d1: d1Ids, recebido: recebidoIds, onWay: onWayIds, faltante: faltanteIds, faltanteAvailable };
 
     renderCards({totalGeral, d1, onWay, recebido, noCarrinho});
     renderOrigemChart(allRows);
@@ -938,9 +1292,9 @@
       data: {
         labels,
         datasets: [
-          { label:'On Time', data:onTime, backgroundColor:'#F5A623', stack:'s' },
-          { label:'Early', data:early, backgroundColor:'#5F6C8C', stack:'s' },
-          { label:'Delay', data:delay, backgroundColor:'#3FD0E0', stack:'s' },
+          { label:'On Time', data:onTime, backgroundColor:'#C97D0C', stack:'s' },
+          { label:'Early', data:early, backgroundColor:'#94A3B8', stack:'s' },
+          { label:'Delay', data:delay, backgroundColor:'#0B5FA5', stack:'s' },
         ]
       },
       options: {
@@ -951,20 +1305,20 @@
           legend:{
             position:'top',
             align:'end',
-            labels:{ color:'#A7B2CC', boxWidth:12, font:{ family:"'JetBrains Mono', monospace", size:11 } }
+            labels:{ color:'#51617A', boxWidth:12, font:{ family:"'JetBrains Mono', monospace", size:11 } }
           },
           tooltip:{
-            backgroundColor:'#121A2E',
-            borderColor:'#232D4A',
+            backgroundColor:'#0B2545',
+            borderColor:'#0B5FA5',
             borderWidth:1,
-            titleColor:'#EEF2FB',
-            bodyColor:'#A7B2CC',
+            titleColor:'#FFFFFF',
+            bodyColor:'#CBD8E8',
             bodyFont:{ family:"'JetBrains Mono', monospace" },
             titleFont:{ family:"'JetBrains Mono', monospace" }
           },
           datalabels:{
             display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
-            color: '#0A0F1E',
+            color: '#FFFFFF',
             font:{ family:"'JetBrains Mono', monospace", size:9, weight:'700' },
             formatter: (value) => value
           }
@@ -972,13 +1326,13 @@
         scales:{
           x:{
             stacked:true,
-            ticks:{ color:'#8996B3', font:{ family:"'JetBrains Mono', monospace", size:10 } },
-            grid:{ color:'#1B2440' }
+            ticks:{ color:'#5B6B84', font:{ family:"'JetBrains Mono', monospace", size:10 } },
+            grid:{ color:'#E6ECF5' }
           },
           y:{
             stacked:true,
-            ticks:{ color:'#8996B3', font:{ family:"'JetBrains Mono', monospace", size:10 } },
-            grid:{ color:'#1B2440' }
+            ticks:{ color:'#5B6B84', font:{ family:"'JetBrains Mono', monospace", size:10 } },
+            grid:{ color:'#E6ECF5' }
           }
         }
       }
@@ -1013,7 +1367,7 @@
 
     const labels = ['D-1', 'On Way', 'Recebido do dia', 'No Carrinho'];
     const values = [d.d1, d.onWay, d.recebido, d.noCarrinho];
-    const colors = ['#F5A623', '#F5A623', '#F5A623', '#F5A623'];
+    const colors = ['#C97D0C', '#C97D0C', '#C97D0C', '#C97D0C'];
 
     if(statusChartInstance) statusChartInstance.destroy();
 
@@ -1029,30 +1383,30 @@
         plugins:{
           legend:{ display:false },
           tooltip:{
-            backgroundColor:'#121A2E',
-            borderColor:'#232D4A',
+            backgroundColor:'#0B2545',
+            borderColor:'#0B5FA5',
             borderWidth:1,
-            titleColor:'#EEF2FB',
-            bodyColor:'#A7B2CC',
+            titleColor:'#FFFFFF',
+            bodyColor:'#CBD8E8',
             bodyFont:{ family:"'JetBrains Mono', monospace" },
             titleFont:{ family:"'JetBrains Mono', monospace" }
           },
           datalabels:{
             anchor:'end',
             align:'top',
-            color:'#EEF2FB',
+            color:'#0B2545',
             font:{ family:"'JetBrains Mono', monospace", size:12, weight:'700' },
             formatter: (value) => fmt(value)
           }
         },
         scales:{
           x:{
-            ticks:{ color:'#8996B3', font:{ family:"'JetBrains Mono', monospace", size:10 } },
+            ticks:{ color:'#5B6B84', font:{ family:"'JetBrains Mono', monospace", size:10 } },
             grid:{ display:false }
           },
           y:{
-            ticks:{ color:'#8996B3', font:{ family:"'JetBrains Mono', monospace", size:10 } },
-            grid:{ color:'#1B2440' },
+            ticks:{ color:'#5B6B84', font:{ family:"'JetBrains Mono', monospace", size:10 } },
+            grid:{ color:'#E6ECF5' },
             grace:'12%'
           }
         }
@@ -1167,7 +1521,7 @@
   async function getDashboardBlob(){
     const el = document.getElementById('captureArea');
     const canvas = await html2canvas(el, {
-      backgroundColor: '#080C17',
+      backgroundColor: '#EEF2F8',
       scale: 3,
       useCORS: true,
       logging: false,
@@ -1243,6 +1597,198 @@
 
   document.getElementById('btnExport').addEventListener('click', exportDashboard);
 
+  // ---------- extract just D-1 / Recebido do Dia / Faltante ----------
+  function buildExtractText(){
+    const d1 = document.getElementById('valD1').textContent.trim();
+    const d1Pct = document.getElementById('pctD1').textContent.trim();
+    const recebido = document.getElementById('valRecebido').textContent.trim();
+    const recebidoPct = document.getElementById('pctRecebido').textContent.trim();
+    const faltante = document.getElementById('valCarrinho').textContent.trim();
+    const faltantePct = document.getElementById('pctCarrinho').textContent.trim();
+    const now = new Date().toLocaleString('pt-BR');
+
+    return (
+      'Painel Operacional — ' + now + '\n' +
+      'D-1: ' + d1 + ' (' + d1Pct + ')\n' +
+      'Recebido do Dia: ' + recebido + ' (' + recebidoPct + ')\n' +
+      'Faltante: ' + faltante + ' (' + faltantePct + ')'
+    );
+  }
+
+  function buildExtractWorkbook(){
+    const wb = XLSX.utils.book_new();
+
+    const d1Data = [['ID do Pacote'], ...lastMetricIds.d1.map(id => [id])];
+    const onWayData = [['ID do Pacote'], ...lastMetricIds.onWay.map(id => [id])];
+    const recebidoData = [['ID do Pacote'], ...lastMetricIds.recebido.map(id => [id])];
+
+    const wsD1 = XLSX.utils.aoa_to_sheet(d1Data);
+    const wsOnWay = XLSX.utils.aoa_to_sheet(onWayData);
+    const wsRecebido = XLSX.utils.aoa_to_sheet(recebidoData);
+
+    XLSX.utils.book_append_sheet(wb, wsD1, 'D-1');
+    XLSX.utils.book_append_sheet(wb, wsOnWay, 'On Way');
+    XLSX.utils.book_append_sheet(wb, wsRecebido, 'Recebido do dia');
+
+    return wb;
+  }
+
+  function extractData(){
+    const btn = document.getElementById('btnExtractData');
+    const hint = document.getElementById('exportHint');
+    const original = btn.innerHTML;
+
+    const wb = buildExtractWorkbook();
+    const fileName = 'ids_d1_onway_recebido_' + new Date().toISOString().slice(0,10) + '.xlsx';
+    XLSX.writeFile(wb, fileName);
+
+    btn.innerHTML = '<span class="export-icon">✅</span> Baixado!';
+    hint.textContent = 'arquivo .xlsx baixado com abas D-1 / On Way / Recebido do dia';
+    setTimeout(()=>{ btn.innerHTML = original; }, 1800);
+  }
+
+  document.getElementById('btnExtractData').addEventListener('click', extractData);
+
+  // ---------- tabs ----------
+  const tabBtnDashboard = document.getElementById('tabBtnDashboard');
+  const tabBtnGoleiro = document.getElementById('tabBtnGoleiro');
+  const viewDashboard = document.getElementById('viewDashboard');
+  const viewGoleiro = document.getElementById('viewGoleiro');
+
+  function switchTab(tab){
+    const isGoleiro = tab === 'goleiro';
+    tabBtnGoleiro.classList.toggle('active', isGoleiro);
+    tabBtnDashboard.classList.toggle('active', !isGoleiro);
+    viewGoleiro.style.display = isGoleiro ? 'block' : 'none';
+    viewDashboard.style.display = isGoleiro ? 'none' : 'block';
+    if(isGoleiro && !goleiroInput.disabled){
+      goleiroInput.focus();
+    }
+  }
+  tabBtnDashboard.addEventListener('click', ()=> switchTab('dashboard'));
+  tabBtnGoleiro.addEventListener('click', ()=> switchTab('goleiro'));
+
+  // ---------- goleiro (handheld scan validation) ----------
+  const goleiroInput = document.getElementById('goleiroInput');
+  const goleiroInputHint = document.getElementById('goleiroInputHint');
+  const goleiroResult = document.getElementById('goleiroResult');
+  const goleiroResultId = document.getElementById('goleiroResultId');
+  const goleiroResultStatus = document.getElementById('goleiroResultStatus');
+  const goleiroResultRota = document.getElementById('goleiroResultRota');
+  const goleiroReleaseBtn = document.getElementById('goleiroReleaseBtn');
+  const tblGoleiroHistory = document.getElementById('tblGoleiroHistory');
+  const goleiroCountBadge = document.getElementById('goleiroCountBadge');
+  const goleiroClearBtn = document.getElementById('goleiroClearBtn');
+
+  let goleiroHistory = []; // {time, id, rota, statusKey, statusLabel}
+  let goleiroBlocked = false;
+
+  function enableGoleiroScan(){
+    // lookup is based on the BASE sheet: id = RTG_UNIT_EXTERNAL_ID, rota = Otimizado
+    if(!base1Data || !base1Data.goleiroRecords){
+      goleiroInput.disabled = true;
+      goleiroInputHint.textContent = 'não encontrei a coluna "RTG_UNIT_EXTERNAL_ID" na aba BASE — confira o arquivo';
+      return;
+    }
+    goleiroInput.disabled = false;
+    goleiroInputHint.textContent = 'bipe o pacote — o resultado aparece automaticamente';
+    if(viewGoleiro.style.display !== 'none') goleiroInput.focus();
+  }
+
+  function classifyLookup(record){
+    if(!record) return { key:'not-found', label:'Não encontrado na aba BASE' };
+    if(record.rota && record.rota.trim() !== '') return { key:'ok', label:'Com rota atribuída' };
+    return { key:'no-rota', label:'Sem rota atribuída' };
+  }
+
+  function blockGoleiroInput(){
+    goleiroBlocked = true;
+    goleiroInput.disabled = true;
+    goleiroInput.classList.add('is-blocked');
+    goleiroInputHint.textContent = 'pacote com rota — clique em "Liberar" para bipar o próximo';
+    goleiroReleaseBtn.style.display = 'block';
+  }
+
+  function unblockGoleiroInput(){
+    goleiroBlocked = false;
+    goleiroInput.disabled = false;
+    goleiroInput.classList.remove('is-blocked');
+    goleiroInputHint.textContent = 'bipe o pacote — o resultado aparece automaticamente';
+    goleiroReleaseBtn.style.display = 'none';
+    goleiroInput.value = '';
+    goleiroInput.focus();
+  }
+
+  function renderGoleiroResult(id, record){
+    const { key, label } = classifyLookup(record);
+
+    goleiroResult.style.display = 'block';
+    goleiroResult.className = 'goleiro-result ' + key;
+    goleiroResultId.textContent = id;
+    goleiroResultStatus.textContent = label;
+    goleiroResultRota.textContent = record && record.rota ? record.rota : '—';
+
+    // haptic feedback for handheld use, if supported
+    if(navigator.vibrate){
+      if(key === 'ok') navigator.vibrate(150);
+      else navigator.vibrate([80,60,80]);
+    }
+
+    const time = new Date().toLocaleTimeString('pt-BR');
+    goleiroHistory.unshift({ time, id, rota: record && record.rota ? record.rota : '—', statusKey:key, statusLabel:label });
+    if(goleiroHistory.length > 200) goleiroHistory.length = 200;
+    renderGoleiroHistory();
+
+    if(key === 'ok'){
+      // package already has a route: block scanning until manually released
+      blockGoleiroInput();
+    } else {
+      // no route (or not found): keep the line moving, ready for the next scan
+      goleiroReleaseBtn.style.display = 'none';
+      goleiroInput.value = '';
+      goleiroInput.focus();
+    }
+  }
+
+  function renderGoleiroHistory(){
+    goleiroCountBadge.textContent = fmt(goleiroHistory.length);
+    tblGoleiroHistory.innerHTML = goleiroHistory.map(h => (
+      '<tr class="row-' + h.statusKey + '">' +
+        '<td>' + h.time + '</td>' +
+        '<td>' + h.id + '</td>' +
+        '<td>' + h.rota + '</td>' +
+        '<td>' + h.statusLabel + '</td>' +
+      '</tr>'
+    )).join('');
+  }
+
+  function handleGoleiroScan(rawValue){
+    if(goleiroBlocked) return; // ignore scans while blocked waiting for manual release
+    const id = normId(rawValue);
+    if(id === null || id === '') return;
+    const record = base1Data && base1Data.goleiroRecords ? base1Data.goleiroRecords.get(id) : undefined;
+    renderGoleiroResult(id, record);
+  }
+
+  goleiroInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      const value = goleiroInput.value;
+      goleiroInput.value = '';
+      handleGoleiroScan(value);
+    }
+  });
+
+  goleiroReleaseBtn.addEventListener('click', ()=>{
+    unblockGoleiroInput();
+  });
+
+  goleiroClearBtn.addEventListener('click', ()=>{
+    goleiroHistory = [];
+    renderGoleiroHistory();
+    goleiroResult.style.display = 'none';
+  });
+
   // ---------- file wiring ----------
   function wireDrop(dropEl, inputEl, statusEl, onFile){
     dropEl.addEventListener('click', (e)=>{ if(e.target !== inputEl) inputEl.click(); });
@@ -1275,6 +1821,7 @@
       try{
         base1Data = parseBase1(e.target.result);
         dropBase1._setStatus(file.name + ' · ' + fmt(base1Data.totalGeral) + ' pacotes', true);
+        enableGoleiroScan(); // goleiro só depende da PLANIFICATION (base1)
         compute();
       }catch(err){
         dropBase1._setStatus('erro ao ler arquivo', false);
