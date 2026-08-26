@@ -8,6 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --bg-0:#EEF2F8;
@@ -728,6 +729,9 @@
     <button class="export-btn" id="btnExtractData" disabled>
       <span class="export-icon">🔢</span> Extrair IDs (D-1 / On Way / Recebido)
     </button>
+    <button class="export-btn" id="btnClearSaved" type="button" title="Remove as bases salvas no banco de dados do painel">
+      <span class="export-icon">🗑️</span> Limpar dados salvos
+    </button>
     <span class="export-hint" id="exportHint">envie as duas bases para liberar</span>
   </div>
 
@@ -929,6 +933,94 @@
   let base1Data = null; // { statusMap: Map(id->status), totalGeral: number }
   let base2Rows = null; // [{id, loc}]
   let excludedOrigins = new Set(); // origins hidden from the "Distribuição por Origem" chart
+
+  // ---------- persistência (banco de dados Supabase) ----------
+  // Os arquivos originais (base estrutura e base faltantes) são salvos numa
+  // tabela do Supabase. Ao subir um arquivo novo, o registro anterior é
+  // SUBSTITUÍDO (upsert pela chave 'base1'/'base2'). Qualquer PC que abrir
+  // este arquivo .html carrega os dados mais recentes automaticamente.
+  const SUPABASE_URL = 'https://cnpcsovjomonctbggbac.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucGNzb3Zqb21vbmN0YmdnYmFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjE4NzUsImV4cCI6MjEwMjAzNzg3NX0.lpumXh7HmzmhUcBqNSAhaR3S7Cd6TFg5sivWybjsra4';
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const SUPABASE_TABLE = 'painel_dados';
+
+  function arrayBufferToBase64(buffer){
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const chunk = 0x8000;
+    for(let i=0;i<bytes.length;i+=chunk){
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk));
+    }
+    return btoa(binary);
+  }
+  function base64ToArrayBuffer(b64){
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+    return bytes.buffer;
+  }
+
+  async function saveBase1ToStorage(arrayBuffer, filename){
+    try{
+      const { error } = await supabaseClient
+        .from(SUPABASE_TABLE)
+        .upsert({
+          chave: 'base1',
+          filename,
+          conteudo: arrayBufferToBase64(arrayBuffer),
+          atualizado_em: new Date().toISOString()
+        }, { onConflict: 'chave' });
+      if(error) throw error;
+    }catch(err){
+      console.error('Falha ao salvar base estrutura no Supabase:', err);
+      showError('Não consegui salvar a base estrutura no banco de dados: ' + (err.message || err));
+    }
+  }
+  async function saveBase2ToStorage(text, filename){
+    try{
+      const { error } = await supabaseClient
+        .from(SUPABASE_TABLE)
+        .upsert({
+          chave: 'base2',
+          filename,
+          conteudo: text,
+          atualizado_em: new Date().toISOString()
+        }, { onConflict: 'chave' });
+      if(error) throw error;
+    }catch(err){
+      console.error('Falha ao salvar base faltantes no Supabase:', err);
+      showError('Não consegui salvar a base faltantes no banco de dados: ' + (err.message || err));
+    }
+  }
+  async function loadSavedData(){
+    try{
+      const { data, error } = await supabaseClient
+        .from(SUPABASE_TABLE)
+        .select('chave, filename, conteudo, atualizado_em')
+        .in('chave', ['base1', 'base2']);
+      if(error) throw error;
+      if(!data) return;
+
+      const row1 = data.find(r => r.chave === 'base1');
+      if(row1 && row1.conteudo){
+        const buf = base64ToArrayBuffer(row1.conteudo);
+        base1Data = parseBase1(buf);
+        dropBase1._setStatus((row1.filename||'base salva') + ' · ' + fmt(base1Data.totalGeral) + ' pacotes (salvo)', true);
+        enableGoleiroScan();
+      }
+
+      const row2 = data.find(r => r.chave === 'base2');
+      if(row2 && row2.conteudo){
+        base2Rows = parseBase2(row2.conteudo);
+        dropBase2._setStatus((row2.filename||'base salva') + ' · ' + fmt(base2Rows.length) + ' linhas (salvo)', true);
+      }
+
+      if(base1Data || base2Rows) compute();
+    }catch(err){
+      console.error('Falha ao carregar dados salvos do Supabase:', err);
+      showError('Não consegui carregar os dados salvos do banco de dados: ' + (err.message || err));
+    }
+  }
 
   const errorBox = document.getElementById('errorBox');
   function showError(msg){
@@ -1823,6 +1915,7 @@
         dropBase1._setStatus(file.name + ' · ' + fmt(base1Data.totalGeral) + ' pacotes', true);
         enableGoleiroScan(); // goleiro só depende da PLANIFICATION (base1)
         compute();
+        saveBase1ToStorage(e.target.result, file.name);
       }catch(err){
         dropBase1._setStatus('erro ao ler arquivo', false);
         showError('Base estrutura: ' + err.message);
@@ -1840,6 +1933,7 @@
         base2Rows = parseBase2(e.target.result);
         dropBase2._setStatus(file.name + ' · ' + fmt(base2Rows.length) + ' linhas', true);
         compute();
+        saveBase2ToStorage(e.target.result, file.name);
       }catch(err){
         dropBase2._setStatus('erro ao ler arquivo', false);
         showError('Base faltantes: ' + err.message);
@@ -1848,6 +1942,24 @@
     reader.onerror = ()=>{ showError('Não consegui ler o arquivo da base faltantes.'); };
     reader.readAsText(file, 'utf-8');
   });
+
+  document.getElementById('btnClearSaved').addEventListener('click', async ()=>{
+    if(!confirm('Isso remove as bases salvas no banco de dados (afeta todos os locais onde este painel é aberto). Deseja continuar?')) return;
+    try{
+      const { error } = await supabaseClient
+        .from(SUPABASE_TABLE)
+        .delete()
+        .in('chave', ['base1', 'base2']);
+      if(error) throw error;
+    }catch(err){
+      showError('Não consegui limpar os dados salvos: ' + (err.message || err));
+      return;
+    }
+    location.reload();
+  });
+
+  // ---------- carregar dados salvos do banco de dados ao abrir o painel ----------
+  loadSavedData();
 </script>
 
 </body>
