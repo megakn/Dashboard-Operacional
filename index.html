@@ -971,9 +971,11 @@
           atualizado_em: new Date().toISOString()
         }, { onConflict: 'chave' });
       if(error) throw error;
+      dropBase1._setStatus(filename + ' · ' + fmt(base1Data.totalGeral) + ' pacotes (salvo no banco ✓)', true);
     }catch(err){
       console.error('Falha ao salvar base estrutura no Supabase:', err);
-      showError('Não consegui salvar a base estrutura no banco de dados: ' + (err.message || err));
+      dropBase1._setStatus(filename + ' · carregado, mas NÃO salvo no banco', false);
+      showError('BASE ESTRUTURA não foi salva no banco de dados: ' + (err.message || JSON.stringify(err)), 'save');
     }
   }
   async function saveBase2ToStorage(text, filename){
@@ -987,9 +989,11 @@
           atualizado_em: new Date().toISOString()
         }, { onConflict: 'chave' });
       if(error) throw error;
+      dropBase2._setStatus(filename + ' · ' + fmt(base2Rows.length) + ' linhas (salvo no banco ✓)', true);
     }catch(err){
       console.error('Falha ao salvar base faltantes no Supabase:', err);
-      showError('Não consegui salvar a base faltantes no banco de dados: ' + (err.message || err));
+      dropBase2._setStatus(filename + ' · carregado, mas NÃO salvo no banco', false);
+      showError('BASE FALTANTES não foi salva no banco de dados: ' + (err.message || JSON.stringify(err)), 'save');
     }
   }
   async function loadSavedData(){
@@ -1023,13 +1027,15 @@
   }
 
   const errorBox = document.getElementById('errorBox');
-  function showError(msg){
+  function showError(msg, kind){
     errorBox.style.display = 'block';
     errorBox.textContent = msg;
+    errorBox.dataset.kind = kind || 'parse';
   }
   function clearError(){
     errorBox.style.display = 'none';
     errorBox.textContent = '';
+    errorBox.dataset.kind = '';
   }
 
   function normId(v){
@@ -1204,7 +1210,7 @@
   // ---------- compute cards ----------
   function compute(){
     if(!base1Data || !base2Rows) return;
-    clearError();
+    if(errorBox.dataset.kind !== 'save') clearError();
 
     populateOriginFilter();
     recomputeAll();
