@@ -266,6 +266,30 @@
     font-size:12px;
     color:var(--text-mid);
   }
+  .card .foot-secondary{
+    margin-top:10px;
+    padding-top:10px;
+    border-top:1px dashed var(--border-soft);
+  }
+  .card .foot-secondary .foot-label{
+    font-size:11px;
+    color:var(--text-lo);
+  }
+  .card .foot-secondary .pct{
+    font-weight:700;
+    color:var(--kn-blue);
+  }
+  .pendente-badge{
+    display:inline-block;
+    margin-top:14px;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--kn-blue);
+    background:rgba(11,95,165,.1);
+    padding:5px 10px;
+    border-radius:7px;
+  }
+  .pendente-badge b{ font-weight:800; }
   .bar-track{
     height:4px;
     border-radius:2px;
@@ -339,15 +363,15 @@
     width:100%;
     border-collapse:collapse;
     font-family:var(--mono);
-    font-size:12px;
+    font-size:12.5px;
   }
   .data-table thead th{
     text-align:left;
     font-size:10.5px;
     text-transform:uppercase;
     letter-spacing:.06em;
-    color:var(--text-lo);
-    font-weight:600;
+    color:var(--text-mid);
+    font-weight:700;
     padding:6px 10px;
     border-bottom:1px solid var(--border-soft);
   }
@@ -355,16 +379,17 @@
   .data-table tbody td{
     padding:8px 10px;
     color:var(--text-hi);
+    font-weight:600;
     border-bottom:1px solid var(--border-soft);
   }
-  .data-table tbody td.num{ text-align:right; }
+  .data-table tbody td.num{ text-align:right; font-weight:700; }
   .data-table tbody tr:nth-child(even){ background:rgba(11,37,69,0.02); }
   .data-table tbody tr:hover{ background:var(--bg-2); }
-  .data-table .origin-cell{ font-weight:700; color:var(--text-hi); }
-  .data-table .c-early{ color:var(--text-mid); }
-  .data-table .c-ontime{ color:var(--amber); font-weight:700; }
-  .data-table .c-delay{ color:var(--cyan); font-weight:700; }
-  .data-table .c-pct{ color:var(--green); font-weight:700; }
+  .data-table .origin-cell{ font-weight:800; color:var(--text-hi); }
+  .data-table .c-early{ color:var(--text-mid); font-weight:700; }
+  .data-table .c-ontime{ color:var(--amber); font-weight:800; }
+  .data-table .c-delay{ color:var(--cyan); font-weight:800; }
+  .data-table .c-pct{ color:var(--green); font-weight:800; }
   .table-scroll{
     max-height:280px;
     overflow-y:auto;
@@ -565,120 +590,35 @@
     .tab-btn{ white-space:nowrap; }
   }
 
-  /* ---------- goleiro (handheld scan) view ---------- */
-  .goleiro-wrap{
-    max-width:640px;
+  /* ---------- layout de página central (usado na aba Chegada) ---------- */
+  .chegada-wrap{
+    max-width:960px;
     margin:0 auto;
     padding-top:8px;
   }
-  .goleiro-header{ margin-bottom:18px; }
-  .goleiro-header h1{ margin:4px 0; color:var(--text-hi); }
-  .goleiro-header p{ color:var(--text-mid); font-size:13px; margin:0; }
+  .chegada-page-header{ margin-bottom:18px; }
+  .chegada-page-header h1{ margin:4px 0; color:var(--text-hi); }
+  .chegada-page-header p{ color:var(--text-mid); font-size:13px; margin:0; }
 
-  .goleiro-scan-box{ margin-bottom:16px; }
-  .goleiro-input{
-    width:100%;
-    box-sizing:border-box;
+  .chegada-hint{ font-size:11px; color:var(--text-lo); margin:8px 2px 0; }
+  .chegada-table-full{ max-height:none; overflow:visible; }
+  .col-total{ color:var(--kn-blue) !important; background:rgba(11,95,165,.07); font-weight:800 !important; }
+  .grand-total-badge{
     font-family:var(--mono);
-    font-size:22px;
-    letter-spacing:.03em;
-    padding:18px 16px;
-    border-radius:12px;
-    border:2px solid var(--border);
-    background:var(--bg-1);
-    color:var(--text-hi);
-    outline:none;
-    transition:border-color .15s ease;
-    box-shadow:0 1px 2px rgba(11,37,69,.04);
-  }
-  .goleiro-input:focus{ border-color:var(--kn-blue); }
-  .goleiro-input:disabled{ opacity:.5; cursor:not-allowed; }
-  .goleiro-hint{
-    margin-top:8px;
-    font-size:12px;
-    color:var(--text-lo);
-  }
-
-  .goleiro-result{
-    border-radius:14px;
-    padding:20px;
-    margin-bottom:20px;
-    text-align:center;
-    border:1px solid var(--border);
-    background:var(--bg-2);
-  }
-  .goleiro-result.ok{ border-color:rgba(30,158,99,.45); background:rgba(30,158,99,.08); }
-  .goleiro-result.no-rota{ border-color:rgba(201,125,12,.45); background:rgba(201,125,12,.08); }
-  .goleiro-result.not-found{ border-color:rgba(224,69,63,.45); background:rgba(224,69,63,.08); }
-  .goleiro-result-id{
-    font-family:var(--mono);
-    font-size:15px;
-    color:var(--text-mid);
-    margin-bottom:8px;
-    word-break:break-all;
-  }
-  .goleiro-result-status{
-    font-size:14px;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:.05em;
-    margin-bottom:6px;
-  }
-  .goleiro-result.ok .goleiro-result-status{ color:#1E9E63; }
-  .goleiro-result.no-rota .goleiro-result-status{ color:#C97D0C; }
-  .goleiro-result.not-found .goleiro-result-status{ color:#E0453F; }
-  .goleiro-result-rota{
-    font-size:34px;
+    font-size:12.5px;
     font-weight:800;
-    font-family:var(--mono);
-    color:var(--text-hi);
-  }
-  .goleiro-release-btn{
-    appearance:none;
-    border:none;
-    margin-top:16px;
-    background:#1E9E63;
-    color:#fff;
-    font-family:inherit;
-    font-size:15px;
-    font-weight:700;
-    padding:14px 24px;
-    border-radius:10px;
-    cursor:pointer;
-    width:100%;
-  }
-  .goleiro-release-btn:hover{ filter:brightness(1.08); }
-  .goleiro-input.is-blocked{
-    border-color:rgba(30,158,99,.55);
-    background:var(--bg-2);
-    opacity:.6;
-    cursor:not-allowed;
-  }
-
-  .goleiro-history-head{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    margin-bottom:8px;
-  }
-  .goleiro-clear-btn{
-    appearance:none;
-    border:1px solid var(--border);
-    background:transparent;
-    color:var(--text-mid);
-    font-family:inherit;
-    font-size:11.5px;
-    padding:6px 12px;
+    color:var(--kn-blue);
+    background:rgba(11,95,165,.1);
+    padding:4px 10px;
     border-radius:6px;
-    cursor:pointer;
+    margin-left:10px;
   }
-  .goleiro-clear-btn:hover{ color:var(--text-hi); border-color:var(--kn-blue); }
-  .goleiro-history-scroll{ max-height:340px; overflow-y:auto; }
-  .goleiro-history-scroll tr.row-ok td:first-child{ border-left:3px solid #1E9E63; }
-  .goleiro-history-scroll tr.row-no-rota td:first-child{ border-left:3px solid #C97D0C; }
-  .goleiro-history-scroll tr.row-not-found td:first-child{ border-left:3px solid #E0453F; }
+  th.sortable{ cursor:pointer; user-select:none; }
+  th.sortable:hover{ color:var(--kn-blue); }
+  th.sortable .sort-arrow{ font-size:9px; opacity:.6; margin-left:3px; }
 </style>
 </head>
+
 
 <body>
 
@@ -715,7 +655,7 @@
   <div class="app-layout">
     <div class="app-sidebar">
       <button class="tab-btn active" id="tabBtnDashboard" type="button">📊 Dashboard</button>
-      <button class="tab-btn" id="tabBtnGoleiro" type="button">🥅 Goleiro — Validação</button>
+      <button class="tab-btn" id="tabBtnChegada" type="button">🚚 Total por Origem</button>
     </div>
 
     <div class="app-main">
@@ -760,7 +700,7 @@
     <div class="card total" style="--accent:var(--violet)">
       <div class="label">Total Geral</div>
       <div class="value" id="valTotal">—</div>
-      <div class="bar-track"><div class="bar-fill" id="barTotal"></div></div>
+      <div class="pendente-badge" id="valPendenteSortingWrap">Pendente de sorting: <b id="valPendenteSorting">—</b></div>
     </div>
 
     <div class="card d1" style="--accent:var(--amber)">
@@ -873,45 +813,65 @@
 
   </div><!-- /viewDashboard -->
 
-  <div id="viewGoleiro" style="display:none;">
-    <div class="goleiro-wrap">
-      <div class="goleiro-header">
-        <p class="eyebrow"><span class="dot"></span>Validação no goleiro</p>
-        <h1>Bipagem de Pacotes</h1>
-        <p>Bipe o ID do pacote para saber se ele já tem uma rota atribuída.</p>
+  <div id="viewChegada" style="display:none;">
+    <div class="chegada-wrap">
+      <div id="chegadaCaptureArea">
+        <div class="chegada-page-header">
+          <p class="eyebrow"><span class="dot"></span>Chegada de veículos</p>
+          <h1>Carros por Origem</h1>
+          <p>Quantidade de pacotes On Time, Early e Delay, por origem, com previsão de chegada.</p>
+        </div>
+
+        <div class="panels" id="chegadaOrigemWrap" style="display:none;">
+          <div class="panel">
+            <p class="panel-title">
+              <span class="swatch" style="background:var(--cyan)"></span>Carros por Origem
+              <span class="total-badge" id="chegadaOrigemBadge"></span>
+              <span class="grand-total-badge" id="chegadaGrandTotalBadge">On Time + Early + Delay: 0</span>
+            </p>
+            <div class="table-scroll chegada-table-full">
+              <table class="data-table" id="tblChegadaOrigemTable">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Hora</th>
+                    <th data-sort="origin" class="sortable">Origem</th>
+                    <th data-sort="onTime" class="sortable num">On Time</th>
+                    <th data-sort="early" class="sortable num">Early</th>
+                    <th data-sort="delay" class="sortable num">Delay</th>
+                    <th data-sort="total" class="sortable num col-total">Total</th>
+                  </tr>
+                </thead>
+                <tbody id="tblChegadaOrigem"></tbody>
+                <tfoot>
+                  <tr>
+                    <td></td>
+                    <td></td>
+                    <td><b>Total (On Time + Early + Delay)</b></td>
+                    <td class="num" id="chegadaOrigemTotalOnTime"><b>0</b></td>
+                    <td class="num" id="chegadaOrigemTotalEarly"><b>0</b></td>
+                    <td class="num" id="chegadaOrigemTotalDelay"><b>0</b></td>
+                    <td class="num col-total" id="chegadaOrigemTotalTotal"><b>0</b></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <p class="chegada-hint">Clique no cabeçalho da coluna pra ordenar. Todas as origens aparecem aqui, mesmo com 0 pacotes.</p>
+          </div>
+        </div>
+        <div class="empty-hint" id="chegadaEmptyHint">Envie a base estrutura (.xlsx) para ver os carros por origem.</div>
       </div>
 
-      <div class="goleiro-scan-box" id="goleiroScanBox">
-        <input type="text" id="goleiroInput" class="goleiro-input" placeholder="Bipe ou digite o ID do pacote…" autocomplete="off" autocapitalize="off" spellcheck="false" disabled>
-        <div class="goleiro-hint" id="goleiroInputHint">envie a base estrutura (.xlsx) acima para liberar a bipagem</div>
-      </div>
-
-      <div class="goleiro-result" id="goleiroResult" style="display:none;">
-        <div class="goleiro-result-id" id="goleiroResultId">—</div>
-        <div class="goleiro-result-status" id="goleiroResultStatus">—</div>
-        <div class="goleiro-result-rota" id="goleiroResultRota">—</div>
-        <button class="goleiro-release-btn" id="goleiroReleaseBtn" type="button" style="display:none;">🔓 Liberar próxima bipagem</button>
-      </div>
-
-      <div class="goleiro-history-head">
-        <p class="panel-title"><span class="swatch"></span>Últimas bipagens<span class="total-badge" id="goleiroCountBadge">0</span></p>
-        <button class="goleiro-clear-btn" id="goleiroClearBtn" type="button">Limpar histórico</button>
-      </div>
-      <div class="table-scroll goleiro-history-scroll">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Horário</th>
-              <th>ID do Pacote</th>
-              <th>Rota</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="tblGoleiroHistory"></tbody>
-        </table>
+      <div class="actions-row" style="margin-top:16px;">
+        <button class="export-btn" id="btnExportChegada" disabled>
+          <span class="export-icon">📋</span> Copiar / Compartilhar
+        </button>
+        <span class="export-hint" id="chegadaExportHint">envie a base estrutura para liberar</span>
       </div>
     </div>
-  </div><!-- /viewGoleiro -->
+  </div><!-- /viewChegada -->
+
+
 
     </div><!-- /app-main -->
   </div><!-- /app-layout -->
@@ -943,16 +903,9 @@
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNucGNzb3Zqb21vbmN0YmdnYmFjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0NjE4NzUsImV4cCI6MjEwMjAzNzg3NX0.lpumXh7HmzmhUcBqNSAhaR3S7Cd6TFg5sivWybjsra4';
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
   const SUPABASE_TABLE = 'painel_dados';
+  const STORAGE_BUCKET = 'painel-arquivos';
+  const BASE1_STORAGE_PATH = 'base1.xlsx';
 
-  function arrayBufferToBase64(buffer){
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    const chunk = 0x8000;
-    for(let i=0;i<bytes.length;i+=chunk){
-      binary += String.fromCharCode.apply(null, bytes.subarray(i, i+chunk));
-    }
-    return btoa(binary);
-  }
   function base64ToArrayBuffer(b64){
     const binary = atob(b64);
     const bytes = new Uint8Array(binary.length);
@@ -962,15 +915,28 @@
 
   async function saveBase1ToStorage(arrayBuffer, filename){
     try{
-      const { error } = await supabaseClient
+      // Arquivo binário (XLSX) vai pro Storage do Supabase — evita timeout que
+      // acontecia tentando gravar o arquivo inteiro em base64 numa coluna de texto.
+      const { error: uploadError } = await supabaseClient
+        .storage
+        .from(STORAGE_BUCKET)
+        .upload(BASE1_STORAGE_PATH, arrayBuffer, {
+          upsert: true,
+          contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+      if(uploadError) throw uploadError;
+
+      // Só o nome do arquivo e a data ficam na tabela (registro pequeno, rápido)
+      const { error: metaError } = await supabaseClient
         .from(SUPABASE_TABLE)
         .upsert({
           chave: 'base1',
           filename,
-          conteudo: arrayBufferToBase64(arrayBuffer),
+          conteudo: null,
           atualizado_em: new Date().toISOString()
         }, { onConflict: 'chave' });
-      if(error) throw error;
+      if(metaError) throw metaError;
+
       dropBase1._setStatus(filename + ' · ' + fmt(base1Data.totalGeral) + ' pacotes (salvo no banco ✓)', true);
     }catch(err){
       console.error('Falha ao salvar base estrutura no Supabase:', err);
@@ -997,34 +963,187 @@
     }
   }
   async function loadSavedData(){
+    // base1 (xlsx) — arquivo no Storage + nome/data na tabela
     try{
-      const { data, error } = await supabaseClient
+      const { data: metaRows } = await supabaseClient
         .from(SUPABASE_TABLE)
-        .select('chave, filename, conteudo, atualizado_em')
-        .in('chave', ['base1', 'base2']);
-      if(error) throw error;
-      if(!data) return;
+        .select('filename')
+        .eq('chave', 'base1')
+        .limit(1);
+      const meta = metaRows && metaRows[0];
 
-      const row1 = data.find(r => r.chave === 'base1');
-      if(row1 && row1.conteudo){
-        const buf = base64ToArrayBuffer(row1.conteudo);
-        base1Data = parseBase1(buf);
-        dropBase1._setStatus((row1.filename||'base salva') + ' · ' + fmt(base1Data.totalGeral) + ' pacotes (salvo)', true);
-        enableGoleiroScan();
-      }
+      const { data: fileBlob, error: downloadError } = await supabaseClient
+        .storage
+        .from(STORAGE_BUCKET)
+        .download(BASE1_STORAGE_PATH);
+      if(downloadError) throw downloadError;
 
-      const row2 = data.find(r => r.chave === 'base2');
+      const buf = await fileBlob.arrayBuffer();
+      base1Data = parseBase1(buf);
+      dropBase1._setStatus((meta && meta.filename || 'base salva') + ' · ' + fmt(base1Data.totalGeral) + ' pacotes (salvo)', true);
+      renderChegadaTab();
+    }catch(err){
+      // ainda não há base estrutura salva — segue sem erro visível
+    }
+
+    // base2 (csv) — continua direto na tabela (arquivo pequeno)
+    try{
+      const { data: row2 } = await supabaseClient
+        .from(SUPABASE_TABLE)
+        .select('filename, conteudo')
+        .eq('chave', 'base2')
+        .limit(1)
+        .maybeSingle();
       if(row2 && row2.conteudo){
         base2Rows = parseBase2(row2.conteudo);
         dropBase2._setStatus((row2.filename||'base salva') + ' · ' + fmt(base2Rows.length) + ' linhas (salvo)', true);
       }
-
-      if(base1Data || base2Rows) compute();
     }catch(err){
-      console.error('Falha ao carregar dados salvos do Supabase:', err);
-      showError('Não consegui carregar os dados salvos do banco de dados: ' + (err.message || err));
+      // ainda não há base faltantes salva — segue sem erro visível
     }
+
+    if(base1Data || base2Rows) compute();
   }
+
+  function getAllOrigins(){
+    if(!base1Data) return [];
+    const set = new Set();
+    base1Data.records.forEach(rec => { if(rec.facility) set.add(rec.facility); });
+    return Array.from(set);
+  }
+
+  function renderChegadaTab(){
+    const emptyHint = document.getElementById('chegadaEmptyHint');
+    const btnExportChegada = document.getElementById('btnExportChegada');
+    const origins = getAllOrigins();
+
+    if(!base1Data || origins.length === 0){
+      document.getElementById('chegadaOrigemWrap').style.display = 'none';
+      btnExportChegada.disabled = true;
+
+      if(!base1Data){
+        emptyHint.textContent = 'Envie a base estrutura (.xlsx) para ver os carros por origem.';
+      } else if(!base1Data.facilityColumnFound){
+        emptyHint.textContent = 'Não encontrei a coluna facility_origin na aba PLANIFICATION.';
+      } else {
+        emptyHint.textContent = 'Não encontrei nenhuma origem preenchida na aba PLANIFICATION.';
+      }
+      emptyHint.style.display = 'block';
+      return;
+    }
+    emptyHint.style.display = 'none';
+    btnExportChegada.disabled = false;
+
+    renderChegadaOrigemPanel();
+  }
+
+  // ---------- On Time / Early / Delay por Origem (aba Total por Origem) ----------
+  let chegadaOrigemSort = { key: 'total', dir: 'desc' };
+
+  function computeChegadaOrigemData(){
+    // Mesma classificação do gráfico "Distribuição por Origem" do Dashboard
+    // (On Time / Early / Delay, com base na promise_date_end), mas aplicada em
+    // CIMA DE TODOS OS PACOTES DA ABA PLANIFICATION (base estrutura) — não só
+    // os que aparecem no CSV de faltantes, que é um subconjunto.
+    const { records } = base1Data;
+    const today = new Date();
+    const byOrigin = new Map(); // origin -> {OnTime, Early, Delay}
+
+    // garante que todas as origens apareçam, mesmo com 0
+    getAllOrigins().forEach(origin => byOrigin.set(origin, {OnTime:0, Early:0, Delay:0}));
+
+    records.forEach(rec => {
+      if(!rec.facility || !rec.promiseEnd) return;
+      const d = rec.promiseEnd;
+      if(isNaN(d.getTime())) return;
+
+      let cls;
+      if(sameDay(d, today)) cls = 'OnTime';
+      else if(d.getTime() < today.getTime()) cls = 'Delay';
+      else cls = 'Early';
+
+      if(!byOrigin.has(rec.facility)) byOrigin.set(rec.facility, {OnTime:0, Early:0, Delay:0});
+      byOrigin.get(rec.facility)[cls]++;
+    });
+
+    return Array.from(byOrigin.entries()).map(([origin, c]) => {
+      const arr = base1Data.arrivalByOrigin && base1Data.arrivalByOrigin.get(origin);
+      return {
+        origin, onTime: c.OnTime, early: c.Early, delay: c.Delay, total: c.OnTime + c.Early + c.Delay,
+        arrivalTimeStr: arr ? arr.timeStr : '—',
+        arrivalDateStr: arr ? (arr.dateStr || today.toLocaleDateString('pt-BR')) : '—'
+      };
+    });
+  }
+
+  function sortChegadaOrigemData(data){
+    const { key, dir } = chegadaOrigemSort;
+    const mult = dir === 'asc' ? 1 : -1;
+    return [...data].sort((a,b) => {
+      if(key === 'origin') return a.origin.localeCompare(b.origin) * mult;
+      return (a[key] - b[key]) * mult;
+    });
+  }
+
+  function renderChegadaOrigemTable(data){
+    const sorted = sortChegadaOrigemData(data);
+    const tbody = document.getElementById('tblChegadaOrigem');
+    document.getElementById('chegadaOrigemBadge').textContent = fmt(sorted.length);
+    tbody.innerHTML = sorted.map(d =>
+      '<tr><td>'+d.arrivalDateStr+'</td><td>'+d.arrivalTimeStr+'</td><td>'+d.origin+'</td><td class="num">'+fmt(d.onTime)+'</td><td class="num">'+fmt(d.early)+'</td><td class="num">'+fmt(d.delay)+'</td><td class="num col-total">'+fmt(d.total)+'</td></tr>'
+    ).join('');
+
+    const totalOnTime = sorted.reduce((s,d)=>s+d.onTime, 0);
+    const totalEarly = sorted.reduce((s,d)=>s+d.early, 0);
+    const totalDelay = sorted.reduce((s,d)=>s+d.delay, 0);
+    const totalTotal = sorted.reduce((s,d)=>s+d.total, 0);
+    document.getElementById('chegadaOrigemTotalOnTime').innerHTML = '<b>'+fmt(totalOnTime)+'</b>';
+    document.getElementById('chegadaOrigemTotalEarly').innerHTML = '<b>'+fmt(totalEarly)+'</b>';
+    document.getElementById('chegadaOrigemTotalDelay').innerHTML = '<b>'+fmt(totalDelay)+'</b>';
+    document.getElementById('chegadaOrigemTotalTotal').innerHTML = '<b>'+fmt(totalTotal)+'</b>';
+    document.getElementById('chegadaGrandTotalBadge').textContent = 'On Time + Early + Delay: ' + fmt(totalTotal);
+
+    document.querySelectorAll('#tblChegadaOrigemTable th.sortable').forEach(th => {
+      const key = th.dataset.sort;
+      const arrowSpan = th.querySelector('.sort-arrow');
+      if(arrowSpan) arrowSpan.remove();
+      if(key === chegadaOrigemSort.key){
+        const arrow = document.createElement('span');
+        arrow.className = 'sort-arrow';
+        arrow.textContent = chegadaOrigemSort.dir === 'asc' ? '▲' : '▼';
+        th.appendChild(arrow);
+      }
+    });
+  }
+
+  function renderChegadaOrigemPanel(){
+    const wrap = document.getElementById('chegadaOrigemWrap');
+    if(!base1Data){
+      wrap.style.display = 'none';
+      return;
+    }
+    const data = computeChegadaOrigemData();
+    if(data.length === 0){
+      wrap.style.display = 'none';
+      return;
+    }
+    wrap.style.display = 'grid';
+    renderChegadaOrigemTable(data);
+  }
+
+  document.querySelectorAll('#tblChegadaOrigemTable th.sortable').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort;
+      if(chegadaOrigemSort.key === key){
+        chegadaOrigemSort.dir = chegadaOrigemSort.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        chegadaOrigemSort = { key, dir: key === 'origin' ? 'asc' : 'desc' };
+      }
+      if(base1Data && base2Rows) renderChegadaOrigemTable(computeChegadaOrigemData());
+    });
+  });
+
+
 
   const errorBox = document.getElementById('errorBox');
   function showError(msg, kind){
@@ -1093,25 +1212,6 @@
       }
     }
 
-    // goleiro lookup: BASE sheet, id = RTG_UNIT_EXTERNAL_ID, rota = Otimizado
-    let goleiroRecords = null;
-    if(baseRows.length > 0){
-      const baseHeader = baseRows[0];
-      const goIdIdx = findHeaderIndex(baseHeader, ['rtg_unit_external_id']);
-      const goRotaIdx = findHeaderIndex(baseHeader, ['otimizado']);
-      if(goIdIdx !== -1){
-        goleiroRecords = new Map();
-        for(let i=1;i<baseRows.length;i++){
-          const row = baseRows[i];
-          if(!row) continue;
-          const id = normId(row[goIdIdx]);
-          if(id === null || id === '') continue;
-          const rota = (goRotaIdx === -1 || row[goRotaIdx] === null || row[goRotaIdx] === undefined) ? '' : String(row[goRotaIdx]).trim();
-          goleiroRecords.set(id, { rota });
-        }
-      }
-    }
-
     // records map from PLANIFICATION: id -> {status, facility, promiseEnd, rota}
     const planRows = XLSX.utils.sheet_to_json(wb.Sheets[planSheetName], {header:1, raw:true, defval:null});
     if(planRows.length < 1) throw new Error('Aba PLANIFICATION está vazia.');
@@ -1121,8 +1221,45 @@
     const facilityIdx = findHeaderIndex(header, ['facility_origin']);
     const promiseEndIdx = findHeaderIndex(header, ['promise_date_end']);
     const rotaIdx = findHeaderIndex(header, ['n.º rota', 'numero rota', 'n° rota', 'rota', 'route_id', 'route']);
+    const estArrivalIdx = findHeaderIndex(header, ['estimated_arrival', 'estimated arrival', 'horário estimado chegada', 'horario estimado chegada', 'eta']);
     if(idIdx === -1) throw new Error('Não encontrei a coluna "unit_id" na aba PLANIFICATION.');
     if(statusIdx === -1) throw new Error('Não encontrei a coluna "status" na aba PLANIFICATION.');
+
+    function parseTimeValue(v){
+      if(v === null || v === undefined || v === '') return null;
+      if(v instanceof Date && !isNaN(v)){
+        // células só de "hora" no Excel viram Date com data-base de 1899/1900 —
+        // isso não é uma data real, então nesse caso não retornamos dateStr.
+        const hasRealDate = v.getFullYear() >= 1970;
+        const dateStr = hasRealDate
+          ? String(v.getDate()).padStart(2,'0') + '/' + String(v.getMonth()+1).padStart(2,'0') + '/' + v.getFullYear()
+          : null;
+        return { h: v.getHours(), m: v.getMinutes(), dateStr };
+      }
+      if(typeof v === 'number'){
+        // Excel serial: dias inteiros desde 1899-12-30 (parte inteira) + fração do dia (hora)
+        const excelEpochMs = Date.UTC(1899, 11, 30);
+        const wholeDays = Math.floor(v);
+        const dateObj = new Date(excelEpochMs + Math.round(v * 86400000));
+        const h = dateObj.getUTCHours();
+        const m = dateObj.getUTCMinutes();
+        const dateStr = wholeDays > 0
+          ? String(dateObj.getUTCDate()).padStart(2,'0') + '/' + String(dateObj.getUTCMonth()+1).padStart(2,'0') + '/' + dateObj.getUTCFullYear()
+          : null;
+        return { h, m, dateStr };
+      }
+      const s = String(v).trim();
+      const dt = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);
+      if(dt){
+        const [, dd, mm, yyyy, hh, min] = dt;
+        return { h: Number(hh), m: Number(min), dateStr: dd.padStart(2,'0') + '/' + mm.padStart(2,'0') + '/' + yyyy };
+      }
+      const m = s.match(/(\d{1,2}):(\d{2})/);
+      if(m) return { h: Number(m[1]), m: Number(m[2]), dateStr: null };
+      return null;
+    }
+
+    const arrivalByOrigin = new Map(); // facility_origin -> { h, m, timeStr, dateStr }
 
     const records = new Map();
     for(let i=1;i<planRows.length;i++){
@@ -1139,13 +1276,21 @@
       }
       const rota = (rotaIdx === -1 || row[rotaIdx] === null || row[rotaIdx] === undefined) ? '' : String(row[rotaIdx]).trim();
       records.set(id, { status, facility, promiseEnd, rota });
+
+      if(facility && estArrivalIdx !== -1 && !arrivalByOrigin.has(facility)){
+        const t = parseTimeValue(row[estArrivalIdx]);
+        if(t){
+          const timeStr = String(t.h).padStart(2,'0') + ':' + String(t.m).padStart(2,'0');
+          arrivalByOrigin.set(facility, { h: t.h, m: t.m, timeStr, dateStr: t.dateStr });
+        }
+      }
     }
 
     // statusMap kept for backward compatibility with existing card logic
     const statusMap = new Map();
     records.forEach((rec, id) => statusMap.set(id, rec.status));
 
-    return { statusMap, records, totalGeral, baseIds, goleiroRecords };
+    return { statusMap, records, totalGeral, baseIds, arrivalByOrigin, estArrivalColumnFound: estArrivalIdx !== -1, facilityColumnFound: facilityIdx !== -1, planHeaderRaw: header };
   }
 
   // ---------- parse BASE2 (csv) ----------
@@ -1223,7 +1368,7 @@
     document.getElementById('btnExtractData').disabled = false;
     document.getElementById('exportHint').textContent = 'imagem pronta pra compartilhar';
 
-    enableGoleiroScan();
+    renderChegadaTab();
   }
 
   function getVisibleRows(){
@@ -1403,7 +1548,7 @@
           legend:{
             position:'top',
             align:'end',
-            labels:{ color:'#51617A', boxWidth:12, font:{ family:"'JetBrains Mono', monospace", size:11 } }
+            labels:{ color:'#0B2545', boxWidth:12, font:{ family:"'JetBrains Mono', monospace", size:12, weight:'700' } }
           },
           tooltip:{
             backgroundColor:'#0B2545',
@@ -1417,19 +1562,19 @@
           datalabels:{
             display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
             color: '#FFFFFF',
-            font:{ family:"'JetBrains Mono', monospace", size:9, weight:'700' },
+            font:{ family:"'JetBrains Mono', monospace", size:10.5, weight:'800' },
             formatter: (value) => value
           }
         },
         scales:{
           x:{
             stacked:true,
-            ticks:{ color:'#5B6B84', font:{ family:"'JetBrains Mono', monospace", size:10 } },
+            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
             grid:{ color:'#E6ECF5' }
           },
           y:{
             stacked:true,
-            ticks:{ color:'#5B6B84', font:{ family:"'JetBrains Mono', monospace", size:10 } },
+            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
             grid:{ color:'#E6ECF5' }
           }
         }
@@ -1499,11 +1644,11 @@
         },
         scales:{
           x:{
-            ticks:{ color:'#5B6B84', font:{ family:"'JetBrains Mono', monospace", size:10 } },
+            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
             grid:{ display:false }
           },
           y:{
-            ticks:{ color:'#5B6B84', font:{ family:"'JetBrains Mono', monospace", size:10 } },
+            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
             grid:{ color:'#E6ECF5' },
             grace:'12%'
           }
@@ -1526,13 +1671,13 @@
     document.getElementById('valOnWay').textContent = fmt(d.onWay);
     document.getElementById('valRecebido').textContent = fmt(d.recebido);
     document.getElementById('valCarrinho').textContent = fmt(d.noCarrinho);
+    document.getElementById('valPendenteSorting').textContent = fmt(d.onWay + d.recebido);
 
     document.getElementById('pctD1').textContent = pct(d.d1, d.totalGeral) + ' do total';
     document.getElementById('pctOnWay').textContent = pct(d.onWay, d.totalGeral) + ' do total';
     document.getElementById('pctRecebido').textContent = pct(d.recebido, d.totalGeral) + ' do total';
     document.getElementById('pctCarrinho').textContent = pct(d.noCarrinho, d.totalGeral) + ' do total';
 
-    document.getElementById('barTotal').style.width = '100%';
     document.getElementById('barD1').style.width = Math.min(100, (d.d1/d.totalGeral)*100) + '%';
     document.getElementById('barOnWay').style.width = Math.min(100, (d.onWay/d.totalGeral)*100) + '%';
     document.getElementById('barRecebido').style.width = Math.min(100, (d.recebido/d.totalGeral)*100) + '%';
@@ -1616,11 +1761,11 @@
   }
 
   // ---------- export / share ----------
-  async function getDashboardBlob(){
-    const el = document.getElementById('captureArea');
+  async function captureElementBlob(elId){
+    const el = document.getElementById(elId);
     const canvas = await html2canvas(el, {
       backgroundColor: '#EEF2F8',
-      scale: 3,
+      scale: 4,
       useCORS: true,
       logging: false,
       imageTimeout: 0
@@ -1628,9 +1773,10 @@
     return await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
   }
 
-  async function exportDashboard(){
-    const btn = document.getElementById('btnExport');
-    const hint = document.getElementById('exportHint');
+  async function exportImage(opts){
+    const { elId, btnId, hintId, fileNamePrefix, shareTitle } = opts;
+    const btn = document.getElementById(btnId);
+    const hint = document.getElementById(hintId);
 
     if(typeof html2canvas === 'undefined'){
       showError('A biblioteca de exportação não carregou (sem conexão com a internet?). Verifique sua conexão e recarregue a página.');
@@ -1642,9 +1788,30 @@
     btn.innerHTML = '<span class="export-icon">⏳</span> Gerando imagem...';
 
     try{
-      const blob = await getDashboardBlob();
-      const fileName = 'painel_operacional_' + new Date().toISOString().slice(0,10) + '.png';
       const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+      const fileName = fileNamePrefix + '_' + new Date().toISOString().slice(0,10) + '.png';
+
+      // Start generating the image right away, but keep it as a PROMISE (don't
+      // await it yet) — the browser only allows clipboard writes for a brief
+      // moment after the click, and html2canvas takes a bit to render. Passing
+      // the still-pending promise straight into ClipboardItem lets Chrome keep
+      // that permission alive while the image finishes rendering in the background.
+      const blobPromise = captureElementBlob(elId);
+
+      // Desktop: copy straight to the clipboard so it can be pasted (Ctrl+V)
+      // into WhatsApp Web directly — no file download involved.
+      if(!isMobile && navigator.clipboard && window.ClipboardItem){
+        try{
+          await navigator.clipboard.write([ new ClipboardItem({ 'image/png': blobPromise }) ]);
+          hint.textContent = 'copiado! cole (Ctrl+V) — envie como arquivo/documento p/ manter qualidade';
+          return;
+        }catch(clipErr){
+          console.warn('Clipboard falhou, tentando alternativa:', clipErr);
+          // falls through to the mobile-share / download logic below
+        }
+      }
+
+      const blob = await blobPromise;
       const file = new File([blob], fileName, { type: 'image/png' });
 
       // Mobile: native share sheet (WhatsApp shows up as a direct option there)
@@ -1652,8 +1819,8 @@
         try{
           await navigator.share({
             files:[file],
-            title:'Painel Operacional',
-            text:'Painel Operacional — ' + new Date().toLocaleString('pt-BR')
+            title: shareTitle,
+            text: shareTitle + ' — ' + new Date().toLocaleString('pt-BR')
           });
           hint.textContent = 'compartilhado!';
           return;
@@ -1663,8 +1830,8 @@
         }
       }
 
-      // Desktop (and mobile without a usable share target): copy straight to
-      // clipboard so it can be pasted (Ctrl+V) into WhatsApp Web directly.
+      // Mobile without share, or desktop with clipboard blocked: try clipboard
+      // once more with the resolved blob before giving up to download.
       if(navigator.clipboard && window.ClipboardItem){
         try{
           await navigator.clipboard.write([ new ClipboardItem({ 'image/png': blob }) ]);
@@ -1693,7 +1860,22 @@
     }
   }
 
-  document.getElementById('btnExport').addEventListener('click', exportDashboard);
+  document.getElementById('btnExport').addEventListener('click', ()=> exportImage({
+    elId: 'captureArea',
+    btnId: 'btnExport',
+    hintId: 'exportHint',
+    fileNamePrefix: 'painel_operacional',
+    shareTitle: 'Painel Operacional'
+  }));
+
+  document.getElementById('btnExportChegada').addEventListener('click', ()=> exportImage({
+    elId: 'chegadaCaptureArea',
+    btnId: 'btnExportChegada',
+    hintId: 'chegadaExportHint',
+    fileNamePrefix: 'chegada_carros',
+    shareTitle: 'Total por Origem'
+  }));
+
 
   // ---------- extract just D-1 / Recebido do Dia / Faltante ----------
   function buildExtractText(){
@@ -1749,143 +1931,23 @@
 
   // ---------- tabs ----------
   const tabBtnDashboard = document.getElementById('tabBtnDashboard');
-  const tabBtnGoleiro = document.getElementById('tabBtnGoleiro');
+  const tabBtnChegada = document.getElementById('tabBtnChegada');
   const viewDashboard = document.getElementById('viewDashboard');
-  const viewGoleiro = document.getElementById('viewGoleiro');
+  const viewChegada = document.getElementById('viewChegada');
 
   function switchTab(tab){
-    const isGoleiro = tab === 'goleiro';
-    tabBtnGoleiro.classList.toggle('active', isGoleiro);
-    tabBtnDashboard.classList.toggle('active', !isGoleiro);
-    viewGoleiro.style.display = isGoleiro ? 'block' : 'none';
-    viewDashboard.style.display = isGoleiro ? 'none' : 'block';
-    if(isGoleiro && !goleiroInput.disabled){
-      goleiroInput.focus();
+    const isChegada = tab === 'chegada';
+    const isDashboard = !isChegada;
+    tabBtnChegada.classList.toggle('active', isChegada);
+    tabBtnDashboard.classList.toggle('active', isDashboard);
+    viewChegada.style.display = isChegada ? 'block' : 'none';
+    viewDashboard.style.display = isDashboard ? 'block' : 'none';
+    if(isChegada){
+      renderChegadaTab();
     }
   }
   tabBtnDashboard.addEventListener('click', ()=> switchTab('dashboard'));
-  tabBtnGoleiro.addEventListener('click', ()=> switchTab('goleiro'));
-
-  // ---------- goleiro (handheld scan validation) ----------
-  const goleiroInput = document.getElementById('goleiroInput');
-  const goleiroInputHint = document.getElementById('goleiroInputHint');
-  const goleiroResult = document.getElementById('goleiroResult');
-  const goleiroResultId = document.getElementById('goleiroResultId');
-  const goleiroResultStatus = document.getElementById('goleiroResultStatus');
-  const goleiroResultRota = document.getElementById('goleiroResultRota');
-  const goleiroReleaseBtn = document.getElementById('goleiroReleaseBtn');
-  const tblGoleiroHistory = document.getElementById('tblGoleiroHistory');
-  const goleiroCountBadge = document.getElementById('goleiroCountBadge');
-  const goleiroClearBtn = document.getElementById('goleiroClearBtn');
-
-  let goleiroHistory = []; // {time, id, rota, statusKey, statusLabel}
-  let goleiroBlocked = false;
-
-  function enableGoleiroScan(){
-    // lookup is based on the BASE sheet: id = RTG_UNIT_EXTERNAL_ID, rota = Otimizado
-    if(!base1Data || !base1Data.goleiroRecords){
-      goleiroInput.disabled = true;
-      goleiroInputHint.textContent = 'não encontrei a coluna "RTG_UNIT_EXTERNAL_ID" na aba BASE — confira o arquivo';
-      return;
-    }
-    goleiroInput.disabled = false;
-    goleiroInputHint.textContent = 'bipe o pacote — o resultado aparece automaticamente';
-    if(viewGoleiro.style.display !== 'none') goleiroInput.focus();
-  }
-
-  function classifyLookup(record){
-    if(!record) return { key:'not-found', label:'Não encontrado na aba BASE' };
-    if(record.rota && record.rota.trim() !== '') return { key:'ok', label:'Com rota atribuída' };
-    return { key:'no-rota', label:'Sem rota atribuída' };
-  }
-
-  function blockGoleiroInput(){
-    goleiroBlocked = true;
-    goleiroInput.disabled = true;
-    goleiroInput.classList.add('is-blocked');
-    goleiroInputHint.textContent = 'pacote com rota — clique em "Liberar" para bipar o próximo';
-    goleiroReleaseBtn.style.display = 'block';
-  }
-
-  function unblockGoleiroInput(){
-    goleiroBlocked = false;
-    goleiroInput.disabled = false;
-    goleiroInput.classList.remove('is-blocked');
-    goleiroInputHint.textContent = 'bipe o pacote — o resultado aparece automaticamente';
-    goleiroReleaseBtn.style.display = 'none';
-    goleiroInput.value = '';
-    goleiroInput.focus();
-  }
-
-  function renderGoleiroResult(id, record){
-    const { key, label } = classifyLookup(record);
-
-    goleiroResult.style.display = 'block';
-    goleiroResult.className = 'goleiro-result ' + key;
-    goleiroResultId.textContent = id;
-    goleiroResultStatus.textContent = label;
-    goleiroResultRota.textContent = record && record.rota ? record.rota : '—';
-
-    // haptic feedback for handheld use, if supported
-    if(navigator.vibrate){
-      if(key === 'ok') navigator.vibrate(150);
-      else navigator.vibrate([80,60,80]);
-    }
-
-    const time = new Date().toLocaleTimeString('pt-BR');
-    goleiroHistory.unshift({ time, id, rota: record && record.rota ? record.rota : '—', statusKey:key, statusLabel:label });
-    if(goleiroHistory.length > 200) goleiroHistory.length = 200;
-    renderGoleiroHistory();
-
-    if(key === 'ok'){
-      // package already has a route: block scanning until manually released
-      blockGoleiroInput();
-    } else {
-      // no route (or not found): keep the line moving, ready for the next scan
-      goleiroReleaseBtn.style.display = 'none';
-      goleiroInput.value = '';
-      goleiroInput.focus();
-    }
-  }
-
-  function renderGoleiroHistory(){
-    goleiroCountBadge.textContent = fmt(goleiroHistory.length);
-    tblGoleiroHistory.innerHTML = goleiroHistory.map(h => (
-      '<tr class="row-' + h.statusKey + '">' +
-        '<td>' + h.time + '</td>' +
-        '<td>' + h.id + '</td>' +
-        '<td>' + h.rota + '</td>' +
-        '<td>' + h.statusLabel + '</td>' +
-      '</tr>'
-    )).join('');
-  }
-
-  function handleGoleiroScan(rawValue){
-    if(goleiroBlocked) return; // ignore scans while blocked waiting for manual release
-    const id = normId(rawValue);
-    if(id === null || id === '') return;
-    const record = base1Data && base1Data.goleiroRecords ? base1Data.goleiroRecords.get(id) : undefined;
-    renderGoleiroResult(id, record);
-  }
-
-  goleiroInput.addEventListener('keydown', (e)=>{
-    if(e.key === 'Enter'){
-      e.preventDefault();
-      const value = goleiroInput.value;
-      goleiroInput.value = '';
-      handleGoleiroScan(value);
-    }
-  });
-
-  goleiroReleaseBtn.addEventListener('click', ()=>{
-    unblockGoleiroInput();
-  });
-
-  goleiroClearBtn.addEventListener('click', ()=>{
-    goleiroHistory = [];
-    renderGoleiroHistory();
-    goleiroResult.style.display = 'none';
-  });
+  tabBtnChegada.addEventListener('click', ()=> switchTab('chegada'));
 
   // ---------- file wiring ----------
   function wireDrop(dropEl, inputEl, statusEl, onFile){
@@ -1919,8 +1981,8 @@
       try{
         base1Data = parseBase1(e.target.result);
         dropBase1._setStatus(file.name + ' · ' + fmt(base1Data.totalGeral) + ' pacotes', true);
-        enableGoleiroScan(); // goleiro só depende da PLANIFICATION (base1)
         compute();
+        renderChegadaTab();
         saveBase1ToStorage(e.target.result, file.name);
       }catch(err){
         dropBase1._setStatus('erro ao ler arquivo', false);
@@ -1957,6 +2019,7 @@
         .delete()
         .in('chave', ['base1', 'base2']);
       if(error) throw error;
+      await supabaseClient.storage.from(STORAGE_BUCKET).remove([BASE1_STORAGE_PATH]);
     }catch(err){
       showError('Não consegui limpar os dados salvos: ' + (err.message || err));
       return;
