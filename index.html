@@ -735,7 +735,7 @@
   <div class="panels" id="panelsWrap" style="display:none;">
     <div class="panels-row">
       <div class="panel">
-        <p class="panel-title"><span class="swatch"></span>Distribuição por Origem</p>
+        <p class="panel-title"><span class="swatch"></span>On Way por Origem (On Time / Early / Delay)</p>
         <div class="chart-wrap">
           <canvas id="chartOrigem"></canvas>
         </div>
@@ -1034,6 +1034,14 @@
     emptyHint.style.display = 'none';
     btnExportChegada.disabled = false;
 
+    if(!base2Rows){
+      document.getElementById('chegadaOrigemWrap').style.display = 'none';
+      emptyHint.textContent = 'Envie também a base faltantes (.csv) — o On Way vem de lá.';
+      emptyHint.style.display = 'block';
+      btnExportChegada.disabled = true;
+      return;
+    }
+
     renderChegadaOrigemPanel();
   }
 
@@ -1041,35 +1049,21 @@
   let chegadaOrigemSort = { key: 'total', dir: 'desc' };
 
   function computeChegadaOrigemData(){
-    // Mesma classificação do gráfico "Distribuição por Origem" do Dashboard
-    // (On Time / Early / Delay, com base na promise_date_end), mas aplicada em
-    // CIMA DE TODOS OS PACOTES DA ABA PLANIFICATION (base estrutura) — não só
-    // os que aparecem no CSV de faltantes, que é um subconjunto.
-    const { records } = base1Data;
+    // Mesma base do gráfico "On Way por Origem" do Dashboard: só os pacotes que
+    // contam pro card On Way, classificados por prazo de entrega (On Time/Early/Delay).
     const today = new Date();
-    const byOrigin = new Map(); // origin -> {OnTime, Early, Delay}
+    const onWayData = computeOnWayByOrigin(); // [{origin, OnTime, Early, Delay, total}]
+    const map = new Map(onWayData.map(c => [c.origin, c]));
 
     // garante que todas as origens apareçam, mesmo com 0
-    getAllOrigins().forEach(origin => byOrigin.set(origin, {OnTime:0, Early:0, Delay:0}));
-
-    records.forEach(rec => {
-      if(!rec.facility || !rec.promiseEnd) return;
-      const d = rec.promiseEnd;
-      if(isNaN(d.getTime())) return;
-
-      let cls;
-      if(sameDay(d, today)) cls = 'OnTime';
-      else if(d.getTime() < today.getTime()) cls = 'Delay';
-      else cls = 'Early';
-
-      if(!byOrigin.has(rec.facility)) byOrigin.set(rec.facility, {OnTime:0, Early:0, Delay:0});
-      byOrigin.get(rec.facility)[cls]++;
+    getAllOrigins().forEach(origin => {
+      if(!map.has(origin)) map.set(origin, {origin, OnTime:0, Early:0, Delay:0, total:0});
     });
 
-    return Array.from(byOrigin.entries()).map(([origin, c]) => {
-      const arr = base1Data.arrivalByOrigin && base1Data.arrivalByOrigin.get(origin);
+    return Array.from(map.values()).map(c => {
+      const arr = base1Data.arrivalByOrigin && base1Data.arrivalByOrigin.get(c.origin);
       return {
-        origin, onTime: c.OnTime, early: c.Early, delay: c.Delay, total: c.OnTime + c.Early + c.Delay,
+        origin: c.origin, onTime: c.OnTime, early: c.Early, delay: c.Delay, total: c.total,
         arrivalTimeStr: arr ? arr.timeStr : '—',
         arrivalDateStr: arr ? (arr.dateStr || today.toLocaleDateString('pt-BR')) : '—'
       };
@@ -1118,7 +1112,7 @@
 
   function renderChegadaOrigemPanel(){
     const wrap = document.getElementById('chegadaOrigemWrap');
-    if(!base1Data){
+    if(!base1Data || !base2Rows){
       wrap.style.display = 'none';
       return;
     }
@@ -1432,7 +1426,7 @@
     lastMetricIds = { d1: d1Ids, recebido: recebidoIds, onWay: onWayIds, faltante: faltanteIds, faltanteAvailable };
 
     renderCards({totalGeral, d1, onWay, recebido, noCarrinho});
-    renderOrigemChart(allRows);
+    renderOrigemChart();
     renderStatusChart({d1, onWay, recebido, noCarrinho, totalGeral});
     renderEarlyTable(allRows);
     renderNaoAtreladosTable(allRows);
@@ -1511,8 +1505,43 @@
     return arr;
   }
 
+  function computeOnWayByOrigin(){
+    const { statusMap, records } = base1Data;
+    const D1_STATUSES = new Set(['at_station|sorting','at_station|buffered']);
+    const visibleRows = getVisibleRows(); // mesmo filtro de origem usado no card On Way
+    const today = new Date();
+    const byOrigin = new Map(); // origin -> {OnTime, Early, Delay}
+
+    for(const r of visibleRows){
+      const status = statusMap.get(r.id);
+      const isD1 = status !== undefined && D1_STATUSES.has(status);
+      if(isD1 || r.loc !== 'Caminho para a estação') continue; // só os pacotes que contam pro card On Way
+
+      const rec = records.get(r.id);
+      const origin = rec && rec.facility;
+      if(!origin) continue;
+      if(!byOrigin.has(origin)) byOrigin.set(origin, {OnTime:0, Early:0, Delay:0});
+
+      // classifica cada pacote On Way pelo prazo de entrega (promise_date_end)
+      if(rec.promiseEnd && !isNaN(rec.promiseEnd.getTime())){
+        const d = rec.promiseEnd;
+        let cls;
+        if(sameDay(d, today)) cls = 'OnTime';
+        else if(d.getTime() < today.getTime()) cls = 'Delay';
+        else cls = 'Early';
+        byOrigin.get(origin)[cls]++;
+      }
+    }
+
+    const arr = Array.from(byOrigin.entries()).map(([origin, c]) => ({
+      origin, ...c, total: c.OnTime + c.Early + c.Delay
+    }));
+    arr.sort((a,b) => b.total - a.total);
+    return arr;
+  }
+
   let origemChartInstance = null;
-  function renderOrigemChart(rows){
+  function renderOrigemChart(){
     if(typeof Chart === 'undefined'){
       showError('A biblioteca de gráficos não carregou (sem conexão com a internet ao abrir o arquivo?). Verifique sua conexão e recarregue a página.');
       return;
@@ -1520,7 +1549,7 @@
     if(typeof ChartDataLabels !== 'undefined'){
       Chart.register(ChartDataLabels);
     }
-    const data = classifyOrigem(rows);
+    const data = computeOnWayByOrigin();
     const ctx = document.getElementById('chartOrigem').getContext('2d');
 
     const labels = data.map(d => d.origin);
