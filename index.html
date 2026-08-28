@@ -1386,6 +1386,7 @@
 
     let d1 = 0, recebido = 0;
     const d1Ids = [], recebidoIds = [];
+    const recebidoRows = [];
     for(const r of allRows){
       const status = statusMap.get(r.id);
       const isD1 = status !== undefined && D1_STATUSES.has(status);
@@ -1395,6 +1396,7 @@
       } else if(r.loc === 'Na estação'){
         recebido++;
         recebidoIds.push(r.id);
+        recebidoRows.push(r);
       }
     }
 
@@ -1430,7 +1432,7 @@
     renderStatusChart({d1, onWay, recebido, noCarrinho, totalGeral});
     renderEarlyTable(allRows);
     renderNaoAtreladosTable(allRows);
-    renderIlhasTable(allRows);
+    renderIlhasTable(recebidoRows);
   }
 
   // ---------- Filtro de origens (afeta somente o card/valor "On Way") ----------
@@ -1700,7 +1702,7 @@
     document.getElementById('valOnWay').textContent = fmt(d.onWay);
     document.getElementById('valRecebido').textContent = fmt(d.recebido);
     document.getElementById('valCarrinho').textContent = fmt(d.noCarrinho);
-    document.getElementById('valPendenteSorting').textContent = fmt(d.onWay + d.recebido);
+    document.getElementById('valPendenteSorting').textContent = fmt(d.d1 + d.onWay + d.recebido);
 
     document.getElementById('pctD1').textContent = pct(d.d1, d.totalGeral) + ' do total';
     document.getElementById('pctOnWay').textContent = pct(d.onWay, d.totalGeral) + ' do total';
@@ -1714,6 +1716,7 @@
 
     tickClock();
   }
+
 
   // ---------- Pacotes Recebidos e não Atrelados ----------
   function formatElapsed(ms){
@@ -1752,10 +1755,10 @@
     `).join('');
   }
 
-  // ---------- Mapa de Calor (Ilhas) ----------
-  function renderIlhasTable(visibleRows){
+  // ---------- Mapa de Calor (Ilhas) — baseado no Recebido do Dia ----------
+  function renderIlhasTable(recebidoRows){
     const counts = new Map();
-    for(const r of visibleRows){
+    for(const r of recebidoRows){
       if(!r.rota) continue;
       const m = r.rota.match(/^([A-Za-z]+)/);
       if(!m) continue;
