@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kuehne+Nagel · Painel Operacional</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<!-- fork com suporte a estilo de célula (cor de fundo, fonte etc.) para a planilha exportada; substitui o global XLSX acima, mantendo a mesma API -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1187,6 +1189,45 @@
     return -1;
   }
 
+  // Tenta achar a coluna que contém os IDs de pacote pelo CONTEÚDO das células
+  // (independente do título do cabeçalho): procura a coluna com maior proporção
+  // de valores só-numéricos com cara de ID de pacote (8 a 15 dígitos). Se nenhuma
+  // coluna bater esse padrão com folga, cai para a coluna A (índice 0) desde que
+  // ela tenha valores preenchidos — é onde os IDs normalmente vêm.
+  function detectIdColumnByContent(rows){
+    if(!rows || rows.length < 2) return -1;
+    let numCols = 0;
+    for(let i=0;i<Math.min(rows.length, 50);i++){
+      if(rows[i]) numCols = Math.max(numCols, rows[i].length);
+    }
+    let bestCol = -1, bestHits = 0;
+    const sampleEnd = Math.min(rows.length, 300);
+    for(let c=0;c<numCols;c++){
+      let hits = 0, total = 0;
+      for(let i=1;i<sampleEnd;i++){
+        const row = rows[i];
+        if(!row) continue;
+        const v = row[c];
+        if(v === null || v === undefined || v === '') continue;
+        total++;
+        const s = String(v).trim();
+        if(/^\d{8,15}$/.test(s)) hits++;
+      }
+      if(total >= 3 && hits/total > 0.85 && hits > bestHits){
+        bestHits = hits;
+        bestCol = c;
+      }
+    }
+    if(bestCol !== -1) return bestCol;
+
+    // fallback: coluna A, se tiver algo preenchido nas primeiras linhas
+    for(let i=1;i<Math.min(rows.length, 50);i++){
+      const row = rows[i];
+      if(row && row[0] !== null && row[0] !== undefined && row[0] !== '') return 0;
+    }
+    return -1;
+  }
+
   function findSheetName(workbook, candidates){
     const names = workbook.SheetNames;
     // 1ª passada: nome da aba igual ao candidato (ex: "BASE")
@@ -1242,7 +1283,13 @@
     const header = planRows[0];
     // cada campo aceita as variações vistas nas diferentes exportações (nomes técnicos em
     // inglês tipo "unit_id" e nomes localizados em espanhol/português tipo "ID DE UNIDAD")
-    const idIdx = findHeaderIndex(header, ['unit_id', 'id de unidad', 'id da unidade', 'id de unidade', 'id do pacote']);
+    let idIdx = findHeaderIndex(header, ['unit_id', 'id de unidad', 'id da unidade', 'id de unidade', 'id do pacote']);
+    if(idIdx === -1){
+      // título da coluna de ID veio diferente do esperado (ou a base mudou de
+      // layout) — detecta pelo conteúdo (números com cara de ID de pacote),
+      // caindo para a coluna A se nada bater com folga.
+      idIdx = detectIdColumnByContent(planRows);
+    }
     const statusIdx = findHeaderIndex(header, ['status', 'estatus']);
     const facilityIdx = findHeaderIndex(header, ['facility_origin', 'origen', 'origem', 'facility origin']);
     const promiseEndIdx = findHeaderIndex(header, ['promise_date_end', 'promesa entrega', 'promessa entrega', 'promise date end']);
@@ -1383,10 +1430,21 @@
     const rows = parseCSVText(text);
     if(rows.length < 1) throw new Error('CSV vazio.');
     const header = rows[0];
-    const idIdx = findHeaderIndex(header, ['id do pacote']);
+    let idIdx = findHeaderIndex(header, ['id do pacote']);
+    if(idIdx === -1) idIdx = detectIdColumnByContent(rows);
     const locIdx = findHeaderIndex(header, ['localização do pacote', 'localizacao do pacote']);
     const rotaIdx = findHeaderIndex(header, ['n.º rota', 'numero rota', 'n° rota', 'rota']);
     const inboundIdx = findHeaderIndex(header, ['data de inbound']);
+    const paradaIdx = findHeaderIndex(header, ['parada']);
+    const pontoIdx = findHeaderIndex(header, ['ponto']);
+    const alturaIdx = findHeaderIndex(header, ['altura']);
+    const larguraIdx = findHeaderIndex(header, ['largura']);
+    const comprimentoIdx = findHeaderIndex(header, ['comprimento']);
+    const detalheIdx = findHeaderIndex(header, ['detalhe do pacote']);
+    const origemIdx = findHeaderIndex(header, ['origem']);
+    const statusIdx = findHeaderIndex(header, ['status']);
+    const status2Idx = findHeaderIndex(header, ['status2']);
+    const status3Idx = findHeaderIndex(header, ['status3']);
     if(idIdx === -1) throw new Error('Não encontrei a coluna "ID do pacote" no CSV.');
     if(locIdx === -1) throw new Error('Não encontrei a coluna "Localização do pacote" no CSV.');
 
@@ -1400,7 +1458,17 @@
       const rota = rotaIdx === -1 ? '' : (r[rotaIdx]||'').trim();
       const inboundRaw = inboundIdx === -1 ? '' : (r[inboundIdx]||'').trim();
       const inboundDate = parseInboundDate(inboundRaw);
-      out.push({id, loc, rota, inboundRaw, inboundDate});
+      const parada = paradaIdx === -1 ? '' : (r[paradaIdx]||'').trim();
+      const ponto = pontoIdx === -1 ? '' : (r[pontoIdx]||'').trim();
+      const altura = alturaIdx === -1 ? '' : (r[alturaIdx]||'').trim();
+      const largura = larguraIdx === -1 ? '' : (r[larguraIdx]||'').trim();
+      const comprimento = comprimentoIdx === -1 ? '' : (r[comprimentoIdx]||'').trim();
+      const detalhe = detalheIdx === -1 ? '' : (r[detalheIdx]||'').trim();
+      const origem = origemIdx === -1 ? '' : (r[origemIdx]||'').trim();
+      const status = statusIdx === -1 ? '' : (r[statusIdx]||'').trim();
+      const status2 = status2Idx === -1 ? '' : (r[status2Idx]||'').trim();
+      const status3 = status3Idx === -1 ? '' : (r[status3Idx]||'').trim();
+      out.push({id, loc, rota, inboundRaw, inboundDate, parada, ponto, altura, largura, comprimento, detalhe, origem, status, status2, status3});
     }
     return out;
   }
@@ -1986,16 +2054,128 @@
     );
   }
 
+  function buildOrderByOrigin(){
+    const arrivalByOrigin = base1Data && base1Data.arrivalByOrigin;
+    const orderMap = new Map();
+    if(!arrivalByOrigin) return orderMap;
+    const arr = Array.from(arrivalByOrigin.entries()).map(([origin, t]) => ({
+      origin, mins: t.h*60 + t.m, timeStr: t.timeStr
+    }));
+    arr.sort((a,b) => a.mins - b.mins);
+    arr.forEach((o, idx) => orderMap.set(o.origin, { order: idx+1, timeStr: o.timeStr }));
+    return orderMap;
+  }
+
+  function classifyPromise(rec){
+    if(!rec || !rec.promiseEnd || isNaN(rec.promiseEnd.getTime())) return '';
+    const today = new Date();
+    const d = rec.promiseEnd;
+    if(sameDay(d, today)) return 'On Time';
+    if(d.getTime() < today.getTime()) return 'Delay';
+    return 'Early';
+  }
+
+  // Monta uma aba do Excel já formatada: título em destaque (azul forte, fonte
+  // preta), linha de cabeçalho azul e linhas de dados alternando azul claro/branco,
+  // igual ao padrão visual usado no time (célula por célula, pra garantir que a
+  // cor cubra mesmo campos vazios).
+  function buildStyledSheet(headerArr, dataRows, title){
+    const ws = {};
+    const lastRow = Math.max(1, dataRows.length + 1);
+    const range = { s:{ r:0, c:0 }, e:{ r:lastRow, c:headerArr.length-1 } };
+
+    const TITLE_FILL  = { patternType:'solid', fgColor:{ rgb:'0B5FA5' } };
+    const TITLE_FONT  = { bold:true, sz:13, color:{ rgb:'000000' } };
+    const HEADER_FILL = { patternType:'solid', fgColor:{ rgb:'9CC7EE' } };
+    const HEADER_FONT = { bold:true, sz:11, color:{ rgb:'000000' } };
+    const ROW_FILL_WHITE = { patternType:'solid', fgColor:{ rgb:'FFFFFF' } };
+    const ROW_FILL_BLUE  = { patternType:'solid', fgColor:{ rgb:'DCEAF9' } };
+    const THIN = { style:'thin', color:{ rgb:'BFD3E8' } };
+    const BORDER = { top:THIN, bottom:THIN, left:THIN, right:THIN };
+
+    function setCell(r, c, v, style){
+      const ref = XLSX.utils.encode_cell({ r, c });
+      const isNum = typeof v === 'number';
+      ws[ref] = { v: (v===null||v===undefined) ? '' : v, t: isNum ? 'n' : 's', s: style };
+    }
+
+    // linha 0: título mesclado, cor forte + fonte preta
+    setCell(0, 0, title, { fill: TITLE_FILL, font: TITLE_FONT, alignment:{ horizontal:'left', vertical:'center' } });
+    for(let c=1;c<headerArr.length;c++) setCell(0, c, '', { fill: TITLE_FILL });
+
+    // linha 1: cabeçalho das colunas
+    headerArr.forEach((h, c) => setCell(1, c, h, { fill: HEADER_FILL, font: HEADER_FONT, border: BORDER, alignment:{ vertical:'center', wrapText:true } }));
+
+    // linhas de dados, alternando branco / azul claro
+    dataRows.forEach((row, i) => {
+      const fill = i % 2 === 0 ? ROW_FILL_WHITE : ROW_FILL_BLUE;
+      row.forEach((val, c) => {
+        setCell(i+2, c, val, { fill, border: BORDER, font:{ color:{ rgb:'0B2545' } } });
+      });
+    });
+
+    ws['!ref'] = XLSX.utils.encode_range(range);
+    ws['!merges'] = [{ s:{r:0,c:0}, e:{r:0,c:headerArr.length-1} }];
+    ws['!cols'] = headerArr.map(h => ({ wch: Math.max(12, Math.min(28, String(h).length + 4)) }));
+    if(dataRows.length > 0){
+      ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s:{r:1,c:0}, e:{r:1,c:headerArr.length-1} }) };
+    }
+    return ws;
+  }
+
+  function buildExtractRow(id, tipo, base2ById, orderByOrigin){
+    const r = base2ById.get(id) || {};
+    const rec = (base1Data && base1Data.records) ? base1Data.records.get(id) : null;
+    const origin = (rec && rec.facility) || r.origem || '';
+    const orderInfo = orderByOrigin.get(origin);
+    const situacao = r.loc === 'Caminho para a estação' ? 'A Caminho'
+      : (r.loc === 'Na estação' ? 'Recebido' : (r.loc || ''));
+    const classificacao = classifyPromise(rec) || r.status || '';
+    return [
+      id,
+      r.rota || (rec && rec.rota) || '',
+      r.parada || '',
+      r.ponto || '',
+      r.inboundRaw || '',
+      r.altura || '',
+      r.largura || '',
+      r.comprimento || '',
+      r.loc || '',
+      r.detalhe || '',
+      origin,
+      orderInfo ? orderInfo.order : '',
+      orderInfo ? orderInfo.timeStr : '',
+      classificacao,
+      situacao,
+      tipo,
+      r.status || '',
+      r.status2 || '',
+      r.status3 || ''
+    ];
+  }
+
   function buildExtractWorkbook(){
     const wb = XLSX.utils.book_new();
 
-    const d1Data = [['ID do Pacote'], ...lastMetricIds.d1.map(id => [id])];
-    const onWayData = [['ID do Pacote'], ...lastMetricIds.onWay.map(id => [id])];
-    const recebidoData = [['ID do Pacote'], ...lastMetricIds.recebido.map(id => [id])];
+    const base2ById = new Map((base2Rows || []).map(r => [r.id, r]));
+    const orderByOrigin = buildOrderByOrigin();
 
-    const wsD1 = XLSX.utils.aoa_to_sheet(d1Data);
-    const wsOnWay = XLSX.utils.aoa_to_sheet(onWayData);
-    const wsRecebido = XLSX.utils.aoa_to_sheet(recebidoData);
+    const header = [
+      'ID do pacote', 'N.º Rota', 'Parada', 'Ponto', 'Data de Inbound',
+      'Altura', 'Largura', 'Comprimento', 'Localização do pacote',
+      'Detalhe do pacote', 'Origem', 'Ordem de Chegada da Origem',
+      'Horário Estimado de Chegada', 'Classificação (On Time/Early/Delay)',
+      'Situação', 'Tipo', 'Status', 'Status2', 'Status3'
+    ];
+
+    const d1Rows = lastMetricIds.d1.map(id => buildExtractRow(id, 'D-1', base2ById, orderByOrigin));
+    const onWayRows = lastMetricIds.onWay.map(id => buildExtractRow(id, 'On Way', base2ById, orderByOrigin));
+    const recebidoRows = lastMetricIds.recebido.map(id => buildExtractRow(id, 'Recebido do dia', base2ById, orderByOrigin));
+
+    const dataLabel = new Date().toLocaleDateString('pt-BR');
+    const wsD1 = buildStyledSheet(header, d1Rows, 'Detalhes da Extração — D-1 · ' + dataLabel);
+    const wsOnWay = buildStyledSheet(header, onWayRows, 'Detalhes da Extração — On Way · ' + dataLabel);
+    const wsRecebido = buildStyledSheet(header, recebidoRows, 'Detalhes da Extração — Recebido do dia · ' + dataLabel);
 
     XLSX.utils.book_append_sheet(wb, wsD1, 'D-1');
     XLSX.utils.book_append_sheet(wb, wsOnWay, 'On Way');
