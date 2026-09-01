@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kuehne+Nagel · Painel Operacional</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<!-- fork com suporte a estilo de célula (cor de fundo, fonte etc.) para a planilha exportada; substitui o global XLSX acima, mantendo a mesma API -->
-<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -144,6 +142,26 @@
     color:#fff;
     letter-spacing:.02em;
   }
+  .refresh-btn{
+    margin-top:8px;
+    appearance:none;
+    border:1px solid rgba(255,255,255,.35);
+    background:rgba(255,255,255,.08);
+    color:#fff;
+    font-family:inherit;
+    font-size:12px;
+    font-weight:600;
+    padding:6px 12px;
+    border-radius:7px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+  }
+  .refresh-btn:hover{ background:rgba(255,255,255,.16); }
+  .refresh-btn:disabled{ opacity:.5; cursor:not-allowed; }
+  .refresh-btn #refreshIcon.spinning{ display:inline-block; animation:spin 0.8s linear infinite; }
+  @keyframes spin{ from{ transform:rotate(0deg); } to{ transform:rotate(360deg); } }
 
   /* ===== UPLOAD ZONE ===== */
   .upload-row{
@@ -695,6 +713,9 @@
       <div class="clock">
         Última atualização
         <strong id="clockTime">--:--</strong>
+        <button id="btnRefreshData" class="refresh-btn" type="button" title="Atualiza sozinho a cada 45s — clique pra forçar agora">
+          <span id="refreshIcon">🔄</span> Atualizar
+        </button>
       </div>
     </div>
 
@@ -1026,7 +1047,7 @@
       if(!base1Data){
         emptyHint.textContent = 'Envie a base estrutura (.xlsx) para ver os carros por origem.';
       } else if(!base1Data.facilityColumnFound){
-        emptyHint.textContent = 'Não encontrei a coluna de origem (facility_origin / ORIGEN) na aba PLANIFICATION.';
+        emptyHint.textContent = 'Não encontrei a coluna facility_origin na aba PLANIFICATION.';
       } else {
         emptyHint.textContent = 'Não encontrei nenhuma origem preenchida na aba PLANIFICATION.';
       }
@@ -1161,88 +1182,19 @@
     return s;
   }
 
-  // remove acentos e normaliza espaços/underscore pra comparar nomes de coluna/aba
-  // vindos de exportações diferentes (ex: "PROMESA ENTREGA" vs "promise_date_end")
-  function normText(s){
-    return String(s === undefined || s === null ? '' : s)
-      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos
-      .trim()
-      .toLowerCase()
-      .replace(/[_\.]+/g, ' ')
-      .replace(/\s+/g, ' ');
-  }
-
   function findHeaderIndex(headerRow, candidates){
-    const norm = headerRow.map(h => normText(h));
-    // 1ª passada: igualdade exata (evita, por ex., "status" bater com "status_extra")
+    const norm = headerRow.map(h => (h===undefined||h===null) ? '' : String(h).trim().toLowerCase());
     for(const cand of candidates){
-      const idx = norm.indexOf(normText(cand));
+      const idx = norm.indexOf(cand.toLowerCase());
       if(idx !== -1) return idx;
-    }
-    // 2ª passada: aceita a coluna quando o nome bate por inteiro/palavra dentro do header
-    // (ex: cabeçalhos com sufixo/prefixo, "ID DE UNIDAD " com espaço extra etc.)
-    for(const cand of candidates){
-      const c = normText(cand);
-      const idx = norm.findIndex(h => h && (h === c || h.split(' ').join('') === c.split(' ').join('')));
-      if(idx !== -1) return idx;
-    }
-    return -1;
-  }
-
-  // Tenta achar a coluna que contém os IDs de pacote pelo CONTEÚDO das células
-  // (independente do título do cabeçalho): procura a coluna com maior proporção
-  // de valores só-numéricos com cara de ID de pacote (8 a 15 dígitos). Se nenhuma
-  // coluna bater esse padrão com folga, cai para a coluna A (índice 0) desde que
-  // ela tenha valores preenchidos — é onde os IDs normalmente vêm.
-  function detectIdColumnByContent(rows){
-    if(!rows || rows.length < 2) return -1;
-    let numCols = 0;
-    for(let i=0;i<Math.min(rows.length, 50);i++){
-      if(rows[i]) numCols = Math.max(numCols, rows[i].length);
-    }
-    let bestCol = -1, bestHits = 0;
-    const sampleEnd = Math.min(rows.length, 300);
-    for(let c=0;c<numCols;c++){
-      let hits = 0, total = 0;
-      for(let i=1;i<sampleEnd;i++){
-        const row = rows[i];
-        if(!row) continue;
-        const v = row[c];
-        if(v === null || v === undefined || v === '') continue;
-        total++;
-        const s = String(v).trim();
-        if(/^\d{8,15}$/.test(s)) hits++;
-      }
-      if(total >= 3 && hits/total > 0.85 && hits > bestHits){
-        bestHits = hits;
-        bestCol = c;
-      }
-    }
-    if(bestCol !== -1) return bestCol;
-
-    // fallback: coluna A, se tiver algo preenchido nas primeiras linhas
-    for(let i=1;i<Math.min(rows.length, 50);i++){
-      const row = rows[i];
-      if(row && row[0] !== null && row[0] !== undefined && row[0] !== '') return 0;
     }
     return -1;
   }
 
   function findSheetName(workbook, candidates){
     const names = workbook.SheetNames;
-    // 1ª passada: nome da aba igual ao candidato (ex: "BASE")
     for(const cand of candidates){
-      const hit = names.find(n => normText(n) === normText(cand));
-      if(hit) return hit;
-    }
-    // 2ª passada: aba com sufixo/prefixo de ciclo (ex: "BASE AM1", "PLANIFICATION AM1",
-    // "BASE_AM0", "PM SD" etc.) — aceita quando o candidato aparece como palavra na aba
-    for(const cand of candidates){
-      const c = normText(cand);
-      const hit = names.find(n => {
-        const words = normText(n).split(' ');
-        return words.includes(c);
-      });
+      const hit = names.find(n => n.trim().toLowerCase() === cand.toLowerCase());
       if(hit) return hit;
     }
     return null;
@@ -1281,50 +1233,14 @@
     const planRows = XLSX.utils.sheet_to_json(wb.Sheets[planSheetName], {header:1, raw:true, defval:null});
     if(planRows.length < 1) throw new Error('Aba PLANIFICATION está vazia.');
     const header = planRows[0];
-    // cada campo aceita as variações vistas nas diferentes exportações (nomes técnicos em
-    // inglês tipo "unit_id" e nomes localizados em espanhol/português tipo "ID DE UNIDAD")
-    let idIdx = findHeaderIndex(header, ['unit_id', 'id de unidad', 'id da unidade', 'id de unidade', 'id do pacote']);
-    if(idIdx === -1){
-      // título da coluna de ID veio diferente do esperado (ou a base mudou de
-      // layout) — detecta pelo conteúdo (números com cara de ID de pacote),
-      // caindo para a coluna A se nada bater com folga.
-      idIdx = detectIdColumnByContent(planRows);
-    }
-    const statusIdx = findHeaderIndex(header, ['status', 'estatus']);
-    const facilityIdx = findHeaderIndex(header, ['facility_origin', 'origen', 'origem', 'facility origin']);
-    const promiseEndIdx = findHeaderIndex(header, ['promise_date_end', 'promesa entrega', 'promessa entrega', 'promise date end']);
+    const idIdx = findHeaderIndex(header, ['unit_id']);
+    const statusIdx = findHeaderIndex(header, ['status']);
+    const facilityIdx = findHeaderIndex(header, ['facility_origin']);
+    const promiseEndIdx = findHeaderIndex(header, ['promise_date_end']);
     const rotaIdx = findHeaderIndex(header, ['n.º rota', 'numero rota', 'n° rota', 'rota', 'route_id', 'route']);
-    const estArrivalIdx = findHeaderIndex(header, ['estimated_arrival', 'estimated arrival', 'horário estimado chegada', 'horario estimado chegada', 'eta', 'llegada', 'chegada']);
-    if(idIdx === -1) throw new Error('Não encontrei a coluna de ID da unidade (unit_id / ID DE UNIDAD) na aba PLANIFICATION.');
+    const estArrivalIdx = findHeaderIndex(header, ['estimated_arrival', 'estimated arrival', 'horário estimado chegada', 'horario estimado chegada', 'eta']);
+    if(idIdx === -1) throw new Error('Não encontrei a coluna "unit_id" na aba PLANIFICATION.');
     if(statusIdx === -1) throw new Error('Não encontrei a coluna "status" na aba PLANIFICATION.');
-
-    // "PROMESA ENTREGA" (e variações) às vezes vem como intervalo em texto:
-    // "29-08-2026 00:00 - 29-08-2026 00:00" — usamos a data final do intervalo.
-    // Também aceita Date nativo (cellDates) e "DD/MM/AAAA HH:mm" / "DD-MM-AAAA HH:mm" simples.
-    function parsePromiseDate(v){
-      if(v === null || v === undefined || v === '') return null;
-      if(v instanceof Date){
-        return isNaN(v.getTime()) ? null : v;
-      }
-      if(typeof v === 'number'){
-        const excelEpochMs = Date.UTC(1899, 11, 30);
-        const d = new Date(excelEpochMs + Math.round(v * 86400000));
-        return isNaN(d.getTime()) ? null : d;
-      }
-      const s = String(v).trim();
-      const range = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})\s+(\d{1,2}):(\d{2}).*?[-–]\s*(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})\s+(\d{1,2}):(\d{2})/);
-      if(range){
-        const [, , , , , , dd2, mm2, yyyy2, hh2, min2] = range;
-        return new Date(Number(yyyy2), Number(mm2)-1, Number(dd2), Number(hh2), Number(min2));
-      }
-      const single = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})\s+(\d{1,2}):(\d{2})/);
-      if(single){
-        const [, dd, mm, yyyy, hh, min] = single;
-        return new Date(Number(yyyy), Number(mm)-1, Number(dd), Number(hh), Number(min));
-      }
-      const d = new Date(s);
-      return isNaN(d.getTime()) ? null : d;
-    }
 
     function parseTimeValue(v){
       if(v === null || v === undefined || v === '') return null;
@@ -1372,7 +1288,8 @@
       const facility = (facilityIdx === -1 || row[facilityIdx] === null || row[facilityIdx] === undefined) ? null : String(row[facilityIdx]).trim();
       let promiseEnd = null;
       if(promiseEndIdx !== -1 && row[promiseEndIdx]){
-        promiseEnd = parsePromiseDate(row[promiseEndIdx]);
+        const v = row[promiseEndIdx];
+        promiseEnd = (v instanceof Date) ? v : new Date(v);
       }
       const rota = (rotaIdx === -1 || row[rotaIdx] === null || row[rotaIdx] === undefined) ? '' : String(row[rotaIdx]).trim();
       records.set(id, { status, facility, promiseEnd, rota });
@@ -1430,21 +1347,10 @@
     const rows = parseCSVText(text);
     if(rows.length < 1) throw new Error('CSV vazio.');
     const header = rows[0];
-    let idIdx = findHeaderIndex(header, ['id do pacote']);
-    if(idIdx === -1) idIdx = detectIdColumnByContent(rows);
+    const idIdx = findHeaderIndex(header, ['id do pacote']);
     const locIdx = findHeaderIndex(header, ['localização do pacote', 'localizacao do pacote']);
     const rotaIdx = findHeaderIndex(header, ['n.º rota', 'numero rota', 'n° rota', 'rota']);
     const inboundIdx = findHeaderIndex(header, ['data de inbound']);
-    const paradaIdx = findHeaderIndex(header, ['parada']);
-    const pontoIdx = findHeaderIndex(header, ['ponto']);
-    const alturaIdx = findHeaderIndex(header, ['altura']);
-    const larguraIdx = findHeaderIndex(header, ['largura']);
-    const comprimentoIdx = findHeaderIndex(header, ['comprimento']);
-    const detalheIdx = findHeaderIndex(header, ['detalhe do pacote']);
-    const origemIdx = findHeaderIndex(header, ['origem']);
-    const statusIdx = findHeaderIndex(header, ['status']);
-    const status2Idx = findHeaderIndex(header, ['status2']);
-    const status3Idx = findHeaderIndex(header, ['status3']);
     if(idIdx === -1) throw new Error('Não encontrei a coluna "ID do pacote" no CSV.');
     if(locIdx === -1) throw new Error('Não encontrei a coluna "Localização do pacote" no CSV.');
 
@@ -1458,17 +1364,7 @@
       const rota = rotaIdx === -1 ? '' : (r[rotaIdx]||'').trim();
       const inboundRaw = inboundIdx === -1 ? '' : (r[inboundIdx]||'').trim();
       const inboundDate = parseInboundDate(inboundRaw);
-      const parada = paradaIdx === -1 ? '' : (r[paradaIdx]||'').trim();
-      const ponto = pontoIdx === -1 ? '' : (r[pontoIdx]||'').trim();
-      const altura = alturaIdx === -1 ? '' : (r[alturaIdx]||'').trim();
-      const largura = larguraIdx === -1 ? '' : (r[larguraIdx]||'').trim();
-      const comprimento = comprimentoIdx === -1 ? '' : (r[comprimentoIdx]||'').trim();
-      const detalhe = detalheIdx === -1 ? '' : (r[detalheIdx]||'').trim();
-      const origem = origemIdx === -1 ? '' : (r[origemIdx]||'').trim();
-      const status = statusIdx === -1 ? '' : (r[statusIdx]||'').trim();
-      const status2 = status2Idx === -1 ? '' : (r[status2Idx]||'').trim();
-      const status3 = status3Idx === -1 ? '' : (r[status3Idx]||'').trim();
-      out.push({id, loc, rota, inboundRaw, inboundDate, parada, ponto, altura, largura, comprimento, detalhe, origem, status, status2, status3});
+      out.push({id, loc, rota, inboundRaw, inboundDate});
     }
     return out;
   }
@@ -1889,7 +1785,7 @@
       if(!r.rota) continue;
       const m = r.rota.match(/^([A-Za-z]+)/);
       if(!m) continue;
-      const ilha = m[1][0].toUpperCase();
+      const ilha = m[1].toUpperCase(); // prefixo de letras inteiro — separa V (ilha) de VA/VB/VC (volumoso)
       counts.set(ilha, (counts.get(ilha) || 0) + 1);
     }
 
@@ -1924,7 +1820,7 @@
     const el = document.getElementById(elId);
     const canvas = await html2canvas(el, {
       backgroundColor: '#EEF2F8',
-      scale: 4,
+      scale: 6,
       useCORS: true,
       logging: false,
       imageTimeout: 0
@@ -2054,128 +1950,16 @@
     );
   }
 
-  function buildOrderByOrigin(){
-    const arrivalByOrigin = base1Data && base1Data.arrivalByOrigin;
-    const orderMap = new Map();
-    if(!arrivalByOrigin) return orderMap;
-    const arr = Array.from(arrivalByOrigin.entries()).map(([origin, t]) => ({
-      origin, mins: t.h*60 + t.m, timeStr: t.timeStr
-    }));
-    arr.sort((a,b) => a.mins - b.mins);
-    arr.forEach((o, idx) => orderMap.set(o.origin, { order: idx+1, timeStr: o.timeStr }));
-    return orderMap;
-  }
-
-  function classifyPromise(rec){
-    if(!rec || !rec.promiseEnd || isNaN(rec.promiseEnd.getTime())) return '';
-    const today = new Date();
-    const d = rec.promiseEnd;
-    if(sameDay(d, today)) return 'On Time';
-    if(d.getTime() < today.getTime()) return 'Delay';
-    return 'Early';
-  }
-
-  // Monta uma aba do Excel já formatada: título em destaque (azul forte, fonte
-  // preta), linha de cabeçalho azul e linhas de dados alternando azul claro/branco,
-  // igual ao padrão visual usado no time (célula por célula, pra garantir que a
-  // cor cubra mesmo campos vazios).
-  function buildStyledSheet(headerArr, dataRows, title){
-    const ws = {};
-    const lastRow = Math.max(1, dataRows.length + 1);
-    const range = { s:{ r:0, c:0 }, e:{ r:lastRow, c:headerArr.length-1 } };
-
-    const TITLE_FILL  = { patternType:'solid', fgColor:{ rgb:'0B5FA5' } };
-    const TITLE_FONT  = { bold:true, sz:13, color:{ rgb:'000000' } };
-    const HEADER_FILL = { patternType:'solid', fgColor:{ rgb:'9CC7EE' } };
-    const HEADER_FONT = { bold:true, sz:11, color:{ rgb:'000000' } };
-    const ROW_FILL_WHITE = { patternType:'solid', fgColor:{ rgb:'FFFFFF' } };
-    const ROW_FILL_BLUE  = { patternType:'solid', fgColor:{ rgb:'DCEAF9' } };
-    const THIN = { style:'thin', color:{ rgb:'BFD3E8' } };
-    const BORDER = { top:THIN, bottom:THIN, left:THIN, right:THIN };
-
-    function setCell(r, c, v, style){
-      const ref = XLSX.utils.encode_cell({ r, c });
-      const isNum = typeof v === 'number';
-      ws[ref] = { v: (v===null||v===undefined) ? '' : v, t: isNum ? 'n' : 's', s: style };
-    }
-
-    // linha 0: título mesclado, cor forte + fonte preta
-    setCell(0, 0, title, { fill: TITLE_FILL, font: TITLE_FONT, alignment:{ horizontal:'left', vertical:'center' } });
-    for(let c=1;c<headerArr.length;c++) setCell(0, c, '', { fill: TITLE_FILL });
-
-    // linha 1: cabeçalho das colunas
-    headerArr.forEach((h, c) => setCell(1, c, h, { fill: HEADER_FILL, font: HEADER_FONT, border: BORDER, alignment:{ vertical:'center', wrapText:true } }));
-
-    // linhas de dados, alternando branco / azul claro
-    dataRows.forEach((row, i) => {
-      const fill = i % 2 === 0 ? ROW_FILL_WHITE : ROW_FILL_BLUE;
-      row.forEach((val, c) => {
-        setCell(i+2, c, val, { fill, border: BORDER, font:{ color:{ rgb:'0B2545' } } });
-      });
-    });
-
-    ws['!ref'] = XLSX.utils.encode_range(range);
-    ws['!merges'] = [{ s:{r:0,c:0}, e:{r:0,c:headerArr.length-1} }];
-    ws['!cols'] = headerArr.map(h => ({ wch: Math.max(12, Math.min(28, String(h).length + 4)) }));
-    if(dataRows.length > 0){
-      ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s:{r:1,c:0}, e:{r:1,c:headerArr.length-1} }) };
-    }
-    return ws;
-  }
-
-  function buildExtractRow(id, tipo, base2ById, orderByOrigin){
-    const r = base2ById.get(id) || {};
-    const rec = (base1Data && base1Data.records) ? base1Data.records.get(id) : null;
-    const origin = (rec && rec.facility) || r.origem || '';
-    const orderInfo = orderByOrigin.get(origin);
-    const situacao = r.loc === 'Caminho para a estação' ? 'A Caminho'
-      : (r.loc === 'Na estação' ? 'Recebido' : (r.loc || ''));
-    const classificacao = classifyPromise(rec) || r.status || '';
-    return [
-      id,
-      r.rota || (rec && rec.rota) || '',
-      r.parada || '',
-      r.ponto || '',
-      r.inboundRaw || '',
-      r.altura || '',
-      r.largura || '',
-      r.comprimento || '',
-      r.loc || '',
-      r.detalhe || '',
-      origin,
-      orderInfo ? orderInfo.order : '',
-      orderInfo ? orderInfo.timeStr : '',
-      classificacao,
-      situacao,
-      tipo,
-      r.status || '',
-      r.status2 || '',
-      r.status3 || ''
-    ];
-  }
-
   function buildExtractWorkbook(){
     const wb = XLSX.utils.book_new();
 
-    const base2ById = new Map((base2Rows || []).map(r => [r.id, r]));
-    const orderByOrigin = buildOrderByOrigin();
+    const d1Data = [['ID do Pacote'], ...lastMetricIds.d1.map(id => [id])];
+    const onWayData = [['ID do Pacote'], ...lastMetricIds.onWay.map(id => [id])];
+    const recebidoData = [['ID do Pacote'], ...lastMetricIds.recebido.map(id => [id])];
 
-    const header = [
-      'ID do pacote', 'N.º Rota', 'Parada', 'Ponto', 'Data de Inbound',
-      'Altura', 'Largura', 'Comprimento', 'Localização do pacote',
-      'Detalhe do pacote', 'Origem', 'Ordem de Chegada da Origem',
-      'Horário Estimado de Chegada', 'Classificação (On Time/Early/Delay)',
-      'Situação', 'Tipo', 'Status', 'Status2', 'Status3'
-    ];
-
-    const d1Rows = lastMetricIds.d1.map(id => buildExtractRow(id, 'D-1', base2ById, orderByOrigin));
-    const onWayRows = lastMetricIds.onWay.map(id => buildExtractRow(id, 'On Way', base2ById, orderByOrigin));
-    const recebidoRows = lastMetricIds.recebido.map(id => buildExtractRow(id, 'Recebido do dia', base2ById, orderByOrigin));
-
-    const dataLabel = new Date().toLocaleDateString('pt-BR');
-    const wsD1 = buildStyledSheet(header, d1Rows, 'Detalhes da Extração — D-1 · ' + dataLabel);
-    const wsOnWay = buildStyledSheet(header, onWayRows, 'Detalhes da Extração — On Way · ' + dataLabel);
-    const wsRecebido = buildStyledSheet(header, recebidoRows, 'Detalhes da Extração — Recebido do dia · ' + dataLabel);
+    const wsD1 = XLSX.utils.aoa_to_sheet(d1Data);
+    const wsOnWay = XLSX.utils.aoa_to_sheet(onWayData);
+    const wsRecebido = XLSX.utils.aoa_to_sheet(recebidoData);
 
     XLSX.utils.book_append_sheet(wb, wsD1, 'D-1');
     XLSX.utils.book_append_sheet(wb, wsOnWay, 'On Way');
@@ -2297,6 +2081,29 @@
     }
     location.reload();
   });
+
+  // ---------- refresh (manual e automático) — busca dados novos do banco sem recarregar a página ----------
+  let isRefreshing = false;
+  async function refreshData(showSpinner){
+    if(isRefreshing) return; // evita duas buscas ao mesmo tempo
+    isRefreshing = true;
+    const btn = document.getElementById('btnRefreshData');
+    const icon = document.getElementById('refreshIcon');
+    if(showSpinner){ btn.disabled = true; icon.classList.add('spinning'); }
+    try{
+      await loadSavedData();
+    }finally{
+      isRefreshing = false;
+      if(showSpinner){ icon.classList.remove('spinning'); btn.disabled = false; }
+      tickClock();
+    }
+  }
+
+  document.getElementById('btnRefreshData').addEventListener('click', ()=> refreshData(true));
+
+  // busca dados novos sozinho a cada 45s (sem precisar clicar em nada); usa o
+  // spinner "silencioso" pra não ficar piscando o botão o tempo todo
+  setInterval(()=> refreshData(false), 45000);
 
   // ---------- carregar dados salvos do banco de dados ao abrir o painel ----------
   loadSavedData();
