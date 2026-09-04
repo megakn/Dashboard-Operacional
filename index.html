@@ -310,6 +310,69 @@
     border-radius:7px;
   }
   .pendente-badge b{ font-weight:800; }
+
+  /* ---------- ajuste manual do Total Geral ---------- */
+  .card .label{ display:flex; align-items:center; gap:6px; }
+  .edit-total-btn{
+    appearance:none;
+    border:1px solid var(--border);
+    background:var(--bg-2);
+    color:var(--text-mid);
+    width:20px;height:20px;
+    border-radius:6px;
+    font-size:11px;
+    line-height:1;
+    cursor:pointer;
+    display:inline-flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .edit-total-btn:hover{ border-color:var(--cyan); color:var(--cyan); }
+  .total-mode-tag{
+    font-family:var(--mono);
+    font-size:9.5px;
+    font-weight:700;
+    letter-spacing:.03em;
+    color:var(--amber);
+    background:rgba(201,125,12,.12);
+    padding:2px 6px;
+    border-radius:5px;
+    text-transform:uppercase;
+  }
+  .total-manual-row{
+    margin-top:10px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+  }
+  .total-manual-row input{
+    width:100px;
+    font-family:var(--mono);
+    font-size:13px;
+    padding:5px 8px;
+    border:1px solid var(--border);
+    border-radius:7px;
+    background:var(--bg-1);
+    color:var(--text-hi);
+  }
+  .total-manual-row button{
+    appearance:none;
+    border:1px solid var(--border);
+    background:var(--bg-2);
+    color:var(--text-mid);
+    font-family:inherit;
+    font-size:11px;
+    font-weight:600;
+    padding:5px 9px;
+    border-radius:7px;
+    cursor:pointer;
+  }
+  .total-manual-row button.primary{
+    border-color:var(--cyan);
+    color:#fff;
+    background:var(--cyan);
+  }
+  .total-manual-row button:hover{ filter:brightness(0.97); }
   .bar-track{
     height:4px;
     border-radius:2px;
@@ -656,7 +719,7 @@
       <div class="drop-icon">①</div>
       <div class="drop-text">
         <div class="label">Base estrutura (.xlsx)</div>
-        <div class="sub">abas: BASE + PLANIFICATION</div>
+        <div class="sub">aceita formato BASE+PLANIFICATION ou Planification (RTG)</div>
       </div>
       <div class="drop-status" id="statusBase1">arraste ou clique</div>
     </label>
@@ -721,8 +784,17 @@
 
     <div class="cards">
     <div class="card total" style="--accent:var(--violet)">
-      <div class="label">Total Geral</div>
+      <div class="label">
+        Total Geral
+        <span class="total-mode-tag" id="totalGeralModeTag" style="display:none;">manual</span>
+        <button type="button" class="edit-total-btn" id="btnEditTotal" title="Ajustar total geral manualmente">✎</button>
+      </div>
       <div class="value" id="valTotal">—</div>
+      <div class="total-manual-row" id="totalManualRow" style="display:none;">
+        <input type="number" id="inputTotalManual" min="0" step="1" placeholder="valor manual">
+        <button type="button" class="primary" id="btnSaveTotalManual">Salvar</button>
+        <button type="button" id="btnClearTotalManual">Usar automático</button>
+      </div>
       <div class="pendente-badge" id="valPendenteSortingWrap">Pendente de sorting: <b id="valPendenteSorting">—</b></div>
     </div>
 
@@ -916,6 +988,14 @@
   let base1Data = null; // { statusMap: Map(id->status), totalGeral: number }
   let base2Rows = null; // [{id, loc}]
   let excludedOrigins = new Set(); // origins hidden from the "Distribuição por Origem" chart
+  let manualTotalGeral = null; // override manual do "Total Geral" (null = usar valor automático da base)
+
+  function getEffectiveTotalGeral(){
+    if(manualTotalGeral !== null && manualTotalGeral !== undefined && !isNaN(manualTotalGeral)){
+      return manualTotalGeral;
+    }
+    return base1Data ? base1Data.totalGeral : 0;
+  }
 
   // ---------- persistência (banco de dados Supabase) ----------
   // Os arquivos originais (base estrutura e base faltantes) são salvos numa
@@ -960,7 +1040,7 @@
         }, { onConflict: 'chave' });
       if(metaError) throw metaError;
 
-      dropBase1._setStatus(filename + ' · ' + fmt(base1Data.totalGeral) + ' pacotes (salvo no banco ✓)', true);
+      dropBase1._setStatus(filename + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || '') + ' (salvo no banco ✓)', true);
     }catch(err){
       console.error('Falha ao salvar base estrutura no Supabase:', err);
       dropBase1._setStatus(filename + ' · carregado, mas NÃO salvo no banco', false);
@@ -985,6 +1065,40 @@
       showError('BASE FALTANTES não foi salva no banco de dados: ' + (err.message || JSON.stringify(err)), 'save');
     }
   }
+  async function saveManualTotalToStorage(value){
+    try{
+      const { error } = await supabaseClient
+        .from(SUPABASE_TABLE)
+        .upsert({
+          chave: 'totalGeralManual',
+          filename: null,
+          conteudo: String(value),
+          atualizado_em: new Date().toISOString()
+        }, { onConflict: 'chave' });
+      if(error) throw error;
+    }catch(err){
+      showError('Total geral manual não foi salvo no banco de dados: ' + (err.message || JSON.stringify(err)), 'save');
+    }
+  }
+
+  async function clearManualTotalFromStorage(){
+    try{
+      const { error } = await supabaseClient
+        .from(SUPABASE_TABLE)
+        .delete()
+        .eq('chave', 'totalGeralManual');
+      if(error) throw error;
+    }catch(err){
+      showError('Não consegui remover o total geral manual do banco de dados: ' + (err.message || JSON.stringify(err)), 'save');
+    }
+  }
+
+  function updateTotalManualUI(){
+    const tag = document.getElementById('totalGeralModeTag');
+    const isManual = manualTotalGeral !== null && manualTotalGeral !== undefined && !isNaN(manualTotalGeral);
+    tag.style.display = isManual ? 'inline-block' : 'none';
+  }
+
   async function loadSavedData(){
     // base1 (xlsx) — arquivo no Storage + nome/data na tabela
     try{
@@ -1003,7 +1117,7 @@
 
       const buf = await fileBlob.arrayBuffer();
       base1Data = parseBase1(buf);
-      dropBase1._setStatus((meta && meta.filename || 'base salva') + ' · ' + fmt(base1Data.totalGeral) + ' pacotes (salvo)', true);
+      dropBase1._setStatus((meta && meta.filename || 'base salva') + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || '') + ' (salvo)', true);
       renderChegadaTab();
     }catch(err){
       // ainda não há base estrutura salva — segue sem erro visível
@@ -1024,6 +1138,25 @@
     }catch(err){
       // ainda não há base faltantes salva — segue sem erro visível
     }
+
+    // total geral manual (override) — se existir, sobrescreve o valor calculado da base
+    try{
+      const { data: rowManual } = await supabaseClient
+        .from(SUPABASE_TABLE)
+        .select('conteudo')
+        .eq('chave', 'totalGeralManual')
+        .limit(1)
+        .maybeSingle();
+      if(rowManual && rowManual.conteudo !== null && rowManual.conteudo !== ''){
+        const n = Number(rowManual.conteudo);
+        manualTotalGeral = isNaN(n) ? null : n;
+      } else {
+        manualTotalGeral = null;
+      }
+    }catch(err){
+      // sem valor manual salvo — segue com o automático
+    }
+    updateTotalManualUI();
 
     if(base1Data || base2Rows) compute();
   }
@@ -1201,14 +1334,35 @@
   }
 
   // ---------- parse BASE1 (xlsx) ----------
+  // ---------- ponto de entrada: detecta o formato do arquivo e delega ----------
   function parseBase1(arrayBuffer){
     const wb = XLSX.read(arrayBuffer, {type:'array', cellDates:true});
 
     const baseSheetName = findSheetName(wb, ['BASE']);
     const planSheetName = findSheetName(wb, ['PLANIFICATION']);
-    if(!baseSheetName) throw new Error('Não encontrei a aba "BASE" no arquivo.');
-    if(!planSheetName) throw new Error('Não encontrei a aba "PLANIFICATION" no arquivo.');
 
+    // Formato 1: abas "BASE" + "PLANIFICATION" (unit_id / status / facility_origin ...)
+    if(baseSheetName && planSheetName){
+      return parseFormat1(wb, baseSheetName, planSheetName);
+    }
+
+    // Formato 2: aba única "Planification" com colunas RTG_UNIT_EXTERNAL_ID / STATUS_ATUAL / ...
+    if(planSheetName){
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[planSheetName], {header:1, raw:true, defval:null});
+      const header = rows[0] || [];
+      const looksLikeFormat2 =
+        findHeaderIndex(header, ['rtg_unit_external_id']) !== -1 &&
+        findHeaderIndex(header, ['status_atual']) !== -1;
+      if(looksLikeFormat2){
+        return parseFormat2(wb, planSheetName, rows, header);
+      }
+    }
+
+    throw new Error('Não reconheci o formato desta planilha. Formatos aceitos: (1) abas "BASE" + "PLANIFICATION"; (2) aba "Planification" com colunas RTG_UNIT_EXTERNAL_ID / STATUS_ATUAL.');
+  }
+
+  // ---------- Formato 1: abas BASE + PLANIFICATION ----------
+  function parseFormat1(wb, baseSheetName, planSheetName){
     // Total geral = data rows in BASE sheet
     const baseRows = XLSX.utils.sheet_to_json(wb.Sheets[baseSheetName], {header:1, raw:true, defval:null});
     const totalGeral = Math.max(0, baseRows.length - 1); // minus header
@@ -1307,7 +1461,66 @@
     const statusMap = new Map();
     records.forEach((rec, id) => statusMap.set(id, rec.status));
 
-    return { statusMap, records, totalGeral, baseIds, arrivalByOrigin, estArrivalColumnFound: estArrivalIdx !== -1, facilityColumnFound: facilityIdx !== -1, planHeaderRaw: header };
+    return { statusMap, records, totalGeral, baseIds, arrivalByOrigin, estArrivalColumnFound: estArrivalIdx !== -1, facilityColumnFound: facilityIdx !== -1, planHeaderRaw: header, formatDetected: 'Formato 1 (BASE + PLANIFICATION)' };
+  }
+
+  // ---------- Formato 2: aba única "Planification" (RTG_UNIT_EXTERNAL_ID / STATUS_ATUAL / SUBSTATUS_ATUAL / ORIGEM / OTIMIZADO ...) ----------
+  function parseFormat2(wb, planSheetName, rowsParam, headerParam){
+    const rows = rowsParam || XLSX.utils.sheet_to_json(wb.Sheets[planSheetName], {header:1, raw:true, defval:null});
+    if(rows.length < 1) throw new Error('Aba "Planification" está vazia.');
+    const header = headerParam || rows[0];
+
+    const idIdx = findHeaderIndex(header, ['rtg_unit_external_id']);
+    const statusIdx = findHeaderIndex(header, ['status_atual']);
+    const substatusIdx = findHeaderIndex(header, ['substatus_atual']);
+    const facilityIdx = findHeaderIndex(header, ['origem']);
+    const rotaIdx = findHeaderIndex(header, ['otimizado']);
+    const dataSaidaIdx = findHeaderIndex(header, ['data_saida']);
+    if(idIdx === -1) throw new Error('Não encontrei a coluna "RTG_UNIT_EXTERNAL_ID" na aba Planification.');
+    if(statusIdx === -1) throw new Error('Não encontrei a coluna "STATUS_ATUAL" na aba Planification.');
+
+    // status combinado no mesmo padrão do Formato 1: "status|substatus" (ex: "at_station|sorting")
+    const records = new Map();
+    const baseIds = new Set();
+    for(let i=1;i<rows.length;i++){
+      const row = rows[i];
+      if(!row) continue;
+      const id = normId(row[idIdx]);
+      if(id === null || id === '') continue;
+
+      const statusMain = (row[statusIdx] === null || row[statusIdx] === undefined) ? '' : String(row[statusIdx]).trim();
+      const substatus = (substatusIdx === -1 || row[substatusIdx] === null || row[substatusIdx] === undefined) ? '' : String(row[substatusIdx]).trim();
+      const status = substatus ? (statusMain + '|' + substatus) : statusMain;
+
+      const facility = (facilityIdx === -1 || row[facilityIdx] === null || row[facilityIdx] === undefined) ? null : String(row[facilityIdx]).trim();
+      const rota = (rotaIdx === -1 || row[rotaIdx] === null || row[rotaIdx] === undefined) ? '' : String(row[rotaIdx]).trim();
+
+      // No Formato 2, DATA_SAIDA faz o papel de "promise_date_end" (usado no On Time/Early/Delay).
+      // Horário estimado de chegada (ORH) segue ignorado por enquanto.
+      let promiseEnd = null;
+      if(dataSaidaIdx !== -1 && row[dataSaidaIdx] !== null && row[dataSaidaIdx] !== undefined && row[dataSaidaIdx] !== ''){
+        const v = row[dataSaidaIdx];
+        const d = (v instanceof Date) ? v : new Date(v);
+        if(!isNaN(d.getTime())) promiseEnd = d;
+      }
+
+      records.set(id, { status, facility, promiseEnd, rota });
+      baseIds.add(id);
+    }
+
+    const statusMap = new Map();
+    records.forEach((rec, id) => statusMap.set(id, rec.status));
+
+    const totalGeral = records.size;
+
+    return {
+      statusMap, records, totalGeral, baseIds,
+      arrivalByOrigin: new Map(),
+      estArrivalColumnFound: false,
+      facilityColumnFound: facilityIdx !== -1,
+      planHeaderRaw: header,
+      formatDetected: 'Formato 2 (Planification)'
+    };
   }
 
   // ---------- parse BASE2 (csv) ----------
@@ -1402,7 +1615,8 @@
   let lastMetricIds = { d1: [], recebido: [], onWay: [], faltante: [], faltanteAvailable: false };
 
   function recomputeAll(){
-    const { statusMap, totalGeral, baseIds } = base1Data;
+    const { statusMap, baseIds } = base1Data;
+    const totalGeral = getEffectiveTotalGeral();
     const D1_STATUSES = new Set(['at_station|sorting','at_station|buffered']);
     const allRows = base2Rows;        // everything except On Way uses the full data
     const visibleRows = getVisibleRows(); // filtered by excludedOrigins — only feeds On Way
@@ -2035,7 +2249,7 @@
     reader.onload = (e)=>{
       try{
         base1Data = parseBase1(e.target.result);
-        dropBase1._setStatus(file.name + ' · ' + fmt(base1Data.totalGeral) + ' pacotes', true);
+        dropBase1._setStatus(file.name + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || ''), true);
         compute();
         renderChegadaTab();
         saveBase1ToStorage(e.target.result, file.name);
@@ -2072,7 +2286,7 @@
       const { error } = await supabaseClient
         .from(SUPABASE_TABLE)
         .delete()
-        .in('chave', ['base1', 'base2']);
+        .in('chave', ['base1', 'base2', 'totalGeralManual']);
       if(error) throw error;
       await supabaseClient.storage.from(STORAGE_BUCKET).remove([BASE1_STORAGE_PATH]);
     }catch(err){
@@ -2098,6 +2312,44 @@
       tickClock();
     }
   }
+
+  // ---------- ajuste manual do Total Geral ----------
+  const btnEditTotal = document.getElementById('btnEditTotal');
+  const totalManualRow = document.getElementById('totalManualRow');
+  const inputTotalManual = document.getElementById('inputTotalManual');
+
+  btnEditTotal.addEventListener('click', ()=>{
+    const isOpen = totalManualRow.style.display !== 'none';
+    if(isOpen){
+      totalManualRow.style.display = 'none';
+      return;
+    }
+    inputTotalManual.value = getEffectiveTotalGeral() || '';
+    totalManualRow.style.display = 'flex';
+    inputTotalManual.focus();
+    inputTotalManual.select();
+  });
+
+  document.getElementById('btnSaveTotalManual').addEventListener('click', async ()=>{
+    const n = Number(inputTotalManual.value);
+    if(inputTotalManual.value === '' || isNaN(n) || n < 0){
+      showError('Digite um número válido para o Total Geral.');
+      return;
+    }
+    manualTotalGeral = n;
+    updateTotalManualUI();
+    totalManualRow.style.display = 'none';
+    if(base1Data && base2Rows) recomputeAll();
+    await saveManualTotalToStorage(n);
+  });
+
+  document.getElementById('btnClearTotalManual').addEventListener('click', async ()=>{
+    manualTotalGeral = null;
+    updateTotalManualUI();
+    totalManualRow.style.display = 'none';
+    if(base1Data && base2Rows) recomputeAll();
+    await clearManualTotalFromStorage();
+  });
 
   document.getElementById('btnRefreshData').addEventListener('click', ()=> refreshData(true));
 
