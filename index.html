@@ -1083,10 +1083,18 @@
 
   async function clearManualTotalFromStorage(){
     try{
+      // Usa upsert (mesma operação já usada para salvar) em vez de delete, pois
+      // a policy de segurança do Supabase pode permitir insert/update mas não
+      // delete para a chave anon — assim a limpeza não corre risco de ser
+      // silenciosamente ignorada pelo banco.
       const { error } = await supabaseClient
         .from(SUPABASE_TABLE)
-        .delete()
-        .eq('chave', 'totalGeralManual');
+        .upsert({
+          chave: 'totalGeralManual',
+          filename: null,
+          conteudo: '',
+          atualizado_em: new Date().toISOString()
+        }, { onConflict: 'chave' });
       if(error) throw error;
     }catch(err){
       showError('Não consegui remover o total geral manual do banco de dados: ' + (err.message || JSON.stringify(err)), 'save');
