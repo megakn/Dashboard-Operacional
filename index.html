@@ -1478,11 +1478,15 @@
     if(!base1Data || !base2Rows) return;
     if(errorBox.dataset.kind !== 'save') clearError();
 
-    populateOriginFilter();
-    recomputeAll();
-
+    // O painel precisa ficar visível ANTES de desenhar os gráficos: o Chart.js
+    // mede a largura/altura do canvas no momento em que é criado, e se o
+    // container ainda estiver com display:none nesse instante, o gráfico
+    // "nasce" com tamanho 0 e fica invisível mesmo depois do painel aparecer.
     document.getElementById('panelsWrap').style.display = 'grid';
     document.getElementById('filterRow').style.display = 'flex';
+
+    populateOriginFilter();
+    recomputeAll();
 
     const btn = document.getElementById('btnExport');
     btn.disabled = false;
