@@ -341,14 +341,7 @@
   }
   .chart-wrap{
     position:relative;
-    height:360px;
-  }
-  /* Gráficos em largura total (empilhados) e bem maiores — legibilidade alta
-     pra quando o painel é exportado como imagem e enviado nos grupos. */
-  .panel-chart-big{ padding-bottom:20px; }
-  .chart-wrap-big{ height:480px; }
-  @media (max-width:1100px){
-    .chart-wrap-big{ height:380px; }
+    height:320px;
   }
 
   .panels-row{
@@ -697,7 +690,7 @@
       <div class="brand-block">
         <p class="eyebrow"><span class="dot"></span>Painel operacional &middot; ao vivo</p>
         <h1>Dashboard Operacional</h1>
-        <p id="cicloInfo">Ciclo &middot; SRJ1</p>
+        <p>Ciclo PM &middot; SRJ1</p>
       </div>
       <div class="clock">
         Última atualização
@@ -742,19 +735,21 @@
   </div>
 
   <div class="panels" id="panelsWrap" style="display:none;">
-    <div class="panel panel-chart-big">
-      <p class="panel-title"><span class="swatch"></span>On Way por Origem (On Time / Early / Delay)</p>
-      <div class="chart-wrap chart-wrap-big">
-        <canvas id="chartOrigem"></canvas>
+    <div class="panels-row">
+      <div class="panel">
+        <p class="panel-title"><span class="swatch"></span>On Way por Origem (On Time / Early / Delay)</p>
+        <div class="chart-wrap">
+          <canvas id="chartOrigem"></canvas>
+        </div>
       </div>
-    </div>
-    <div class="panel panel-chart-big">
-      <p class="panel-title">
-        <span class="swatch" style="background:var(--amber)"></span>Resumo Geral por Status
-        <span class="total-badge" id="statusTotalBadge"></span>
-      </p>
-      <div class="chart-wrap chart-wrap-big">
-        <canvas id="chartStatus"></canvas>
+      <div class="panel">
+        <p class="panel-title">
+          <span class="swatch" style="background:var(--amber)"></span>Resumo Geral por Status
+          <span class="total-badge" id="statusTotalBadge"></span>
+        </p>
+        <div class="chart-wrap">
+          <canvas id="chartStatus"></canvas>
+        </div>
       </div>
     </div>
 
@@ -1253,20 +1248,6 @@
     return null;
   }
 
-  // Identifica o ciclo (AM/PM/CHP/SD etc, com o número do turno se houver, ex:
-  // "AM1", "PM2", "SD0") a partir do nome das abas da planilha (ex: "BASE AM1",
-  // "PLANIFICATION_PM2"). Procura a palavra isolada pra não confundir com
-  // outros textos que por acaso contenham essas letras juntas.
-  function detectCiclo(sheetNames){
-    const CICLO_RE = /(?:^|[\s_\-.])(AM|PM|CHP|SD)(\d{1,2})?(?:$|[\s_\-.])/i;
-    for(const name of sheetNames){
-      if(!name) continue;
-      const m = String(name).match(CICLO_RE);
-      if(m) return m[1].toUpperCase() + (m[2] || '');
-    }
-    return null;
-  }
-
   // ---------- parse BASE1 (xlsx) ----------
   function parseBase1(arrayBuffer){
     const wb = XLSX.read(arrayBuffer, {type:'array', cellDates:true});
@@ -1275,8 +1256,6 @@
     const planSheetName = findSheetName(wb, ['PLANIFICATION']);
     if(!baseSheetName) throw new Error('Não encontrei a aba "BASE" no arquivo.');
     if(!planSheetName) throw new Error('Não encontrei a aba "PLANIFICATION" no arquivo.');
-
-    const ciclo = detectCiclo([baseSheetName, planSheetName, ...wb.SheetNames]);
 
     // Total geral = data rows in BASE sheet
     const baseRows = XLSX.utils.sheet_to_json(wb.Sheets[baseSheetName], {header:1, raw:true, defval:null});
@@ -1411,7 +1390,7 @@
     const statusMap = new Map();
     records.forEach((rec, id) => statusMap.set(id, rec.status));
 
-    return { statusMap, records, totalGeral, baseIds, arrivalByOrigin, estArrivalColumnFound: estArrivalIdx !== -1, facilityColumnFound: facilityIdx !== -1, planHeaderRaw: header, ciclo };
+    return { statusMap, records, totalGeral, baseIds, arrivalByOrigin, estArrivalColumnFound: estArrivalIdx !== -1, facilityColumnFound: facilityIdx !== -1, planHeaderRaw: header };
   }
 
   // ---------- parse BASE2 (csv) ----------
@@ -1499,20 +1478,11 @@
     if(!base1Data || !base2Rows) return;
     if(errorBox.dataset.kind !== 'save') clearError();
 
-    // O painel precisa ficar visível ANTES de desenhar os gráficos: o Chart.js
-    // mede a largura/altura do canvas no momento em que é criado, e se o
-    // container ainda estiver com display:none nesse instante, o gráfico
-    // "nasce" com tamanho 0 e fica invisível mesmo depois do painel aparecer.
-    document.getElementById('panelsWrap').style.display = 'grid';
-    document.getElementById('filterRow').style.display = 'flex';
-
-    const cicloEl = document.getElementById('cicloInfo');
-    if(cicloEl){
-      cicloEl.textContent = base1Data.ciclo ? ('Ciclo ' + base1Data.ciclo + ' \u00b7 SRJ1') : 'Ciclo \u00b7 SRJ1';
-    }
-
     populateOriginFilter();
     recomputeAll();
+
+    document.getElementById('panelsWrap').style.display = 'grid';
+    document.getElementById('filterRow').style.display = 'flex';
 
     const btn = document.getElementById('btnExport');
     btn.disabled = false;
@@ -1709,31 +1679,12 @@
       Chart.register(ChartDataLabels);
     }
     const data = computeOnWayByOrigin();
-    const canvasEl = document.getElementById('chartOrigem');
-    const ctx = canvasEl.getContext('2d');
+    const ctx = document.getElementById('chartOrigem').getContext('2d');
 
     const labels = data.map(d => d.origin);
     const onTime = data.map(d => d.OnTime);
     const early = data.map(d => d.Early);
     const delay = data.map(d => d.Delay);
-
-    // ---- altura mínima visual pros segmentos pequenos ----
-    // Numa escala linear até ~4.500, um valor de "1" ou "5" some — a fatia
-    // fica menor que 1px e o número não tem onde caber. Aqui calculamos uma
-    // altura mínima (em unidades de dado) equivalente a ~16px na tela, e
-    // "levantamos" só os segmentos menores que isso pra ficarem visíveis.
-    // O texto do número continua mostrando o valor REAL (não o inflado) —
-    // isso afeta só o desenho da barra, nunca a informação exibida.
-    const wrapEl = canvasEl.parentElement;
-    const plotAreaHeight = Math.max(200, (wrapEl ? wrapEl.clientHeight : 480) - 150);
-    const maxTotal = Math.max(1, ...data.map(d => d.OnTime + d.Early + d.Delay));
-    const yMaxApprox = maxTotal * 1.10;
-    const MIN_PX = 16;
-    const floor = Math.max(1, Math.round(MIN_PX * yMaxApprox / plotAreaHeight));
-    const withFloor = (arr) => arr.map(v => v > 0 ? Math.max(v, floor) : 0);
-    const onTimeVisual = withFloor(onTime);
-    const earlyVisual = withFloor(early);
-    const delayVisual = withFloor(delay);
 
     if(origemChartInstance) origemChartInstance.destroy();
 
@@ -1742,14 +1693,9 @@
       data: {
         labels,
         datasets: [
-          { label:'On Time', data:onTimeVisual, realData:onTime, backgroundColor:'#C97D0C', stack:'s',
-            datalabels:{ anchor:'center', align:'center' } },
-          { label:'Early', data:earlyVisual, realData:early, backgroundColor:'#94A3B8', stack:'s',
-            datalabels:{ anchor:'center', align:'center' } },
-          // Delay fica sempre por cima do topo da barra (fora da fatia fina),
-          // pra não colidir com o número de "Early" logo abaixo dele.
-          { label:'Delay', data:delayVisual, realData:delay, backgroundColor:'#0B5FA5', stack:'s',
-            datalabels:{ anchor:'end', align:'end', offset:2 } },
+          { label:'On Time', data:onTime, backgroundColor:'#C97D0C', stack:'s' },
+          { label:'Early', data:early, backgroundColor:'#94A3B8', stack:'s' },
+          { label:'Delay', data:delay, backgroundColor:'#0B5FA5', stack:'s' },
         ]
       },
       options: {
@@ -1760,7 +1706,7 @@
           legend:{
             position:'top',
             align:'end',
-            labels:{ color:'#0B2545', boxWidth:14, font:{ family:"'JetBrains Mono', monospace", size:13, weight:'700' } }
+            labels:{ color:'#0B2545', boxWidth:12, font:{ family:"'JetBrains Mono', monospace", size:12, weight:'700' } }
           },
           tooltip:{
             backgroundColor:'#0B2545',
@@ -1769,50 +1715,27 @@
             titleColor:'#FFFFFF',
             bodyColor:'#CBD8E8',
             bodyFont:{ family:"'JetBrains Mono', monospace" },
-            titleFont:{ family:"'JetBrains Mono', monospace" },
-            callbacks:{
-              // Mostra o valor REAL no tooltip (não a altura inflada usada só
-              // pra deixar a barra visível).
-              label:(ctx) => {
-                const real = ctx.dataset.realData ? ctx.dataset.realData[ctx.dataIndex] : ctx.raw;
-                return ' ' + ctx.dataset.label + ': ' + fmt(real);
-              }
-            }
+            titleFont:{ family:"'JetBrains Mono', monospace" }
           },
           datalabels:{
-            // Mostra o número em TODOS os segmentos, mesmo os bem pequenos —
-            // em vez de esconder quando não cabe, usamos um contorno escuro
-            // ao redor do texto branco (halo), assim o número fica legível
-            // por cima de qualquer cor de fundo, sem cortar nem esconder nada.
-            display: (ctx) => {
-              const real = ctx.dataset.realData ? ctx.dataset.realData[ctx.dataIndex] : ctx.dataset.data[ctx.dataIndex];
-              return real > 0;
-            },
-            clamp:true,
-            clip:false,
+            display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
             color: '#FFFFFF',
-            textStrokeColor: '#0B2545',
-            textStrokeWidth: 3.5,
-            font:{ family:"'JetBrains Mono', monospace", size:12, weight:'800' },
-            // Sempre exibe o valor REAL, mesmo que a barra tenha sido "levantada"
-            // visualmente pra ficar visível.
-            formatter: (value, ctx) => ctx.dataset.realData ? ctx.dataset.realData[ctx.dataIndex] : value
+            font:{ family:"'JetBrains Mono', monospace", size:10.5, weight:'800' },
+            formatter: (value) => value
           }
         },
         scales:{
           x:{
             stacked:true,
-            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:12, weight:'600' } },
+            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
             grid:{ color:'#E6ECF5' }
           },
           y:{
             stacked:true,
-            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:12, weight:'600' } },
-            grid:{ color:'#E6ECF5' },
-            grace:'10%'
+            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
+            grid:{ color:'#E6ECF5' }
           }
-        },
-        layout:{ padding:{ top:14 } }
+        }
       }
     });
   }
@@ -1853,7 +1776,7 @@
       type: 'bar',
       data: {
         labels,
-        datasets: [{ data: values, backgroundColor: colors, borderRadius: 4, barThickness: 70 }]
+        datasets: [{ data: values, backgroundColor: colors, borderRadius: 3, barThickness: 46 }]
       },
       options: {
         responsive:true,
@@ -1873,17 +1796,17 @@
             anchor:'end',
             align:'top',
             color:'#0B2545',
-            font:{ family:"'JetBrains Mono', monospace", size:15, weight:'700' },
+            font:{ family:"'JetBrains Mono', monospace", size:12, weight:'700' },
             formatter: (value) => fmt(value)
           }
         },
         scales:{
           x:{
-            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:13, weight:'600' } },
+            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
             grid:{ display:false }
           },
           y:{
-            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:12, weight:'600' } },
+            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
             grid:{ color:'#E6ECF5' },
             grace:'12%'
           }
