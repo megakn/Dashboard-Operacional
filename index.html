@@ -1970,7 +1970,7 @@
       type: 'bar',
       data: {
         labels,
-        datasets: [{ data: values, backgroundColor: colors, borderRadius: 3, barThickness: 46 }]
+        datasets: [{ data: values, backgroundColor: colors, borderRadius: 3, barThickness: 46, minBarLength: 34 }]
       },
       options: {
         responsive:true,
@@ -1987,17 +1987,19 @@
             titleFont:{ family:"'JetBrains Mono', monospace" }
           },
           datalabels:{
-            // Valor fica DENTRO da própria barra: a cor sobe junto com a informação.
-            anchor:'end',
-            align:'start',
-            offset:4,
+            // Mantém inclusive os valores pequenos dentro da barra para o print ficar legível.
+            display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
+            anchor:'center',
+            align:'center',
+            offset:0,
             clamp:true,
+            clip:false,
             color:'#FFFFFF',
             backgroundColor:null,
             borderWidth:0,
-            padding:{top:4,bottom:4,left:7,right:7},
-            font:{ family:"'JetBrains Mono', monospace", size:16, weight:'900' },
-            textStrokeColor:'rgba(0,0,0,.32)',
+            padding:{top:2,bottom:2,left:4,right:4},
+            font:{ family:"'JetBrains Mono', monospace", size:14, weight:'900' },
+            textStrokeColor:'rgba(0,0,0,.38)',
             textStrokeWidth:2,
             formatter: (value) => fmt(value)
           }
