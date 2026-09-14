@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kuehne+Nagel · Painel Operacional</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -423,7 +422,7 @@
   }
   .chart-wrap{
     position:relative;
-    height:350px;
+    height:320px;
   }
 
   .panels-row{
@@ -772,7 +771,7 @@
       <div class="brand-block">
         <p class="eyebrow"><span class="dot"></span>Painel operacional &middot; ao vivo</p>
         <h1>Dashboard Operacional</h1>
-        <p id="cicloBadge" style="display:none;">Ciclo —</p>
+        <p>Ciclo PM &middot; SRJ1</p>
       </div>
       <div class="clock">
         Última atualização
@@ -858,6 +857,7 @@
                 <th class="num">Early</th>
                 <th class="num">On Time</th>
                 <th class="num">Delay</th>
+                <th class="num">Sem Data</th>
                 <th class="num">Total</th>
                 <th class="num">%</th>
               </tr>
@@ -935,6 +935,7 @@
                     <th data-sort="onTime" class="sortable num">On Time</th>
                     <th data-sort="early" class="sortable num">Early</th>
                     <th data-sort="delay" class="sortable num">Delay</th>
+                    <th data-sort="semData" class="sortable num">Sem Data</th>
                     <th data-sort="total" class="sortable num col-total">Total</th>
                   </tr>
                 </thead>
@@ -943,10 +944,11 @@
                   <tr>
                     <td></td>
                     <td></td>
-                    <td><b>Total (On Time + Early + Delay)</b></td>
+                    <td><b>Total (On Time + Early + Delay + Sem Data)</b></td>
                     <td class="num" id="chegadaOrigemTotalOnTime"><b>0</b></td>
                     <td class="num" id="chegadaOrigemTotalEarly"><b>0</b></td>
                     <td class="num" id="chegadaOrigemTotalDelay"><b>0</b></td>
+                    <td class="num" id="chegadaOrigemTotalSemData"><b>0</b></td>
                     <td class="num col-total" id="chegadaOrigemTotalTotal"><b>0</b></td>
                   </tr>
                 </tfoot>
@@ -1041,7 +1043,7 @@
         }, { onConflict: 'chave' });
       if(metaError) throw metaError;
 
-      dropBase1._setStatus(filename + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || '') + cycleTag(base1Data) + ' (salvo no banco ✓)', true);
+      dropBase1._setStatus(filename + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || '') + ' (salvo no banco ✓)', true);
     }catch(err){
       console.error('Falha ao salvar base estrutura no Supabase:', err);
       dropBase1._setStatus(filename + ' · carregado, mas NÃO salvo no banco', false);
@@ -1125,9 +1127,8 @@
       if(downloadError) throw downloadError;
 
       const buf = await fileBlob.arrayBuffer();
-      base1Data = parseBase1(buf, meta && meta.filename);
-      dropBase1._setStatus((meta && meta.filename || 'base salva') + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || '') + cycleTag(base1Data) + ' (salvo)', true);
-      updateCicloBadge();
+      base1Data = parseBase1(buf);
+      dropBase1._setStatus((meta && meta.filename || 'base salva') + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || '') + ' (salvo)', true);
       renderChegadaTab();
     }catch(err){
       // ainda não há base estrutura salva — segue sem erro visível
@@ -1223,13 +1224,13 @@
 
     // garante que todas as origens apareçam, mesmo com 0
     getAllOrigins().forEach(origin => {
-      if(!map.has(origin)) map.set(origin, {origin, OnTime:0, Early:0, Delay:0, total:0});
+      if(!map.has(origin)) map.set(origin, {origin, OnTime:0, Early:0, Delay:0, SemData:0, total:0});
     });
 
     return Array.from(map.values()).map(c => {
       const arr = base1Data.arrivalByOrigin && base1Data.arrivalByOrigin.get(c.origin);
       return {
-        origin: c.origin, onTime: c.OnTime, early: c.Early, delay: c.Delay, total: c.total,
+        origin: c.origin, onTime: c.OnTime, early: c.Early, delay: c.Delay, semData: c.SemData || 0, total: c.total,
         arrivalTimeStr: arr ? arr.timeStr : '—',
         arrivalDateStr: arr ? (arr.dateStr || today.toLocaleDateString('pt-BR')) : '—'
       };
@@ -1250,18 +1251,20 @@
     const tbody = document.getElementById('tblChegadaOrigem');
     document.getElementById('chegadaOrigemBadge').textContent = fmt(sorted.length);
     tbody.innerHTML = sorted.map(d =>
-      '<tr><td>'+d.arrivalDateStr+'</td><td>'+d.arrivalTimeStr+'</td><td>'+d.origin+'</td><td class="num">'+fmt(d.onTime)+'</td><td class="num">'+fmt(d.early)+'</td><td class="num">'+fmt(d.delay)+'</td><td class="num col-total">'+fmt(d.total)+'</td></tr>'
+      '<tr><td>'+d.arrivalDateStr+'</td><td>'+d.arrivalTimeStr+'</td><td>'+d.origin+'</td><td class="num">'+fmt(d.onTime)+'</td><td class="num">'+fmt(d.early)+'</td><td class="num">'+fmt(d.delay)+'</td><td class="num">'+fmt(d.semData)+'</td><td class="num col-total">'+fmt(d.total)+'</td></tr>'
     ).join('');
 
     const totalOnTime = sorted.reduce((s,d)=>s+d.onTime, 0);
     const totalEarly = sorted.reduce((s,d)=>s+d.early, 0);
     const totalDelay = sorted.reduce((s,d)=>s+d.delay, 0);
+    const totalSemData = sorted.reduce((s,d)=>s+d.semData, 0);
     const totalTotal = sorted.reduce((s,d)=>s+d.total, 0);
     document.getElementById('chegadaOrigemTotalOnTime').innerHTML = '<b>'+fmt(totalOnTime)+'</b>';
     document.getElementById('chegadaOrigemTotalEarly').innerHTML = '<b>'+fmt(totalEarly)+'</b>';
     document.getElementById('chegadaOrigemTotalDelay').innerHTML = '<b>'+fmt(totalDelay)+'</b>';
+    document.getElementById('chegadaOrigemTotalSemData').innerHTML = '<b>'+fmt(totalSemData)+'</b>';
     document.getElementById('chegadaOrigemTotalTotal').innerHTML = '<b>'+fmt(totalTotal)+'</b>';
-    document.getElementById('chegadaGrandTotalBadge').textContent = 'On Time + Early + Delay: ' + fmt(totalTotal);
+    document.getElementById('chegadaGrandTotalBadge').textContent = 'On Time + Early + Delay + Sem Data: ' + fmt(totalTotal);
 
     document.querySelectorAll('#tblChegadaOrigemTable th.sortable').forEach(th => {
       const key = th.dataset.sort;
@@ -1336,74 +1339,24 @@
 
   function findSheetName(workbook, candidates){
     const names = workbook.SheetNames;
-    const norm = n => n.trim().toLowerCase();
-
-    // 1) match exato (ex: aba chamada só "BASE")
     for(const cand of candidates){
-      const c = cand.toLowerCase();
-      const hit = names.find(n => norm(n) === c);
-      if(hit) return hit;
-    }
-    // 2) match por "palavra" dentro do nome da aba (ex: "BASE PM1", "PLANIFICATION SRJ1",
-    //    onde o sufixo muda conforme a operação/turno)
-    for(const cand of candidates){
-      const c = cand.toLowerCase();
-      const hit = names.find(n => norm(n).split(/[\s_\-]+/).includes(c));
-      if(hit) return hit;
-    }
-    // 3) fallback: aba cujo nome começa com o candidato (ex: "BASEPM1" sem espaço)
-    for(const cand of candidates){
-      const c = cand.toLowerCase();
-      const hit = names.find(n => norm(n).startsWith(c));
+      const hit = names.find(n => n.trim().toLowerCase() === cand.toLowerCase());
       if(hit) return hit;
     }
     return null;
   }
 
-  // ---------- reconhecimento do ciclo (AM/PM/SD/CHP/Outro) ----------
-  // Procura, nos nomes das abas e no nome do arquivo, um token do tipo "PM1",
-  // "AM1", "SD1", "CHP1" (ou só "PM"/"AM"/"SD"/"CHP" sem número) e devolve o
-  // ciclo completo (ex: "PM1") junto com a família (PM/AM/SD/CHP/Outro).
-  function detectCycleInfo(candidates){
-    const text = candidates.filter(Boolean).join(' ');
-    const m = text.match(/\b(AM|PM|SD|CHP)\s*-?\s*(\d+)?\b/i);
-    if(m){
-      const family = m[1].toUpperCase();
-      const num = m[2] || '';
-      return { cycle: family + num, cycleFamily: family };
-    }
-    return { cycle: '', cycleFamily: '' };
-  }
-
-  // texto " · Ciclo PM1" pra anexar nas mensagens de status, ou '' se não detectou
-  function cycleTag(data){
-    return (data && data.cycle) ? ' · Ciclo ' + data.cycle : '';
-  }
-
-  // atualiza o badge de ciclo fixado no topo do painel
-  function updateCicloBadge(){
-    const badge = document.getElementById('cicloBadge');
-    if(!badge) return;
-    if(base1Data && base1Data.cycle){
-      badge.textContent = 'Ciclo ' + base1Data.cycle;
-      badge.style.display = 'inline-block';
-    } else {
-      badge.style.display = 'none';
-    }
-  }
-
   // ---------- parse BASE1 (xlsx) ----------
   // ---------- ponto de entrada: detecta o formato do arquivo e delega ----------
-  function parseBase1(arrayBuffer, fileName){
+  function parseBase1(arrayBuffer){
     const wb = XLSX.read(arrayBuffer, {type:'array', cellDates:true});
 
     const baseSheetName = findSheetName(wb, ['BASE']);
     const planSheetName = findSheetName(wb, ['PLANIFICATION']);
-    const cycleInfo = detectCycleInfo([planSheetName, baseSheetName, fileName, ...wb.SheetNames]);
 
     // Formato 1: abas "BASE" + "PLANIFICATION" (unit_id / status / facility_origin ...)
     if(baseSheetName && planSheetName){
-      return Object.assign(parseFormat1(wb, baseSheetName, planSheetName), cycleInfo);
+      return parseFormat1(wb, baseSheetName, planSheetName);
     }
 
     // Formato 2: aba única "Planification" com colunas RTG_UNIT_EXTERNAL_ID / STATUS_ATUAL / ...
@@ -1414,7 +1367,7 @@
         findHeaderIndex(header, ['rtg_unit_external_id']) !== -1 &&
         findHeaderIndex(header, ['status_atual']) !== -1;
       if(looksLikeFormat2){
-        return Object.assign(parseFormat2(wb, planSheetName, rows, header), cycleInfo);
+        return parseFormat2(wb, planSheetName, rows, header);
       }
     }
 
@@ -1624,18 +1577,8 @@
     const locIdx = findHeaderIndex(header, ['localização do pacote', 'localizacao do pacote']);
     const rotaIdx = findHeaderIndex(header, ['n.º rota', 'numero rota', 'n° rota', 'rota']);
     const inboundIdx = findHeaderIndex(header, ['data de inbound']);
-    // colunas extras (opcionais) — se existirem no CSV, são capturadas pra
-    // enriquecer a planilha de extração de IDs; se não existirem, ficam em branco
-    const paradaIdx = findHeaderIndex(header, ['parada']);
-    const pontoIdx = findHeaderIndex(header, ['ponto']);
-    const alturaIdx = findHeaderIndex(header, ['altura']);
-    const larguraIdx = findHeaderIndex(header, ['largura']);
-    const comprimentoIdx = findHeaderIndex(header, ['comprimento']);
-    const detalheIdx = findHeaderIndex(header, ['detalhe do pacote', 'detalhe pacote', 'detalhes do pacote']);
     if(idIdx === -1) throw new Error('Não encontrei a coluna "ID do pacote" no CSV.');
     if(locIdx === -1) throw new Error('Não encontrei a coluna "Localização do pacote" no CSV.');
-
-    const pick = (r, idx) => idx === -1 ? '' : String(r[idx] === null || r[idx] === undefined ? '' : r[idx]).trim();
 
     const out = [];
     for(let i=1;i<rows.length;i++){
@@ -1644,16 +1587,10 @@
       const id = normId(r[idIdx]);
       if(id === null || id === '') continue;
       const loc = (r[locIdx]||'').trim();
-      const rota = pick(r, rotaIdx);
-      const inboundRaw = pick(r, inboundIdx);
+      const rota = rotaIdx === -1 ? '' : (r[rotaIdx]||'').trim();
+      const inboundRaw = inboundIdx === -1 ? '' : (r[inboundIdx]||'').trim();
       const inboundDate = parseInboundDate(inboundRaw);
-      const parada = pick(r, paradaIdx);
-      const ponto = pick(r, pontoIdx);
-      const altura = pick(r, alturaIdx);
-      const largura = pick(r, larguraIdx);
-      const comprimento = pick(r, comprimentoIdx);
-      const detalhePacote = pick(r, detalheIdx);
-      out.push({id, loc, rota, inboundRaw, inboundDate, parada, ponto, altura, largura, comprimento, detalhePacote});
+      out.push({id, loc, rota, inboundRaw, inboundDate});
     }
     return out;
   }
@@ -1743,7 +1680,7 @@
     renderCards({totalGeral, d1, onWay, recebido, noCarrinho});
     renderOrigemChart();
     renderStatusChart({d1, onWay, recebido, noCarrinho, totalGeral});
-    renderEarlyTable(allRows);
+    renderEarlyTable();
     renderNaoAtreladosTable(allRows);
     renderIlhasTable(recebidoRows);
   }
@@ -1825,7 +1762,7 @@
     const D1_STATUSES = new Set(['at_station|sorting','at_station|buffered']);
     const visibleRows = getVisibleRows(); // mesmo filtro de origem usado no card On Way
     const today = new Date();
-    const byOrigin = new Map(); // origin -> {OnTime, Early, Delay}
+    const byOrigin = new Map(); // origin -> {OnTime, Early, Delay, SemData}
 
     for(const r of visibleRows){
       const status = statusMap.get(r.id);
@@ -1833,29 +1770,34 @@
       if(isD1 || r.loc !== 'Caminho para a estação') continue; // só os pacotes que contam pro card On Way
 
       const rec = records.get(r.id);
-      const origin = rec && rec.facility;
-      if(!origin) continue;
-      if(!byOrigin.has(origin)) byOrigin.set(origin, {OnTime:0, Early:0, Delay:0});
+      // Pacote sem facility_origin preenchido ainda conta pro card On Way,
+      // então precisa aparecer em algum lugar aqui também (em vez de sumir).
+      const origin = (rec && rec.facility) ? rec.facility : 'Sem Origem';
+      if(!byOrigin.has(origin)) byOrigin.set(origin, {OnTime:0, Early:0, Delay:0, SemData:0});
 
       // classifica cada pacote On Way pelo prazo de entrega (promise_date_end)
-      if(rec.promiseEnd && !isNaN(rec.promiseEnd.getTime())){
+      if(rec && rec.promiseEnd && !isNaN(rec.promiseEnd.getTime())){
         const d = rec.promiseEnd;
         let cls;
         if(sameDay(d, today)) cls = 'OnTime';
         else if(d.getTime() < today.getTime()) cls = 'Delay';
         else cls = 'Early';
         byOrigin.get(origin)[cls]++;
+      } else {
+        // sem promise_date_end válido: conta como "Sem Data" em vez de sumir do total
+        byOrigin.get(origin).SemData++;
       }
     }
 
     const arr = Array.from(byOrigin.entries()).map(([origin, c]) => ({
-      origin, ...c, total: c.OnTime + c.Early + c.Delay
+      origin, ...c, total: c.OnTime + c.Early + c.Delay + c.SemData
     }));
     arr.sort((a,b) => b.total - a.total);
     return arr;
   }
 
   let origemChartInstance = null;
+
   function renderOrigemChart(){
     if(typeof Chart === 'undefined'){
       showError('A biblioteca de gráficos não carregou (sem conexão com a internet ao abrir o arquivo?). Verifique sua conexão e recarregue a página.');
@@ -1871,18 +1813,25 @@
     const onTime = data.map(d => d.OnTime);
     const early = data.map(d => d.Early);
     const delay = data.map(d => d.Delay);
+    const semData = data.map(d => d.SemData);
+    const hasSemData = semData.some(v => v > 0);
 
     if(origemChartInstance) origemChartInstance.destroy();
+
+    const datasets = [
+      { label:'On Time', data:onTime, backgroundColor:'#C97D0C', stack:'s' },
+      { label:'Early', data:early, backgroundColor:'#94A3B8', stack:'s' },
+      { label:'Delay', data:delay, backgroundColor:'#0B5FA5', stack:'s' },
+    ];
+    if(hasSemData){
+      datasets.push({ label:'Sem Data', data:semData, backgroundColor:'#C4B5FD', stack:'s' });
+    }
 
     origemChartInstance = new Chart(ctx, {
       type: 'bar',
       data: {
         labels,
-        datasets: [
-          { label:'On Time', data:onTime, backgroundColor:'#C97D0C', stack:'s', minBarLength:18, borderRadius:3, barPercentage:.82, categoryPercentage:.86 },
-          { label:'Early', data:early, backgroundColor:'#94A3B8', stack:'s', minBarLength:18, borderRadius:3, barPercentage:.82, categoryPercentage:.86 },
-          { label:'Delay', data:delay, backgroundColor:'#0B5FA5', stack:'s', minBarLength:18, borderRadius:3, barPercentage:.82, categoryPercentage:.86 },
-        ]
+        datasets
       },
       options: {
         responsive:true,
@@ -1892,7 +1841,7 @@
           legend:{
             position:'top',
             align:'end',
-            labels:{ color:'#071C33', boxWidth:14, padding:16, font:{ family:"'JetBrains Mono', monospace", size:14, weight:'800' } }
+            labels:{ color:'#0B2545', boxWidth:12, font:{ family:"'JetBrains Mono', monospace", size:12, weight:'700' } }
           },
           tooltip:{
             backgroundColor:'#0B2545',
@@ -1905,29 +1854,21 @@
           },
           datalabels:{
             display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
-            anchor:'center',
-            align:'center',
-            clamp:true,
-            color:'#FFFFFF',
-            backgroundColor:null,
-            borderWidth:0,
-            padding:{top:3,bottom:3,left:4,right:4},
-            font:{ family:"'JetBrains Mono', monospace", size:13, weight:'900' },
-            textStrokeColor:'rgba(0,0,0,.42)',
-            textStrokeWidth:2,
-            formatter: (value) => fmt(value)
+            color: '#FFFFFF',
+            font:{ family:"'JetBrains Mono', monospace", size:10.5, weight:'800' },
+            formatter: (value) => value
           }
         },
         scales:{
           x:{
             stacked:true,
-            ticks:{ color:'#0B2545', font:{ family:"'JetBrains Mono', monospace", size:13, weight:'800' } },
-            grid:{ color:'#D5DFEC' }
+            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
+            grid:{ color:'#E6ECF5' }
           },
           y:{
             stacked:true,
-            ticks:{ color:'#0B2545', font:{ family:"'JetBrains Mono', monospace", size:13, weight:'800' } },
-            grid:{ color:'#D5DFEC' }
+            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
+            grid:{ color:'#E6ECF5' }
           }
         }
       }
@@ -1935,10 +1876,14 @@
   }
 
   // ---------- Origens Com % Mais Early ----------
-  function renderEarlyTable(rows){
-    const data = classifyOrigem(rows); // already has {origin, OnTime, Early, Delay, total}
+  function renderEarlyTable(){
+    // Mesma base do gráfico "On Way por Origem": só pacotes On Way,
+    // já respeitando o filtro de origens excluídas. Antes esta tabela usava
+    // TODAS as linhas (D-1 + Recebido + No Carrinho + On Way), o que fazia
+    // os números divergirem do gráfico ao lado.
+    const data = computeOnWayByOrigin(); // already has {origin, OnTime, Early, Delay, total}
     const ranked = data
-      .filter(d => d.total > 0)
+      .filter(d => d.total > 100)
       .map(d => ({ ...d, pctEarly: d.Early / d.total }))
       .sort((a,b) => b.pctEarly - a.pctEarly);
 
@@ -1949,6 +1894,7 @@
         <td class="num c-early">${fmt(d.Early)}</td>
         <td class="num c-ontime">${fmt(d.OnTime)}</td>
         <td class="num c-delay">${fmt(d.Delay)}</td>
+        <td class="num" style="color:var(--text-lo)">${fmt(d.SemData)}</td>
         <td class="num">${fmt(d.total)}</td>
         <td class="num c-pct">${(d.pctEarly*100).toFixed(1).replace('.', ',')}%</td>
       </tr>
@@ -1970,7 +1916,7 @@
       type: 'bar',
       data: {
         labels,
-        datasets: [{ data: values, backgroundColor: colors, borderRadius: 3, barThickness: 46, minBarLength: 34 }]
+        datasets: [{ data: values, backgroundColor: colors, borderRadius: 3, barThickness: 46 }]
       },
       options: {
         responsive:true,
@@ -1987,32 +1933,22 @@
             titleFont:{ family:"'JetBrains Mono', monospace" }
           },
           datalabels:{
-            // Mantém inclusive os valores pequenos dentro da barra para o print ficar legível.
-            display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
-            anchor:'center',
-            align:'center',
-            offset:0,
-            clamp:true,
-            clip:false,
-            color:'#FFFFFF',
-            backgroundColor:null,
-            borderWidth:0,
-            padding:{top:2,bottom:2,left:4,right:4},
-            font:{ family:"'JetBrains Mono', monospace", size:14, weight:'900' },
-            textStrokeColor:'rgba(0,0,0,.38)',
-            textStrokeWidth:2,
+            anchor:'end',
+            align:'top',
+            color:'#0B2545',
+            font:{ family:"'JetBrains Mono', monospace", size:12, weight:'700' },
             formatter: (value) => fmt(value)
           }
         },
         scales:{
           x:{
-            ticks:{ color:'#0B2545', font:{ family:"'JetBrains Mono', monospace", size:13, weight:'800' } },
+            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
             grid:{ display:false }
           },
           y:{
-            ticks:{ color:'#0B2545', font:{ family:"'JetBrains Mono', monospace", size:13, weight:'800' } },
-            grid:{ color:'#D5DFEC' },
-            grace:'8%'
+            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
+            grid:{ color:'#E6ECF5' },
+            grace:'12%'
           }
         }
       }
@@ -2258,190 +2194,36 @@
     );
   }
 
-  const EXTRACT_HEADER = [
-    'ID do pacote','N.º Rota','Parada','Ponto','Data de Inbound','Altura','Largura','Comprimento',
-    'Localização do pacote','Detalhe do pacote','Origem','Ordem de Chegada da Origem',
-    'Horário Estimado de Chegada','Classificação (On Time/Early/Delay)','Situação','Tipo',
-    'Status','Status2','Status3'
-  ];
+  function buildExtractWorkbook(){
+    const wb = XLSX.utils.book_new();
 
-  // ordem de chegada de cada origem no dia, do horário mais cedo (1) pro mais tarde,
-  // usando o mesmo horário estimado de chegada (estimated_arrival) já extraído da base estrutura
-  function computeArrivalOrderMap(){
-    const order = new Map();
-    if(!base1Data || !base1Data.arrivalByOrigin) return order;
-    const arr = Array.from(base1Data.arrivalByOrigin.entries())
-      .map(([origin, t]) => ({ origin, mins: t.h*60 + t.m }));
-    arr.sort((a,b) => a.mins - b.mins);
-    arr.forEach((o, idx) => order.set(o.origin, idx+1));
-    return order;
+    const d1Data = [['ID do Pacote'], ...lastMetricIds.d1.map(id => [id])];
+    const onWayData = [['ID do Pacote'], ...lastMetricIds.onWay.map(id => [id])];
+    const recebidoData = [['ID do Pacote'], ...lastMetricIds.recebido.map(id => [id])];
+
+    const wsD1 = XLSX.utils.aoa_to_sheet(d1Data);
+    const wsOnWay = XLSX.utils.aoa_to_sheet(onWayData);
+    const wsRecebido = XLSX.utils.aoa_to_sheet(recebidoData);
+
+    XLSX.utils.book_append_sheet(wb, wsD1, 'D-1');
+    XLSX.utils.book_append_sheet(wb, wsOnWay, 'On Way');
+    XLSX.utils.book_append_sheet(wb, wsRecebido, 'Recebido do dia');
+
+    return wb;
   }
 
-  // mesma classificação usada no gráfico "On Way por Origem" (classifyOrigem), mas
-  // aplicada a um único pacote a partir do promise_date_end dele
-  function classifyByPromiseEnd(promiseEnd){
-    if(!promiseEnd || isNaN(promiseEnd.getTime())) return '';
-    const today = new Date();
-    if(sameDay(promiseEnd, today)) return 'On Time';
-    if(promiseEnd.getTime() < today.getTime()) return 'Delay';
-    return 'Early';
-  }
-
-  // monta só as linhas de dados (sem título/cabeçalho — isso é responsabilidade
-  // de quem monta a planilha estilizada, logo abaixo)
-  function buildExtractDataRows(ids, tipoLabel, situacaoLabel){
-    const records = base1Data ? base1Data.records : new Map();
-    const arrivalByOrigin = (base1Data && base1Data.arrivalByOrigin) || new Map();
-    const arrivalOrder = computeArrivalOrderMap();
-    const base2ById = new Map(base2Rows.map(r => [r.id, r]));
-
-    return ids.map(id => {
-      const r2 = base2ById.get(id) || {};
-      const rec = records.get(id) || {};
-      const origin = rec.facility || '';
-      const arr = origin ? arrivalByOrigin.get(origin) : null;
-      return [
-        id,
-        r2.rota || '',
-        r2.parada || '',
-        r2.ponto || '',
-        r2.inboundRaw || '',
-        r2.altura || '',
-        r2.largura || '',
-        r2.comprimento || '',
-        r2.loc || '',
-        r2.detalhePacote || '',
-        origin,
-        origin ? (arrivalOrder.get(origin) || '') : '',
-        arr ? arr.timeStr : '',
-        classifyByPromiseEnd(rec.promiseEnd),
-        situacaoLabel,
-        tipoLabel,
-        '', '', ''
-      ];
-    });
-  }
-
-  // ---------- planilha estilizada (título + cabeçalho + linhas zebradas) ----------
-  // Usa ExcelJS em vez do SheetJS (xlsx.js) pra essa exportação porque a versão
-  // gratuita do SheetJS não grava cor/estilo de célula no .xlsx — só o ExcelJS
-  // consegue reproduzir a aparência.
-  //
-  // A cor das linhas é pintada célula por célula (RGB fixo), em vez de usar o
-  // "estilo de tabela" nomeado do Excel (ex: TableStyleLight9) — esse estilo
-  // nomeado depende de cada programa saber renderizar aquele nome, e na prática
-  // abriu diferente do esperado. Pintando a cor direto na célula, o resultado é
-  // sempre o mesmo em qualquer programa que abra o arquivo (Excel, Google
-  // Sheets, LibreOffice), do jeito que uma faixa de cor no Google Sheets funciona.
-  const EXTRACT_COL_WIDTHS = [16,12,9,8,18,9,9,12,22,20,12,14,14,20,12,14,10,10,10];
-  const EXTRACT_HEADER_FILL = 'FF0B5FA5';   // azul K+N
-  const EXTRACT_BAND_LIGHT = 'FFDCEAF7';    // azul bem clarinho
-  const EXTRACT_BAND_WHITE = 'FFFFFFFF';    // branco
-  const EXTRACT_BORDER_COLOR = 'FFD7E1EE';
-  const EXTRACT_THIN_BORDER = {
-    top:{style:'thin', color:{argb:EXTRACT_BORDER_COLOR}},
-    left:{style:'thin', color:{argb:EXTRACT_BORDER_COLOR}},
-    bottom:{style:'thin', color:{argb:EXTRACT_BORDER_COLOR}},
-    right:{style:'thin', color:{argb:EXTRACT_BORDER_COLOR}}
-  };
-
-  async function buildExtractWorkbookXlsx(){
-    const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'Kuehne+Nagel · Painel Operacional';
-    workbook.created = new Date();
-
-    const sheetsDef = [
-      { name: 'D-1', ids: lastMetricIds.d1, tipo: 'D-1', situacao: 'Recebido' },
-      { name: 'On Way', ids: lastMetricIds.onWay, tipo: 'On Way', situacao: 'A Caminho' },
-      { name: 'Recebido do dia', ids: lastMetricIds.recebido, tipo: 'Recebido do dia', situacao: 'Recebido' }
-    ];
-    const numCols = EXTRACT_HEADER.length;
-    const dataDateStr = new Date().toLocaleDateString('pt-BR');
-    const ciclo = (base1Data && base1Data.cycle) ? base1Data.cycle + ' · ' : '';
-
-    sheetsDef.forEach(({name, ids, tipo, situacao}) => {
-      const ws = workbook.addWorksheet(name, { views: [{ state:'frozen', ySplit:2 }] });
-      const dataRows = buildExtractDataRows(ids, tipo, situacao);
-
-      // linha 1 — faixa de título, mesclada, fundo azul-marinho (igual ao topo do painel)
-      ws.mergeCells(1,1,1,numCols);
-      const titleCell = ws.getCell(1,1);
-      titleCell.value = 'Detalhes da Extração — ' + ciclo + tipo + ' · ' + dataDateStr;
-      titleCell.font = { bold:true, color:{argb:'FFFFFFFF'}, size:13 };
-      titleCell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:'FF003269'} };
-      titleCell.alignment = { vertical:'middle', horizontal:'left' };
-      ws.getRow(1).height = 24;
-
-      // linha 2 — cabeçalho azul, negrito, branco
-      const headerRow = ws.getRow(2);
-      EXTRACT_HEADER.forEach((h, i) => {
-        const cell = headerRow.getCell(i+1);
-        cell.value = h;
-        cell.font = { bold:true, color:{argb:'FFFFFFFF'} };
-        cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:EXTRACT_HEADER_FILL} };
-        cell.alignment = { vertical:'middle', horizontal:'left', wrapText:true };
-        cell.border = EXTRACT_THIN_BORDER;
-      });
-      headerRow.height = 30;
-      headerRow.commit();
-
-      // linhas de dados — cor alternada linha a linha (zebrado), igual planilha
-      dataRows.forEach((rowArr, idx) => {
-        const row = ws.addRow(rowArr);
-        const bandColor = (idx % 2 === 0) ? EXTRACT_BAND_LIGHT : EXTRACT_BAND_WHITE;
-        row.eachCell({ includeEmpty:true }, (cell) => {
-          cell.font = { color:{argb:'FF0B2545'} };
-          cell.fill = { type:'pattern', pattern:'solid', fgColor:{argb:bandColor} };
-          cell.border = EXTRACT_THIN_BORDER;
-          cell.alignment = { vertical:'middle' };
-        });
-      });
-
-      // larguras de coluna
-      EXTRACT_COL_WIDTHS.forEach((w, i) => { ws.getColumn(i+1).width = w; });
-
-      // filtro (setas no cabeçalho) — autofiltro simples, sem depender de
-      // "Tabela" nomeada do Excel
-      if(dataRows.length > 0){
-        ws.autoFilter = { from: { row:2, column:1 }, to: { row: 2 + dataRows.length, column: numCols } };
-      }
-    });
-
-    return workbook;
-  }
-
-  async function extractData(){
+  function extractData(){
     const btn = document.getElementById('btnExtractData');
     const hint = document.getElementById('exportHint');
     const original = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="export-icon">⏳</span> Gerando...';
 
-    try{
-      const workbook = await buildExtractWorkbookXlsx();
-      const buffer = await workbook.xlsx.writeBuffer();
-      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const cicloSlug = (base1Data && base1Data.cycle) ? base1Data.cycle.toLowerCase() + '_' : '';
-      const fileName = 'ids_' + cicloSlug + 'd1_onway_recebido_' + new Date().toISOString().slice(0,10) + '.xlsx';
+    const wb = buildExtractWorkbook();
+    const fileName = 'ids_d1_onway_recebido_' + new Date().toISOString().slice(0,10) + '.xlsx';
+    XLSX.writeFile(wb, fileName);
 
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      btn.innerHTML = '<span class="export-icon">✅</span> Baixado!';
-      hint.textContent = 'arquivo .xlsx baixado com abas D-1 / On Way / Recebido do dia';
-      setTimeout(()=>{ btn.innerHTML = original; }, 1800);
-    }catch(err){
-      showError('Não consegui gerar o Excel: ' + (err.message || JSON.stringify(err)));
-      btn.innerHTML = original;
-    }finally{
-      btn.disabled = false;
-    }
+    btn.innerHTML = '<span class="export-icon">✅</span> Baixado!';
+    hint.textContent = 'arquivo .xlsx baixado com abas D-1 / On Way / Recebido do dia';
+    setTimeout(()=>{ btn.innerHTML = original; }, 1800);
   }
 
   document.getElementById('btnExtractData').addEventListener('click', extractData);
@@ -2496,9 +2278,8 @@
     const reader = new FileReader();
     reader.onload = (e)=>{
       try{
-        base1Data = parseBase1(e.target.result, file.name);
-        dropBase1._setStatus(file.name + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || '') + cycleTag(base1Data), true);
-        updateCicloBadge();
+        base1Data = parseBase1(e.target.result);
+        dropBase1._setStatus(file.name + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || ''), true);
         compute();
         renderChegadaTab();
         saveBase1ToStorage(e.target.result, file.name);
