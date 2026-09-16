@@ -440,6 +440,22 @@
     color:var(--text-mid);
     font-weight:500;
   }
+  .early-min-toggle{
+    margin-left:auto;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-family:var(--mono);
+    font-size:11px;
+    font-weight:500;
+    color:var(--text-mid);
+    cursor:pointer;
+    letter-spacing:0;
+    text-transform:none;
+  }
+  .early-min-toggle input{
+    cursor:pointer;
+  }
 
   /* ===== TABLE PANEL ===== */
   .data-table{
@@ -591,6 +607,19 @@
     border-radius:50%;
   }
   .chip button:hover{ background:rgba(224,69,63,0.18); }
+
+  .chip-reset-btn{
+    background:var(--bg-2);
+    border:1px solid var(--border);
+    color:var(--text-mid);
+    font-family:var(--mono);
+    font-size:11.5px;
+    font-weight:600;
+    padding:6px 12px;
+    border-radius:6px;
+    cursor:pointer;
+  }
+  .chip-reset-btn:hover{ border-color:var(--cyan); color:var(--cyan); }
 
   .empty-hint{
     font-family:var(--mono);
@@ -759,6 +788,14 @@
   </div>
 
   <div class="filter-row" id="filterRow" style="display:none;">
+    <span class="filter-label">Ver somente esta origem:</span>
+    <select id="originIsolateSelect" class="filter-select">
+      <option value="">+ selecionar origem…</option>
+    </select>
+    <button type="button" id="btnShowAllOrigins" class="chip-reset-btn" style="display:none;">Mostrar todas</button>
+  </div>
+
+  <div class="filter-row" id="filterRowExclude" style="display:none;">
     <span class="filter-label">Excluir origens do card/gráfico "On Way":</span>
     <select id="originFilterSelect" class="filter-select">
       <option value="">+ selecionar origem…</option>
@@ -848,7 +885,13 @@
 
     <div class="panels-row panels-row-3">
       <div class="panel">
-        <p class="panel-title"><span class="swatch" style="background:var(--green)"></span>Origens Com % Mais Early</p>
+        <p class="panel-title">
+          <span class="swatch" style="background:var(--green)"></span>Origens Com % Mais Early
+          <label class="early-min-toggle" for="chkEarlyMin100">
+            <input type="checkbox" id="chkEarlyMin100" checked>
+            Só origens com 100+ pacotes
+          </label>
+        </p>
         <div class="table-scroll">
           <table class="data-table">
             <thead>
@@ -1605,6 +1648,7 @@
 
     document.getElementById('panelsWrap').style.display = 'grid';
     document.getElementById('filterRow').style.display = 'flex';
+    document.getElementById('filterRowExclude').style.display = 'flex';
 
     const btn = document.getElementById('btnExport');
     btn.disabled = false;
@@ -1686,18 +1730,42 @@
   }
 
   // ---------- Filtro de origens (afeta somente o card/valor "On Way") ----------
-  function populateOriginFilter(){
+  function getAllOriginsList(){
     const { records } = base1Data;
     const originsSet = new Set();
     base2Rows.forEach(r => {
       const rec = records.get(r.id);
       if(rec && rec.facility) originsSet.add(rec.facility);
     });
-    const allOrigins = Array.from(originsSet).sort();
+    return Array.from(originsSet).sort();
+  }
+
+  function populateOriginFilter(){
+    const allOrigins = getAllOriginsList();
     const select = document.getElementById('originFilterSelect');
     select.innerHTML = '<option value="">+ selecionar origem…</option>' +
       allOrigins.map(o => `<option value="${o}">${o}</option>`).join('');
+
+    const isolateSelect = document.getElementById('originIsolateSelect');
+    isolateSelect.innerHTML = '<option value="">+ selecionar origem…</option>' +
+      allOrigins.map(o => `<option value="${o}">${o}</option>`).join('');
+
     renderExcludedChips();
+  }
+
+  function updateIsolateUI(){
+    const allOrigins = getAllOriginsList();
+    const isolateSelect = document.getElementById('originIsolateSelect');
+    const showAllBtn = document.getElementById('btnShowAllOrigins');
+    // If exactly one origin is NOT excluded (all others excluded), we're in "isolate" mode
+    const visibleOrigins = allOrigins.filter(o => !excludedOrigins.has(o));
+    if(allOrigins.length > 0 && visibleOrigins.length === 1 && excludedOrigins.size === allOrigins.length - 1){
+      isolateSelect.value = visibleOrigins[0];
+      showAllBtn.style.display = '';
+    } else {
+      isolateSelect.value = '';
+      showAllBtn.style.display = excludedOrigins.size > 0 ? '' : 'none';
+    }
   }
 
   function renderExcludedChips(){
@@ -1712,6 +1780,7 @@
         recomputeAll();
       });
     });
+    updateIsolateUI();
   }
 
   document.getElementById('originFilterSelect').addEventListener('change', (e) => {
@@ -1722,6 +1791,23 @@
       recomputeAll();
     }
     e.target.value = '';
+  });
+
+  document.getElementById('originIsolateSelect').addEventListener('change', (e) => {
+    const val = e.target.value;
+    if(val){
+      const allOrigins = getAllOriginsList();
+      excludedOrigins = new Set(allOrigins.filter(o => o !== val));
+      renderExcludedChips();
+      recomputeAll();
+    }
+  });
+
+  document.getElementById('btnShowAllOrigins').addEventListener('click', () => {
+    excludedOrigins.clear();
+    renderExcludedChips();
+    recomputeAll();
+    populateOriginFilter();
   });
 
   // ---------- Distribuição por Origem (On Time / Early / Delay) ----------
@@ -1882,8 +1968,10 @@
     // TODAS as linhas (D-1 + Recebido + No Carrinho + On Way), o que fazia
     // os números divergirem do gráfico ao lado.
     const data = computeOnWayByOrigin(); // already has {origin, OnTime, Early, Delay, total}
+    const minCheckbox = document.getElementById('chkEarlyMin100');
+    const applyMin100 = minCheckbox ? minCheckbox.checked : true;
     const ranked = data
-      .filter(d => d.total > 100)
+      .filter(d => applyMin100 ? d.total > 100 : d.total > 0)
       .map(d => ({ ...d, pctEarly: d.Early / d.total }))
       .sort((a,b) => b.pctEarly - a.pctEarly);
 
@@ -1901,6 +1989,7 @@
     `).join('');
   }
   let statusChartInstance = null;
+  document.getElementById('chkEarlyMin100').addEventListener('change', renderEarlyTable);
   function renderStatusChart(d){
     if(typeof Chart === 'undefined') return;
     const ctx = document.getElementById('chartStatus').getContext('2d');
