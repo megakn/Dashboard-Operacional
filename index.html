@@ -777,6 +777,8 @@
   .fg-loc{ display:inline-block; font-size:11.5px; font-weight:700; padding:4px 9px; border-radius:999px; background:#F1F5F9; color:#334155; border:1px solid #E2E8F0; white-space:nowrap; }
   .fg-loc.st{ background:#ECFDF5; color:#047857; border-color:#A7F3D0; }
   .fg-loc.way{ background:#EFF6FF; color:#1D4ED8; border-color:#BFDBFE; }
+  .d1-pager{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:#33415C; margin-right:6px; }
+  .d1-pager .export-btn{ padding:6px 10px; }
   .fg-tr{ display:grid; grid-template-columns:118px 96px 200px 88px 150px 96px minmax(0,1fr); gap:16px; align-items:center; padding:11px 18px; border-top:1px solid #EEF2F7; }
   .fg-th{ border-top:0; background:#FAFBFD; font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#64748B; padding:12px 18px; }
   .fg-id{ font-family:var(--mono, 'JetBrains Mono', monospace); font-size:12.5px; font-weight:700; color:#0F1B2D; letter-spacing:-.01em; }
@@ -1152,6 +1154,7 @@
           </div>
           <div class="fg-meta">
             <div class="fg-chip fg-chip-dark"><b id="d1rTotal">0</b> pacotes</div>
+            <div class="fg-chip" id="d1rPageChip" style="display:none;">Página <b id="d1rPageNum">1</b>/<b id="d1rPageTot">1</b></div>
             <div class="fg-chip"><span class="fg-dot"></span><span id="d1ReportWhen"></span></div>
           </div>
         </div>
@@ -1165,7 +1168,19 @@
       </div>
       </div>
       <div class="actions-row" style="margin-top:12px;">
-        <button class="export-btn" id="btnD1ReportImg" type="button" disabled><span class="export-icon">🖼️</span> Copiar report (imagem)</button>
+        <span class="d1-pager">
+          <button class="export-btn" id="btnD1Prev" type="button" title="página anterior">◀</button>
+          <span id="d1PagerLbl">Página 1 de 1</span>
+          <button class="export-btn" id="btnD1Next" type="button" title="próxima página">▶</button>
+          <select id="d1PageSize" class="d1-filter" style="min-width:0;padding:4px 8px;" title="pacotes por imagem">
+            <option value="12">12 por imagem</option>
+            <option value="15" selected>15 por imagem</option>
+            <option value="20">20 por imagem</option>
+            <option value="0">tudo numa imagem</option>
+          </select>
+        </span>
+        <button class="export-btn" id="btnD1ReportImg" type="button" disabled><span class="export-icon">🖼️</span> Copiar esta página (imagem)</button>
+        <button class="export-btn" id="btnD1ReportAll" type="button" disabled><span class="export-icon">🗂️</span> Gerar todas as páginas</button>
         <button class="export-btn" id="btnD1ReportTxt" type="button" disabled><span class="export-icon">💬</span> Copiar report (texto p/ WhatsApp)</button>
         <span class="export-hint" id="d1ReportHint"></span>
       </div>
@@ -2740,7 +2755,7 @@
     if(!viewD1) return;
     const ids = d1Ids();
     const has = !!(base1Data && base2Rows);
-    ['btnD1CopyLines','btnD1CopyQuery','btnD1Import','btnD1ReportImg','btnD1ReportTxt'].forEach(b => document.getElementById(b).disabled = !has || ids.length === 0);
+    ['btnD1CopyLines','btnD1CopyQuery','btnD1Import','btnD1ReportImg','btnD1ReportAll','btnD1ReportTxt'].forEach(b => document.getElementById(b).disabled = !has || ids.length === 0);
     document.getElementById('d1Hint').textContent = !has ? 'envie as duas bases para liberar' : (ids.length ? '' : 'nenhum pacote D-1 nos faltantes atuais 🎉');
     document.getElementById('d1Empty').style.display = (has && ids.length) ? 'none' : 'block';
 
@@ -2838,12 +2853,26 @@
     return ids;
   }
 
+  let d1Page = 0;
+  function d1PageSize(){ const el = document.getElementById('d1PageSize'); return el ? Number(el.value) : 15; }
+  function d1PageCount(n){ const ps = d1PageSize(); return ps ? Math.max(1, Math.ceil(n / ps)) : 1; }
   function renderD1Report(){
     const all = d1Ids();
-    const ids = d1ReportIds();
+    const fullIds = d1ReportIds();
+    const pages = d1PageCount(fullIds.length);
+    if(d1Page >= pages) d1Page = pages - 1;
+    if(d1Page < 0) d1Page = 0;
+    const ps = d1PageSize();
+    const ids = ps ? fullIds.slice(d1Page * ps, d1Page * ps + ps) : fullIds;
+    document.getElementById('d1PagerLbl').textContent = 'Página ' + (d1Page + 1) + ' de ' + pages;
+    document.getElementById('btnD1Prev').disabled = d1Page === 0;
+    document.getElementById('btnD1Next').disabled = d1Page >= pages - 1;
+    document.getElementById('d1rPageChip').style.display = pages > 1 ? '' : 'none';
+    document.getElementById('d1rPageNum').textContent = d1Page + 1;
+    document.getElementById('d1rPageTot').textContent = pages;
     const now = new Date();
     document.getElementById('d1ReportWhen').textContent = 'Atualizado ' + now.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' às ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-    document.getElementById('d1rTotal').textContent = fmt(ids.length);
+    document.getElementById('d1rTotal').textContent = fmt(fullIds.length);
     document.getElementById('d1ReportBody').innerHTML = ids.map(id => {
       const r = d1Data[id] || {};
       const rota = d1Rota(id);
@@ -2983,8 +3012,47 @@
     d1Copy(b.dataset.copy, 'd1Hint', 'ID ' + b.dataset.copy + ' copiado');
   });
   document.getElementById('d1Filter').addEventListener('input', ()=> renderD1Tab());
-  document.getElementById('d1OnlyDone').addEventListener('change', ()=> renderD1Report());
   document.getElementById('d1Order').addEventListener('change', ()=> renderD1Report());
+  document.getElementById('d1OnlyDone').addEventListener('change', ()=>{ d1Page = 0; renderD1Report(); });
+  document.getElementById('d1PageSize').addEventListener('change', ()=>{ d1Page = 0; renderD1Report(); });
+  document.getElementById('btnD1Prev').addEventListener('click', ()=>{ d1Page--; renderD1Report(); });
+  document.getElementById('btnD1Next').addEventListener('click', ()=>{ d1Page++; renderD1Report(); });
+  document.getElementById('btnD1ReportAll').addEventListener('click', async ()=>{
+    const btn = document.getElementById('btnD1ReportAll');
+    const hint = document.getElementById('d1ReportHint');
+    if(typeof html2canvas === 'undefined'){ showError('A biblioteca de exportação não carregou. Recarregue a página.'); return; }
+    const original = btn.innerHTML, keep = d1Page;
+    btn.disabled = true;
+    const total = d1PageCount(d1ReportIds().length);
+    const files = [];
+    try{
+      for(let i=0;i<total;i++){
+        btn.innerHTML = '<span class="export-icon">⏳</span> Gerando ' + (i+1) + '/' + total + '...';
+        d1Page = i; renderD1Report();
+        await new Promise(r => setTimeout(r, 60));
+        const blob = await captureElementBlob('d1ReportArea');
+        files.push(new File([blob], 'report_d1_' + new Date().toISOString().slice(0,10) + '_pag' + (i+1) + '.png', { type:'image/png' }));
+      }
+      const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+      if(isMobile && navigator.canShare && navigator.canShare({ files })){
+        try{ await navigator.share({ files, title:'Report D-1' }); hint.textContent = 'compartilhado!'; return; }
+        catch(e){ if(e && e.name === 'AbortError') return; }
+      }
+      for(const f of files){
+        const url = URL.createObjectURL(f);
+        const a = document.createElement('a'); a.href = url; a.download = f.name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(()=> URL.revokeObjectURL(url), 2000);
+        await new Promise(r => setTimeout(r, 350));
+      }
+      hint.textContent = total + ' imagens baixadas — envie todas juntas no grupo';
+    }catch(err){
+      showError('Não consegui gerar as páginas: ' + err.message);
+    }finally{
+      d1Page = keep; renderD1Report();
+      btn.disabled = false; btn.innerHTML = original;
+    }
+  });
   document.getElementById('btnD1ReportTxt').addEventListener('click', ()=> d1Copy(d1BuildText(), 'd1ReportHint', 'texto copiado — cole no WhatsApp'));
   document.getElementById('btnD1ReportImg').addEventListener('click', ()=> exportImage({
     elId: 'd1ReportArea', btnId: 'btnD1ReportImg', hintId: 'd1ReportHint',
