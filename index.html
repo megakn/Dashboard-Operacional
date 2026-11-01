@@ -777,6 +777,8 @@
   .fg-loc{ display:inline-block; font-size:11.5px; font-weight:700; padding:4px 9px; border-radius:999px; background:#F1F5F9; color:#334155; border:1px solid #E2E8F0; white-space:nowrap; }
   .fg-loc.st{ background:#ECFDF5; color:#047857; border-color:#A7F3D0; }
   .fg-loc.way{ background:#EFF6FF; color:#1D4ED8; border-color:#BFDBFE; }
+  .fg-loc.srt{ background:#EFF6FF; color:#1D4ED8; border-color:#BFDBFE; }
+  .fg-loc.buf{ background:#FEF3C7; color:#92400E; border-color:#FDE68A; }
   .d1-paste{ margin:14px 0 6px; background:#fff; border:1px solid #D7E0EE; border-left:4px solid #0B5FA5; border-radius:12px; padding:14px 16px; }
   .d1-paste-head{ display:flex; justify-content:space-between; gap:14px; align-items:flex-start; flex-wrap:wrap; }
   .d1-paste-title{ font-size:14.5px; font-weight:800; color:#0B2545; }
@@ -796,7 +798,7 @@
   .fg-group.pend b{ background:#FFEDD5; }
   .d1-pager{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:#33415C; margin-right:6px; }
   .d1-pager .export-btn{ padding:6px 10px; }
-  .fg-tr{ display:grid; grid-template-columns:118px 96px 200px 88px 150px 96px minmax(0,1fr); gap:16px; align-items:center; padding:11px 18px; border-top:1px solid #EEF2F7; }
+  .fg-tr{ display:grid; grid-template-columns:124px 220px 96px 120px 110px minmax(0,1fr); gap:16px; align-items:center; padding:11px 18px; border-top:1px solid #EEF2F7; }
   .fg-th{ border-top:0; background:#FAFBFD; font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#64748B; padding:12px 18px; }
   .fg-id{ font-family:var(--mono, 'JetBrains Mono', monospace); font-size:12.5px; font-weight:700; color:#0F1B2D; letter-spacing:-.01em; }
   .fg-desc{ font-size:13px; color:#1E293B; line-height:1.35; }
@@ -1199,7 +1201,7 @@
         </div>
         <div class="fg-table">
           <div class="fg-tr fg-th">
-            <div>ID do pacote</div><div>Data de inbound</div><div>Colaborador</div><div>Rota</div><div>Localização do pacote</div><div>Tipo de pacote</div><div>Detalhe do pacote</div>
+            <div>ID do pacote</div><div>Colaborador</div><div>Rota</div><div>Status</div><div>Tipo de pacote</div><div>Detalhe do pacote</div>
           </div>
           <div id="d1ReportBody"></div>
         </div>
@@ -2864,6 +2866,17 @@
     const rec = base1Data && base1Data.records && base1Data.records.get(id);
     return rec && rec.rota ? rec.rota : '';
   }
+  // status do pacote na base do ciclo (planification): "at_station|sorting" -> "Sorting"
+  const D1_ST_LABEL = { sorting:'Sorting', buffered:'Buffered', at_station:'Na estação', on_way:'A caminho', in_transit:'Em trânsito', delivered:'Entregue', picked:'Separado', staged:'Staged', ready_to_ship:'Pronto p/ envio', shipped:'Expedido', not_delivered:'Não entregue', returned:'Devolvido' };
+  function d1Status(id){
+    const raw = (base1Data && base1Data.statusMap && base1Data.statusMap.get(id)) || '';
+    if(!raw) return { label:'', cls:'' };
+    const [main, sub] = String(raw).split('|');
+    const key = (sub || main || '').trim().toLowerCase();
+    const label = D1_ST_LABEL[key] || key.replace(/_/g,' ').replace(/^\w/, c => c.toUpperCase());
+    const cls = key === 'sorting' ? 'srt' : (key === 'buffered' ? 'buf' : '');
+    return { label, cls, raw };
+  }
   function d1Inbound(row){
     if(!row) return null;
     const d = row.inboundDate;
@@ -2947,16 +2960,13 @@
         mov = '<span class="fg-wait">● aguardando consulta</span>';
       }
       const row = d1Row(id) || {};
-      const inb = d1Inbound(row);
-      const loc = row.loc || '';
-      const locCls = /caminho/i.test(loc) ? 'way' : (/esta/i.test(loc) ? 'st' : '');
+      const st = d1Status(id);
       const tipo = d1Detalhe(id);
       return sep + `<div class="fg-tr">
         <div class="fg-id">${d1Esc(id)}</div>
-        <div class="fg-inb">${inb ? '<b>' + d1Esc(inb.d) + '</b>' + (inb.t ? '<small>' + d1Esc(inb.t) + '</small>' : '') : '<span class="fg-desc empty">—</span>'}</div>
         <div>${mov}</div>
         <div>${rota ? '<span class="fg-rota">' + d1Esc(rota) + '</span>' : '<span class="fg-desc empty">—</span>'}</div>
-        <div>${loc ? '<span class="fg-loc ' + locCls + '">' + d1Esc(loc) + '</span>' : '<span class="fg-desc empty">—</span>'}</div>
+        <div>${st.label ? '<span class="fg-loc ' + st.cls + '">' + d1Esc(st.label) + '</span>' : '<span class="fg-desc empty">—</span>'}</div>
         <div>${tipo ? '<span class="fg-vol">' + d1Esc(tipo) + '</span>' : '<span class="fg-desc empty">—</span>'}</div>
         <div class="fg-desc${r.desc ? '' : ' empty'}">${r.desc ? d1Esc(r.desc) : 'aguardando query'}</div>
       </div>`;
@@ -2976,14 +2986,13 @@
     ids.forEach(id => {
       const r = d1Data[id] || {};
       const row = d1Row(id) || {};
-      const inb = d1Inbound(row);
       const rota = d1Rota(id);
       const tipo = d1Detalhe(id);
+      const st = d1Status(id);
       lines.push('');
       lines.push('*' + id + '*' + (tipo ? '  ·  📦 *' + tipo.toUpperCase() + '*' : ''));
-      lines.push('📥 Inbound: ' + (inb ? inb.d + (inb.t ? ' ' + inb.t : '') : '—') + '  ·  🛣️ Rota: ' + (rota || '—'));
+      lines.push('🛣️ Rota: ' + (rota || '—') + '  ·  📊 Status: ' + (st.label || '—'));
       lines.push('👤 Colaborador: ' + (r.nome ? d1TitleCase(r.nome) : 'aguardando consulta') + (r.dt ? ' (' + d1MovParts(r.dt).date + ')' : ''));
-      lines.push('📍 ' + (row.loc || '—'));
       if(r.desc) lines.push('📝 ' + r.desc);
     });
     return lines.join('\n');
