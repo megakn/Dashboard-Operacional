@@ -777,6 +777,17 @@
   .fg-loc{ display:inline-block; font-size:11.5px; font-weight:700; padding:4px 9px; border-radius:999px; background:#F1F5F9; color:#334155; border:1px solid #E2E8F0; white-space:nowrap; }
   .fg-loc.st{ background:#ECFDF5; color:#047857; border-color:#A7F3D0; }
   .fg-loc.way{ background:#EFF6FF; color:#1D4ED8; border-color:#BFDBFE; }
+  .d1-paste{ margin:14px 0 6px; background:#fff; border:1px solid #D7E0EE; border-left:4px solid #0B5FA5; border-radius:12px; padding:14px 16px; }
+  .d1-paste-head{ display:flex; justify-content:space-between; gap:14px; align-items:flex-start; flex-wrap:wrap; }
+  .d1-paste-title{ font-size:14.5px; font-weight:800; color:#0B2545; }
+  .d1-paste-sub{ font-size:12.5px; color:#33415C; margin-top:4px; max-width:820px; line-height:1.45; }
+  .d1-paste-grid{ display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:14px; margin-top:12px; }
+  @media (max-width:900px){ .d1-paste-grid{ grid-template-columns:1fr; } }
+  .d1-paste textarea{ width:100%; box-sizing:border-box; min-height:150px; font-family:var(--mono, monospace); font-size:11.5px; padding:10px; border:1.5px dashed #9FB7D6; border-radius:10px; background:#F8FAFD; resize:vertical; }
+  .d1-paste textarea:focus{ outline:none; border-color:#0B5FA5; background:#fff; }
+  .d1-paste-res{ display:flex; flex-direction:column; gap:8px; }
+  .d1-paste-res label{ display:flex; flex-direction:column; gap:3px; font-size:11px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:#5B6B85; }
+  .d1-paste-res .found{ border-color:#22C55E !important; background:#F0FDF4; }
   .d1-pager{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:#33415C; margin-right:6px; }
   .d1-pager .export-btn{ padding:6px 10px; }
   .fg-tr{ display:grid; grid-template-columns:118px 96px 200px 88px 150px 96px minmax(0,1fr); gap:16px; align-items:center; padding:11px 18px; border-top:1px solid #EEF2F7; }
@@ -1081,7 +1092,7 @@
   <div id="viewD1" style="display:none;">
     <div class="chegada-wrap">
       <div class="chegada-page-header">
-        <p class="eyebrow"><span class="dot"></span>D-1 ausentes · deram entrada no SVC</p>
+        <p class="eyebrow"><span class="dot"></span>Pacotes D-1</p>
         <h1>Análise D-1</h1>
         <p>Os pacotes D-1 aparecem aqui sozinhos conforme a operação sobe a base do ciclo e os faltantes. Preencha a última movimentação e quem bipou; a descrição vem da query de valor. Tudo fica salvo e aparece pra todos.</p>
         <div class="d1-badges">
@@ -1089,8 +1100,29 @@
           <span class="d1-badge ok">com movimentação: <b id="d1ComMov">0</b></span>
           <span class="d1-badge ok">com descrição: <b id="d1ComDesc">0</b></span>
           <span class="d1-badge warn">pendentes: <b id="d1Pend">0</b></span>
-          <span class="d1-badge" title="D-1 que ainda estão a caminho e não deram entrada no SVC — não entram na análise">fora (a caminho): <b id="d1Fora">0</b></span>
           <span class="d1-badge" id="d1SaveState">—</span>
+        </div>
+      </div>
+
+      <div class="d1-paste">
+        <div class="d1-paste-head">
+          <div>
+            <div class="d1-paste-title">⚡ Consulta rápida — cole a página do sistema</div>
+            <div class="d1-paste-sub">1) clique em <b>Copiar próximo ID</b> e cole na busca do sistema · 2) na página do pacote aperte <b>Ctrl+A</b> e <b>Ctrl+C</b> · 3) clique no quadro abaixo e aperte <b>Ctrl+V</b>. A data, a hora e quem bipou por último são preenchidos sozinhos.</div>
+          </div>
+          <button class="export-btn" id="btnD1NextId" type="button" disabled><span class="export-icon">➡️</span> Copiar próximo ID</button>
+        </div>
+        <div class="d1-paste-grid">
+          <textarea id="d1PasteBox" placeholder="Cole aqui (Ctrl+V) o conteúdo da página de consulta do pacote…"></textarea>
+          <div class="d1-paste-res">
+            <label>Pacote<select id="d1PId" class="d1-filter" style="min-width:0;width:100%;"></select></label>
+            <label>Última bipagem<input id="d1PDt" type="datetime-local" class="d1-filter" style="min-width:0;width:100%;"></label>
+            <label>Quem bipou<input id="d1PNome" type="text" class="d1-filter" style="min-width:0;width:100%;" list="d1Nomes" placeholder="nome"></label>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+              <button class="export-btn" id="btnD1PSave" type="button" disabled><span class="export-icon">💾</span> Salvar e ir pro próximo</button>
+              <span class="export-hint" id="d1PHint"></span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1149,7 +1181,7 @@
           <div class="fg-title">
             <span class="fg-logo">K+N</span>
             <div>
-              <div class="fg-h1">Pacotes D-1 ausentes</div>
+              <div class="fg-h1">Pacotes D-1</div>
               <div class="fg-sub">SRJ1 · última movimentação registrada no sistema</div>
             </div>
           </div>
@@ -2694,7 +2726,7 @@
     return !/caminho/.test(loc);
   }
   function d1AllD1(){ return (lastMetricIds && lastMetricIds.d1) ? lastMetricIds.d1.slice() : []; }
-  function d1Ids(){ return d1AllD1().filter(d1Entrou); }
+  function d1Ids(){ return d1AllD1(); }
   function d1SetState(t){ const el = document.getElementById('d1SaveState'); if(el) el.textContent = t; }
 
   function d1MergeRemote(remote){
@@ -2795,7 +2827,7 @@
     let comMov = 0, comDesc = 0, pend = 0;
     ids.forEach(id => { const r = d1Data[id] || {}; if(r.dt && r.nome) comMov++; else pend++; if(r.desc) comDesc++; });
     document.getElementById('d1Total').textContent = fmt(ids.length);
-    document.getElementById('d1Fora').textContent = fmt(d1AllD1().length - ids.length);
+    if(document.activeElement !== document.getElementById('d1PId')) d1FillPasteIdSelect(document.getElementById('d1PId').value);
     document.getElementById('d1ComMov').textContent = fmt(comMov);
     document.getElementById('d1ComDesc').textContent = fmt(comDesc);
     document.getElementById('d1Pend').textContent = fmt(pend);
@@ -2918,7 +2950,7 @@
     const ids = d1ReportIds();
     const now = new Date();
     const lines = [
-      '📦 *PACOTES D-1 AUSENTES — SRJ1*',
+      '📦 *PACOTES D-1 — SRJ1*',
       '🗓️ Atualizado ' + now.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' às ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) + '  ·  *' + ids.length + ' pacotes*',
       '━━━━━━━━━━━━━━'
     ];
@@ -3068,6 +3100,136 @@
     elId: 'd1ReportArea', btnId: 'btnD1ReportImg', hintId: 'd1ReportHint',
     fileNamePrefix: 'report_d1', shareTitle: 'Report D-1'
   }));
+  // ---------- Consulta rápida: colar a página do sistema e extrair a última bipagem ----------
+  const D1_MESES = {jan:1,fev:2,feb:2,mar:3,abr:4,apr:4,mai:5,may:5,jun:6,jul:7,ago:8,aug:8,set:9,sep:9,out:10,oct:10,nov:11,dez:12,dec:12};
+  function d1Pad(n){ return String(n).padStart(2,'0'); }
+  function d1FindDates(text){
+    const out = [];
+    const yNow = new Date().getFullYear();
+    const push = (idx, y, mo, d, h, mi) => {
+      y = Number(y || yNow); if(y < 100) y += 2000;
+      mo = Number(mo); d = Number(d); h = Number(h); mi = Number(mi);
+      if(mo < 1 || mo > 12 || d < 1 || d > 31 || h > 23 || mi > 59) return;
+      out.push({ idx, t: new Date(y, mo-1, d, h, mi).getTime(), v: y + '-' + d1Pad(mo) + '-' + d1Pad(d) + 'T' + d1Pad(h) + ':' + d1Pad(mi) });
+    };
+    let m;
+    // 29/10/2026 14:32 · 29/10/26 - 14:32 · 29/10 14:32
+    const r1 = /(?<![\d-])(\d{1,2})[\/.-](\d{1,2})(?:[\/.-](\d{2,4}))?[\s,·|à-]*(?:as|às|at)?\s*(\d{1,2})[:h](\d{2})/gi;
+    while((m = r1.exec(text))) push(m.index, m[3], m[2], m[1], m[4], m[5]);
+    // 2026-10-29 14:32 / 2026-10-29T14:32
+    const r2 = /(\d{4})-(\d{2})-(\d{2})[T\s]+(\d{1,2}):(\d{2})/g;
+    while((m = r2.exec(text))) push(m.index, m[1], m[2], m[3], m[4], m[5]);
+    // 29 out 2026 14:32 · 29 de outubro de 2026, 14:32 · 29 out. 14:32
+    const r3 = /(?<!\d)(\d{1,2})\s*(?:de\s+)?(jan|fev|feb|mar|abr|apr|mai|may|jun|jul|ago|aug|set|sep|out|oct|nov|dez|dec)[a-zç]*\.?\s*(?:de\s+)?(\d{4})?[\s,·|-]*(?:as|às|at)?\s*(\d{1,2})[:h](\d{2})/gi;
+    while((m = r3.exec(text))) push(m.index, m[3], D1_MESES[m[2].toLowerCase()], m[1], m[4], m[5]);
+    return out;
+  }
+  const D1_NAME_STOP = /(esta[cç][aã]o|pacote|rota|status|sorting|buffer|inbound|outbound|entregue|carrinho|gaiola|transfer|caminho|recebid|processad|hist[oó]rico|movimenta|localiza|svc|srj|facility|shipment|data|hora|detalhe|volumoso|usu[aá]rio|operador|evento|a[cç][aã]o|tipo|origem|destino|motivo)/i;
+  function d1LooksName(line){
+    const t = line.replace(/^[\s•·:\-–|]+|[\s•·:\-–|]+$/g,'').trim();
+    if(!t || t.length < 5 || t.length > 60 || /\d/.test(t) || D1_NAME_STOP.test(t)) return '';
+    const w = t.split(/\s+/);
+    if(w.length < 2 || w.length > 7) return '';
+    if(!w.every(x => /^[A-Za-zÀ-ÿ'.]+$/.test(x))) return '';
+    return t;
+  }
+  function d1FindName(lines, li){
+    // 1) rótulos explícitos perto da data
+    const lab = /(?:usu[aá]rio|operador|respons[aá]vel|colaborador|bipad[oa]\s+por|realizad[oa]\s+por|feito\s+por|por|user|nome)\s*[:\-–]?\s*([A-Za-zÀ-ÿ'. ]{5,60}|[a-z0-9._-]{4,40})\s*$/i;
+    for(let d=0; d<=4; d++){
+      for(const k of [li+d, li-d]){
+        if(k < 0 || k >= lines.length) continue;
+        const m = lines[k].match(lab);
+        if(m){ const v = m[1].trim(); if(v && !D1_NAME_STOP.test(v)) return v; }
+      }
+    }
+    // 2) a própria linha da data, sem a data
+    // 3) linhas vizinhas que parecem nome de pessoa
+    for(let d=0; d<=4; d++){
+      for(const k of [li+d, li-d]){
+        if(k < 0 || k >= lines.length) continue;
+        const parts = lines[k].split(/\t|\s{2,}|\s[|·-]\s/);
+        for(const part of parts){ const n = d1LooksName(part); if(n) return n; }
+      }
+    }
+    return '';
+  }
+  function d1ParsePage(text){
+    const res = { id:'', dt:'', nome:'' };
+    const ids = d1Ids();
+    const set = new Set(ids);
+    const nums = text.match(/\d{10,13}/g) || [];
+    res.id = nums.find(n => set.has(n)) || '';
+    const dates = d1FindDates(text);
+    if(dates.length){
+      const last = dates.reduce((a, b) => b.t > a.t ? b : a);
+      res.dt = last.v;
+      const before = text.slice(0, last.idx);
+      const lines = text.split(/\r?\n/);
+      const li = before.split(/\r?\n/).length - 1;
+      // linha da data sem a data, depois vizinhas
+      const own = lines[li] ? lines[li].replace(/\d{1,4}[\/.-]\d{1,2}([\/.-]\d{2,4})?[\s,·|à-]*(as|às)?\s*\d{1,2}[:h]\d{2}(:\d{2})?/gi,' ') : '';
+      // login no formato nome.sobrenome na própria linha
+      const login = (own.match(/(?:^|\s)([a-z]{2,}[._][a-z]{2,}(?:[._][a-z]{2,})?)(?=\s|$)/i) || [])[1] || '';
+      res.nome = d1LooksName(own) || d1FindName(lines, li) || login;
+    }
+    return res;
+  }
+  function d1FillPasteIdSelect(sel){
+    const el = document.getElementById('d1PId');
+    const ids = d1Ids();
+    el.innerHTML = '<option value="">— escolha o pacote —</option>' + ids.map(id => {
+      const r = d1Data[id] || {};
+      return '<option value="' + d1Esc(id) + '">' + d1Esc(id) + (r.dt && r.nome ? '  ✓' : '') + '</option>';
+    }).join('');
+    if(sel) el.value = sel;
+    document.getElementById('btnD1NextId').disabled = !ids.length;
+  }
+  function d1NextPending(after){
+    const ids = d1Ids();
+    const start = after ? ids.indexOf(after) + 1 : 0;
+    for(let k=0;k<ids.length;k++){ const id = ids[(start + k) % ids.length]; const r = d1Data[id] || {}; if(!(r.dt && r.nome)) return id; }
+    return '';
+  }
+  function d1MarkFound(el, ok){ el.classList.toggle('found', !!ok); }
+  function d1ApplyPaste(){
+    const text = document.getElementById('d1PasteBox').value;
+    if(!text.trim()) return;
+    const r = d1ParsePage(text);
+    const cur = document.getElementById('d1PId').value;
+    d1FillPasteIdSelect(r.id || cur);
+    const dtEl = document.getElementById('d1PDt'), nmEl = document.getElementById('d1PNome');
+    dtEl.value = r.dt || ''; nmEl.value = r.nome ? d1TitleCase(r.nome) : '';
+    d1MarkFound(document.getElementById('d1PId'), r.id); d1MarkFound(dtEl, r.dt); d1MarkFound(nmEl, r.nome);
+    const miss = [!r.id && !cur ? 'ID' : '', !r.dt ? 'data/hora' : '', !r.nome ? 'nome' : ''].filter(Boolean);
+    document.getElementById('d1PHint').textContent = miss.length ? 'não achei: ' + miss.join(', ') + ' — confira e complete' : 'achei tudo ✓ confira e salve';
+    document.getElementById('btnD1PSave').disabled = false;
+    (miss.length ? (miss.includes('nome') ? nmEl : dtEl) : document.getElementById('btnD1PSave')).focus();
+  }
+  document.getElementById('d1PasteBox').addEventListener('paste', ()=> setTimeout(d1ApplyPaste, 30));
+  document.getElementById('d1PasteBox').addEventListener('input', ()=>{ clearTimeout(window.__d1pt); window.__d1pt = setTimeout(d1ApplyPaste, 400); });
+  document.getElementById('btnD1NextId').addEventListener('click', ()=>{
+    const id = d1NextPending(document.getElementById('d1PId').value);
+    if(!id){ document.getElementById('d1PHint').textContent = 'todos os D-1 já têm última bipagem 🎉'; return; }
+    d1FillPasteIdSelect(id);
+    d1Copy(id, 'd1PHint', 'ID ' + id + ' copiado — cole na busca do sistema');
+    document.getElementById('d1PasteBox').value = '';
+    ['d1PDt','d1PNome','d1PId'].forEach(x => d1MarkFound(document.getElementById(x), false));
+    document.getElementById('d1PDt').value = ''; document.getElementById('d1PNome').value = '';
+  });
+  document.getElementById('btnD1PSave').addEventListener('click', ()=>{
+    const id = document.getElementById('d1PId').value;
+    const dt = document.getElementById('d1PDt').value;
+    const nome = document.getElementById('d1PNome').value.trim();
+    if(!id){ document.getElementById('d1PHint').textContent = 'escolha o pacote'; return; }
+    if(dt) d1SetField(id, 'dt', dt);
+    if(nome) d1SetField(id, 'nome', nome);
+    renderD1Tab();
+    document.getElementById('d1PHint').textContent = id + ' salvo ✓';
+    // já prepara o próximo
+    document.getElementById('btnD1NextId').click();
+  });
+
   // atualiza o que os outros preencheram junto com a busca automática de 45s
   setInterval(()=>{ if(viewD1.style.display !== 'none') loadD1Analise(); }, 45000);
   loadD1Analise();
