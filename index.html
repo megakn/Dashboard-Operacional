@@ -1108,7 +1108,7 @@
         <div class="d1-paste-head">
           <div>
             <div class="d1-paste-title">⚡ Consulta rápida — cole a página do sistema</div>
-            <div class="d1-paste-sub">1) clique em <b>Copiar próximo ID</b> e cole na busca do sistema · 2) na página do pacote aperte <b>Ctrl+A</b> e <b>Ctrl+C</b> · 3) clique no quadro abaixo e aperte <b>Ctrl+V</b>. A data, a hora e quem bipou por último são preenchidos sozinhos.</div>
+            <div class="d1-paste-sub">1) clique em <b>Copiar próximo ID</b> e cole na busca do sistema · 2) na página do pacote aperte <b>Ctrl+A</b> e <b>Ctrl+C</b> · 3) clique no quadro abaixo e aperte <b>Ctrl+V</b>. Pronto: a data, a hora e quem bipou são preenchidos e salvos sozinhos, e o próximo ID já fica copiado.</div>
           </div>
           <button class="export-btn" id="btnD1NextId" type="button" disabled><span class="export-icon">➡️</span> Copiar próximo ID</button>
         </div>
@@ -1119,7 +1119,7 @@
             <label>Última bipagem<input id="d1PDt" type="datetime-local" class="d1-filter" style="min-width:0;width:100%;"></label>
             <label>Quem bipou<input id="d1PNome" type="text" class="d1-filter" style="min-width:0;width:100%;" list="d1Nomes" placeholder="nome"></label>
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-              <button class="export-btn" id="btnD1PSave" type="button" disabled><span class="export-icon">💾</span> Salvar e ir pro próximo</button>
+              <button class="export-btn" id="btnD1PSave" type="button" disabled><span class="export-icon">💾</span> Salvar (só se faltar algo)</button>
               <span class="export-hint" id="d1PHint"></span>
             </div>
           </div>
@@ -3192,7 +3192,7 @@
     return '';
   }
   function d1MarkFound(el, ok){ el.classList.toggle('found', !!ok); }
-  function d1ApplyPaste(){
+  function d1ApplyPaste(auto){
     const text = document.getElementById('d1PasteBox').value;
     if(!text.trim()) return;
     const r = d1ParsePage(text);
@@ -3204,10 +3204,16 @@
     const miss = [!r.id && !cur ? 'ID' : '', !r.dt ? 'data/hora' : '', !r.nome ? 'nome' : ''].filter(Boolean);
     document.getElementById('d1PHint').textContent = miss.length ? 'não achei: ' + miss.join(', ') + ' — confira e complete' : 'achei tudo ✓ confira e salve';
     document.getElementById('btnD1PSave').disabled = false;
+    // achou tudo: salva sozinho e já copia o próximo ID
+    if(auto && !miss.length && document.getElementById('d1PId').value){
+      document.getElementById('btnD1PSave').click();
+      document.getElementById('d1PasteBox').focus();
+      return;
+    }
     (miss.length ? (miss.includes('nome') ? nmEl : dtEl) : document.getElementById('btnD1PSave')).focus();
   }
-  document.getElementById('d1PasteBox').addEventListener('paste', ()=> setTimeout(d1ApplyPaste, 30));
-  document.getElementById('d1PasteBox').addEventListener('input', ()=>{ clearTimeout(window.__d1pt); window.__d1pt = setTimeout(d1ApplyPaste, 400); });
+  document.getElementById('d1PasteBox').addEventListener('paste', ()=> setTimeout(()=> d1ApplyPaste(true), 30));
+  document.getElementById('d1PasteBox').addEventListener('input', ()=>{ clearTimeout(window.__d1pt); window.__d1pt = setTimeout(()=> d1ApplyPaste(false), 400); });
   document.getElementById('btnD1NextId').addEventListener('click', ()=>{
     const id = d1NextPending(document.getElementById('d1PId').value);
     if(!id){ document.getElementById('d1PHint').textContent = 'todos os D-1 já têm última bipagem 🎉'; return; }
@@ -3225,9 +3231,10 @@
     if(dt) d1SetField(id, 'dt', dt);
     if(nome) d1SetField(id, 'nome', nome);
     renderD1Tab();
-    document.getElementById('d1PHint').textContent = id + ' salvo ✓';
-    // já prepara o próximo
+    // já prepara o próximo e mostra o que foi salvo
     document.getElementById('btnD1NextId').click();
+    const nx = document.getElementById('d1PId').value;
+    setTimeout(()=>{ document.getElementById('d1PHint').textContent = '✓ ' + id + ' salvo (' + d1FmtDt(dt) + ' · ' + d1TitleCase(nome) + ')' + (nx ? ' — próximo ID ' + nx + ' já copiado' : ' — todos feitos 🎉'); }, 150);
   });
 
   // atualiza o que os outros preencheram junto com a busca automática de 45s
