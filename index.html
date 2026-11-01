@@ -788,6 +788,12 @@
   .d1-paste-res{ display:flex; flex-direction:column; gap:8px; }
   .d1-paste-res label{ display:flex; flex-direction:column; gap:3px; font-size:11px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:#5B6B85; }
   .d1-paste-res .found{ border-color:#22C55E !important; background:#F0FDF4; }
+  .fg-group{ display:flex; align-items:center; gap:8px; padding:9px 18px; font-size:11.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; border-top:1px solid #EEF2F7; }
+  .fg-group b{ font-size:11px; padding:2px 8px; border-radius:999px; }
+  .fg-group.done{ background:#F0FDF4; color:#15803D; }
+  .fg-group.done b{ background:#DCFCE7; }
+  .fg-group.pend{ background:#FFF7ED; color:#B45309; }
+  .fg-group.pend b{ background:#FFEDD5; }
   .d1-pager{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:#33415C; margin-right:6px; }
   .d1-pager .export-btn{ padding:6px 10px; }
   .fg-tr{ display:grid; grid-template-columns:118px 96px 200px 88px 150px 96px minmax(0,1fr); gap:16px; align-items:center; padding:11px 18px; border-top:1px solid #EEF2F7; }
@@ -2809,7 +2815,7 @@
       Object.values(d1Data).forEach(r => { if(r && r.nome) nomes.add(r.nome); });
       document.getElementById('d1Nomes').innerHTML = Array.from(nomes).sort().map(n => '<option value="' + d1Esc(n) + '">').join('');
       const rows = [];
-      ids.forEach((id, i) => {
+      d1DoneFirst(ids).forEach((id, i) => {
         const r = d1Data[id] || {};
         if(q && !(id.toLowerCase().includes(q) || (r.nome||'').toLowerCase().includes(q) || (r.desc||'').toLowerCase().includes(q))) return;
         const done = r.dt && r.nome;
@@ -2892,8 +2898,11 @@
       };
       ids = ids.slice().sort((x, y) => key(x).localeCompare(key(y), 'pt-BR', { numeric:true }) || x.localeCompare(y));
     }
-    return ids;
+    // já consultados juntos no topo, depois os que faltam
+    return d1DoneFirst(ids);
   }
+  function d1Done(id){ const r = d1Data[id] || {}; return !!(r.dt || r.nome); }
+  function d1DoneFirst(ids){ return ids.filter(d1Done).concat(ids.filter(id => !d1Done(id))); }
 
   let d1Page = 0;
   function d1PageSize(){ const el = document.getElementById('d1PageSize'); return el ? Number(el.value) : 15; }
@@ -2915,8 +2924,18 @@
     const now = new Date();
     document.getElementById('d1ReportWhen').textContent = 'Atualizado ' + now.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' às ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
     document.getElementById('d1rTotal').textContent = fmt(fullIds.length);
+    const nDone = fullIds.filter(d1Done).length, nPend = fullIds.length - nDone;
+    let lastGroup = null;
     document.getElementById('d1ReportBody').innerHTML = ids.map(id => {
       const r = d1Data[id] || {};
+      const g = d1Done(id) ? 'done' : 'pend';
+      let sep = '';
+      if(g !== lastGroup){
+        sep = g === 'done'
+          ? `<div class="fg-group done">✓ Já consultados <b>${fmt(nDone)}</b></div>`
+          : `<div class="fg-group pend">● Aguardando consulta <b>${fmt(nPend)}</b></div>`;
+        lastGroup = g;
+      }
       const rota = d1Rota(id);
       const mp = d1MovParts(r.dt);
       let mov;
@@ -2932,7 +2951,7 @@
       const loc = row.loc || '';
       const locCls = /caminho/i.test(loc) ? 'way' : (/esta/i.test(loc) ? 'st' : '');
       const tipo = d1Detalhe(id);
-      return `<div class="fg-tr">
+      return sep + `<div class="fg-tr">
         <div class="fg-id">${d1Esc(id)}</div>
         <div class="fg-inb">${inb ? '<b>' + d1Esc(inb.d) + '</b>' + (inb.t ? '<small>' + d1Esc(inb.t) + '</small>' : '') : '<span class="fg-desc empty">—</span>'}</div>
         <div>${mov}</div>
