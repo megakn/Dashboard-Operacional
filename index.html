@@ -767,7 +767,7 @@
     </div>
   </div>
 
-  <div class="upload-row">
+  <div class="upload-row" id="uploadRow">
     <label class="drop" id="dropBase1">
       <input type="file" id="fileBase1" accept=".xlsx,.xls">
       <div class="drop-icon">①</div>
@@ -2588,6 +2588,8 @@
     viewChegada.style.display = isChegada ? 'block' : 'none';
     viewD1.style.display = isD1 ? 'block' : 'none';
     viewDashboard.style.display = isDashboard ? 'block' : 'none';
+    // na Análise D-1 não precisa subir planilha — esconde a área de envio
+    document.getElementById('uploadRow').style.display = isD1 ? 'none' : '';
     if(isChegada){
       renderChegadaTab();
     }
