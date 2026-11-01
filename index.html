@@ -754,37 +754,34 @@
 
   /* ---------- Report D-1 ---------- */
   .d1-opt{ margin-left:auto; font-size:12.5px; font-weight:600; color:#33415C; display:flex; align-items:center; gap:6px; cursor:pointer; }
-  .d1r-outer{ overflow-x:auto; }
-  .d1r{ width:100%; max-width:1000px; box-sizing:border-box; background:#FFFFFF; border-radius:14px; overflow:hidden; border:1px solid #D7E0EE; box-shadow:0 2px 6px rgba(11,37,69,.06); font-family:'Inter', system-ui, sans-serif; }
-  .d1r-head{ display:flex; justify-content:space-between; align-items:center; padding:18px 22px; background:linear-gradient(135deg,#0B2545 0%,#0B5FA5 100%); color:#fff; }
-  .d1r-brand{ display:flex; align-items:center; gap:12px; }
-  .d1r-logo{ background:#fff; color:#0B2545; font-weight:900; font-size:15px; padding:8px 9px; border-radius:8px; letter-spacing:-.02em; }
-  .d1r-org{ font-size:17px; font-weight:800; }
-  .d1r-kicker{ font-family:var(--mono, monospace); font-size:11px; letter-spacing:.14em; opacity:.85; margin-top:2px; }
-  .d1r-when{ text-align:right; font-family:var(--mono, monospace); font-size:11px; opacity:.95; display:flex; flex-direction:column; gap:2px; }
-  .d1r-when b{ font-size:16px; }
-  .d1r-kpis{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:16px 22px 10px; }
-  .d1r-kpi{ border:1px solid #E2E8F2; border-top:3px solid #0B5FA5; border-radius:10px; padding:10px 12px; }
-  .d1r-kpi span{ display:block; font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#5B6B85; }
-  .d1r-kpi b{ display:block; font-size:26px; font-weight:900; color:#0B2545; margin-top:2px; }
-  .d1r-kpi.ok{ border-top-color:#1E9E63; } .d1r-kpi.ok b{ color:#1E9E63; }
-  .d1r-kpi.warn{ border-top-color:#C97D0C; } .d1r-kpi.warn b{ color:#C97D0C; }
-  .d1r-progress{ margin:0 22px 14px; height:8px; background:#EEF2F8; border-radius:99px; overflow:hidden; }
-  .d1r-progress div{ height:100%; width:0; background:#1E9E63; border-radius:99px; }
-  .d1r-table{ width:calc(100% - 44px); margin:0 22px; border-collapse:collapse; font-size:12.5px; }
-  .d1r-table th{ text-align:left; font-family:var(--mono, monospace); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:#5B6B85; padding:8px 8px; border-bottom:2px solid #D7E0EE; }
-  .d1r-table td{ padding:8px 8px; border-bottom:1px solid #EEF2F8; color:#0B2545; vertical-align:top; }
-  .d1r-table tr:nth-child(even) td{ background:#FAFBFD; }
-  .d1r-table .n{ color:#94A3B8; font-weight:700; width:28px; }
-  .d1r-table .id{ font-family:var(--mono, monospace); font-weight:800; white-space:nowrap; }
-  .d1r-table .rota{ font-family:var(--mono, monospace); color:#33415C; white-space:nowrap; }
-  .d1r-table .mov b{ display:block; font-weight:800; }
-  .d1r-table .mov small{ color:#5B6B85; font-size:11px; }
-  .d1r-table .who{ font-weight:700; }
-  .d1r-table .desc{ color:#33415C; max-width:300px; }
-  .d1r-pill{ display:inline-block; font-size:10.5px; font-weight:800; letter-spacing:.04em; padding:3px 8px; border-radius:99px; background:#FFF4E5; color:#B45309; border:1px solid #FCD9A8; }
-  .d1r-table tr.pend td{ background:#FFFBF5; }
-  .d1r-foot{ display:flex; justify-content:space-between; padding:12px 22px 16px; font-family:var(--mono, monospace); font-size:11px; color:#5B6B85; }
+  .d1-section-title{ flex-wrap:wrap; }
+  .d1r-outer{ overflow-x:auto; padding:4px; }
+  .fg{ width:100%; max-width:1120px; box-sizing:border-box; background:#F6F8FC; border-radius:20px; padding:22px; font-family:'Inter', system-ui, -apple-system, sans-serif; color:#0F1B2D; }
+  .fg-head{ display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:16px; }
+  .fg-title{ display:flex; align-items:center; gap:14px; }
+  .fg-logo{ width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#0B2545,#0B5FA5); color:#fff; font-weight:900; font-size:14px; display:flex; align-items:center; justify-content:center; letter-spacing:-.02em; box-shadow:0 4px 12px rgba(11,95,165,.25); }
+  .fg-h1{ font-size:22px; font-weight:800; letter-spacing:-.02em; line-height:1.15; }
+  .fg-sub{ font-size:12.5px; color:#64748B; margin-top:3px; }
+  .fg-meta{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+  .fg-chip{ display:inline-flex; align-items:center; gap:7px; background:#fff; border:1px solid #E3E8F0; border-radius:999px; padding:7px 13px; font-size:12.5px; font-weight:600; color:#334155; box-shadow:0 1px 2px rgba(15,27,45,.04); }
+  .fg-chip b{ font-weight:800; }
+  .fg-chip-dark{ background:#0B2545; color:#fff; border-color:#0B2545; }
+  .fg-dot{ width:7px; height:7px; border-radius:50%; background:#22C55E; box-shadow:0 0 0 3px rgba(34,197,94,.18); }
+  .fg-table{ background:#fff; border:1px solid #E3E8F0; border-radius:16px; overflow:hidden; box-shadow:0 1px 3px rgba(15,27,45,.05), 0 8px 24px -12px rgba(15,27,45,.10); }
+  .fg-tr{ display:grid; grid-template-columns:132px minmax(0,1fr) 92px 250px; gap:16px; align-items:center; padding:11px 18px; border-top:1px solid #EEF2F7; }
+  .fg-th{ border-top:0; background:#FAFBFD; font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#64748B; padding:12px 18px; }
+  .fg-id{ font-family:var(--mono, 'JetBrains Mono', monospace); font-size:12.5px; font-weight:700; color:#0F1B2D; letter-spacing:-.01em; }
+  .fg-desc{ font-size:13px; color:#1E293B; line-height:1.35; }
+  .fg-desc.empty{ color:#94A3B8; font-style:italic; }
+  .fg-rota{ display:inline-block; font-family:var(--mono, 'JetBrains Mono', monospace); font-size:11.5px; font-weight:800; padding:4px 9px; border-radius:8px; background:#EAF2FB; color:#0B5FA5; border:1px solid #D3E4F7; white-space:nowrap; }
+  .fg-mov{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .fg-av{ flex:0 0 30px; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:#fff; }
+  .fg-who{ min-width:0; }
+  .fg-who b{ display:block; font-size:12.5px; font-weight:700; color:#0F1B2D; line-height:1.25; }
+  .fg-who small{ display:block; font-size:11.5px; color:#64748B; margin-top:1px; }
+  .fg-wait{ display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; color:#B45309; background:#FFF7ED; border:1px solid #FED7AA; border-radius:999px; padding:4px 10px; }
+  .fg-empty{ padding:22px; text-align:center; color:#94A3B8; font-size:13px; }
+  .fg-foot{ display:flex; justify-content:space-between; margin-top:12px; padding:0 4px; font-size:11.5px; color:#64748B; }
 </style>
 </head>
 
@@ -1123,29 +1120,39 @@
       </div>
       <div class="empty-hint" id="d1Empty">Envie a base do ciclo e os faltantes para listar os pacotes D-1.</div>
 
-      <div class="d1-section-title">📣 Report D-1
-        <label class="d1-opt"><input type="checkbox" id="d1OnlyDone"> só os que já têm última movimentação</label>
+      <div class="d1-section-title">📣 Report D-1 (pra mandar nos grupos)
+        <span class="d1-opt">ordenar por
+          <select id="d1Order" class="d1-filter" style="min-width:0;padding:4px 8px;">
+            <option value="rota">Rota</option>
+            <option value="nome">Quem bipou</option>
+            <option value="data">Última movimentação</option>
+            <option value="lista">Ordem da lista</option>
+          </select>
+        </span>
+        <label class="d1-opt" style="margin-left:12px;"><input type="checkbox" id="d1OnlyDone"> só com última movimentação</label>
       </div>
       <div class="d1r-outer">
-      <div id="d1ReportArea" class="d1r">
-        <div class="d1r-head">
-          <div class="d1r-brand"><span class="d1r-logo">K+N</span><div><div class="d1r-org">Kuehne+Nagel · SRJ1</div><div class="d1r-kicker">PACOTES D-1 PENDENTES · FAVOR LOCALIZAR</div></div></div>
-          <div class="d1r-when"><span>Atualizado</span><b id="d1ReportWhen"></b></div>
+      <div id="d1ReportArea" class="fg">
+        <div class="fg-head">
+          <div class="fg-title">
+            <span class="fg-logo">K+N</span>
+            <div>
+              <div class="fg-h1">Pacotes D-1 pendentes</div>
+              <div class="fg-sub">SRJ1 · última movimentação registrada no sistema</div>
+            </div>
+          </div>
+          <div class="fg-meta">
+            <div class="fg-chip fg-chip-dark"><b id="d1rTotal">0</b> pacotes</div>
+            <div class="fg-chip"><span class="fg-dot"></span><span id="d1ReportWhen"></span></div>
+          </div>
         </div>
-        <div class="d1r-kpis">
-          <div class="d1r-kpi warn"><span>D-1 pendentes</span><b id="d1rTotal">0</b></div>
-          <div class="d1r-kpi ok"><span>Última mov. identificada</span><b id="d1rMov">0</b></div>
-          <div class="d1r-kpi"><span>Em consulta</span><b id="d1rPend">0</b></div>
-          <div class="d1r-kpi"><span>Com descrição</span><b id="d1rDesc">0</b></div>
+        <div class="fg-table">
+          <div class="fg-tr fg-th">
+            <div>Nº do pedido</div><div>Descrição</div><div>Rota</div><div>Última movimentação</div>
+          </div>
+          <div id="d1ReportBody"></div>
         </div>
-        <div class="d1r-progress"><div id="d1rBar"></div></div>
-        <table class="d1r-table">
-          <thead>
-            <tr><th>#</th><th>ID do pacote</th><th>Rota</th><th>Última movimentação</th><th>Quem bipou</th><th>Descrição</th></tr>
-          </thead>
-          <tbody id="d1ReportBody"></tbody>
-        </table>
-        <div class="d1r-foot"><span id="d1ReportSummary"></span><span>Favor localizar e processar · Kuehne+Nagel</span></div>
+        <div class="fg-foot"><span id="d1ReportSummary"></span><span>Kuehne+Nagel · Painel Operacional</span></div>
       </div>
       </div>
       <div class="actions-row" style="margin-top:12px;">
@@ -2771,62 +2778,79 @@
     const rec = base1Data && base1Data.records && base1Data.records.get(id);
     return rec && rec.rota ? rec.rota : '';
   }
+  const D1_AV_COLORS = ['#0B5FA5','#1E9E63','#C97D0C','#7C3AED','#DB2777','#0891B2','#DC2626','#4F46E5','#059669','#B45309'];
+  function d1AvColor(n){ let h = 0; for(const c of String(n)) h = (h*31 + c.charCodeAt(0)) >>> 0; return D1_AV_COLORS[h % D1_AV_COLORS.length]; }
+  function d1Initials(n){ const p = String(n).trim().split(/\s+/).filter(Boolean); return ((p[0]||'')[0] || '') .toUpperCase() + ((p.length > 1 ? p[p.length-1][0] : '') || '').toUpperCase(); }
+  function d1TitleCase(n){ return String(n||'').toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase()).replace(/\b(De|Da|Do|Dos|Das|E)\b/g, m => m.toLowerCase()); }
+  function d1MovParts(dt){
+    if(!dt) return { date:'', time:'' };
+    const m = String(dt).match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/);
+    if(!m) return { date:String(dt), time:'' };
+    return { date: m[3] + '/' + m[2], time: m[4] ? (m[4] + ':' + m[5]) : '' };
+  }
   function d1ReportIds(){
-    const ids = d1Ids();
+    let ids = d1Ids();
     const only = document.getElementById('d1OnlyDone') && document.getElementById('d1OnlyDone').checked;
-    return only ? ids.filter(id => { const r = d1Data[id] || {}; return r.dt || r.nome; }) : ids;
+    if(only) ids = ids.filter(id => { const r = d1Data[id] || {}; return r.dt || r.nome; });
+    const ord = (document.getElementById('d1Order') || {}).value || 'rota';
+    if(ord !== 'lista'){
+      const key = id => {
+        const r = d1Data[id] || {};
+        if(ord === 'rota') return d1Rota(id) || '~';
+        if(ord === 'nome') return (r.nome || '~').toLowerCase();
+        return r.dt || '~';
+      };
+      ids = ids.slice().sort((x, y) => key(x).localeCompare(key(y), 'pt-BR', { numeric:true }) || x.localeCompare(y));
+    }
+    return ids;
   }
 
   function renderD1Report(){
     const all = d1Ids();
     const ids = d1ReportIds();
     const now = new Date();
-    document.getElementById('d1ReportWhen').textContent = now.toLocaleDateString('pt-BR') + ' · ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-    let mov = 0, desc = 0;
-    all.forEach(id => { const r = d1Data[id] || {}; if(r.dt && r.nome) mov++; if(r.desc) desc++; });
-    document.getElementById('d1rTotal').textContent = fmt(all.length);
-    document.getElementById('d1rMov').textContent = fmt(mov);
-    document.getElementById('d1rPend').textContent = fmt(all.length - mov);
-    document.getElementById('d1rDesc').textContent = fmt(desc);
-    document.getElementById('d1rBar').style.width = (all.length ? Math.round(mov / all.length * 100) : 0) + '%';
-    const pend = '<span class="d1r-pill">EM CONSULTA</span>';
-    document.getElementById('d1ReportBody').innerHTML = ids.map((id, i) => {
+    document.getElementById('d1ReportWhen').textContent = 'Atualizado ' + now.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' às ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    document.getElementById('d1rTotal').textContent = fmt(ids.length);
+    document.getElementById('d1ReportBody').innerHTML = ids.map(id => {
       const r = d1Data[id] || {};
-      const ok = r.dt && r.nome;
-      const movHtml = r.dt ? `<b>${d1Esc(d1FmtDt(r.dt))}</b><small>${d1Esc(d1Ago(r.dt))}</small>` : pend;
-      return `<tr class="${ok ? '' : 'pend'}">
-        <td class="n">${i+1}</td>
-        <td class="id">${d1Esc(id)}</td>
-        <td class="rota">${d1Esc(d1Rota(id)) || '—'}</td>
-        <td class="mov">${movHtml}</td>
-        <td class="who">${r.nome ? d1Esc(r.nome) : '—'}</td>
-        <td class="desc">${r.desc ? d1Esc(r.desc) : '—'}</td>
-      </tr>`;
-    }).join('') || '<tr><td colspan="6" style="text-align:center;color:#94A3B8;padding:18px;">nenhum pacote para mostrar</td></tr>';
-    document.getElementById('d1ReportSummary').textContent = fmt(ids.length) + (ids.length === all.length ? ' pacotes D-1 pendentes no report' : ' de ' + fmt(all.length) + ' pacotes D-1 pendentes (só os já consultados)');
+      const rota = d1Rota(id);
+      const mp = d1MovParts(r.dt);
+      let mov;
+      if(r.nome || r.dt){
+        const nome = r.nome ? d1TitleCase(r.nome) : '—';
+        const av = r.nome ? `<span class="fg-av" style="background:${d1AvColor(nome)}">${d1Esc(d1Initials(nome))}</span>` : '';
+        mov = `<div class="fg-mov">${av}<div class="fg-who"><b>${d1Esc(nome)}</b><small>${d1Esc(mp.date)}${mp.time ? ' · ' + d1Esc(mp.time) : ''}</small></div></div>`;
+      } else {
+        mov = '<span class="fg-wait">● aguardando consulta</span>';
+      }
+      return `<div class="fg-tr">
+        <div class="fg-id">${d1Esc(id)}</div>
+        <div class="fg-desc${r.desc ? '' : ' empty'}">${r.desc ? d1Esc(r.desc) : 'sem descrição'}</div>
+        <div>${rota ? '<span class="fg-rota">' + d1Esc(rota) + '</span>' : '<span class="fg-desc empty">—</span>'}</div>
+        <div>${mov}</div>
+      </div>`;
+    }).join('') || '<div class="fg-empty">Nenhum pacote para mostrar.</div>';
+    const sem = all.filter(id => { const r = d1Data[id] || {}; return !(r.dt || r.nome); }).length;
+    document.getElementById('d1ReportSummary').textContent = fmt(all.length) + ' pacotes D-1' + (sem ? ' · ' + fmt(sem) + ' aguardando consulta' : ' · todos consultados');
   }
 
   function d1BuildText(){
-    const all = d1Ids();
     const ids = d1ReportIds();
     const now = new Date();
-    let mov = 0; all.forEach(id => { const r = d1Data[id] || {}; if(r.dt && r.nome) mov++; });
     const lines = [
-      '🚨 *PACOTES D-1 PENDENTES — SRJ1*',
-      '🗓️ ' + now.toLocaleDateString('pt-BR') + ' · ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
-      '',
-      '*' + all.length + ' pacotes D-1 ainda pendentes.* Favor localizar e processar.',
-      '📍 ' + mov + ' com última movimentação identificada  |  🔎 ' + (all.length - mov) + ' em consulta',
+      '📦 *PACOTES D-1 PENDENTES — SRJ1*',
+      '🗓️ Atualizado ' + now.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' às ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) + '  ·  *' + ids.length + ' pacotes*',
       '━━━━━━━━━━━━━━'
     ];
-    ids.forEach((id, i) => {
+    ids.forEach(id => {
       const r = d1Data[id] || {};
       const rota = d1Rota(id);
+      const mp = d1MovParts(r.dt);
       lines.push('');
-      lines.push((i+1) + '. *' + id + '*' + (rota ? '  ·  ' + rota : ''));
-      if(r.dt || r.nome) lines.push('   🕒 ' + (r.dt ? d1FmtDt(r.dt) : '—') + '  👤 ' + (r.nome || '—'));
-      else lines.push('   🔎 em consulta');
-      if(r.desc) lines.push('   📝 ' + r.desc);
+      lines.push('*' + id + '*' + (rota ? '  ·  ' + rota : ''));
+      if(r.desc) lines.push('📝 ' + r.desc);
+      if(r.nome || r.dt) lines.push('👤 ' + (mp.date ? mp.date + ' ' : '') + (r.nome ? d1TitleCase(r.nome) : ''));
+      else lines.push('⏳ aguardando consulta');
     });
     return lines.join('\n');
   }
@@ -2864,7 +2888,9 @@
     }
     if(descCol === -1) return 'achei os IDs, mas não a coluna de descrição';
     let n = 0;
-    data.forEach(r => { const id = nId(r[idCol]); const d = r[descCol]; if(idSet.has(id) && d !== null && d !== undefined && String(d).trim() !== ''){ d1SetField(id, 'desc', String(d).trim()); n++; } });
+    const acc = new Map();
+    data.forEach(r => { const id = nId(r[idCol]); const d = r[descCol]; if(idSet.has(id) && d !== null && d !== undefined && String(d).trim() !== ''){ if(!acc.has(id)) acc.set(id, []); const v = String(d).trim(); if(!acc.get(id).includes(v)) acc.get(id).push(v); } });
+    acc.forEach((list, id) => { d1SetField(id, 'desc', list.join(' + ')); n++; });
     renderD1Tab();
     return n + ' descrições aplicadas' + (header ? ' (coluna "' + header[descCol] + '")' : '');
   }
@@ -2914,6 +2940,7 @@
   });
   document.getElementById('d1Filter').addEventListener('input', ()=> renderD1Tab());
   document.getElementById('d1OnlyDone').addEventListener('change', ()=> renderD1Report());
+  document.getElementById('d1Order').addEventListener('change', ()=> renderD1Report());
   document.getElementById('btnD1ReportTxt').addEventListener('click', ()=> d1Copy(d1BuildText(), 'd1ReportHint', 'texto copiado — cole no WhatsApp'));
   document.getElementById('btnD1ReportImg').addEventListener('click', ()=> exportImage({
     elId: 'd1ReportArea', btnId: 'btnD1ReportImg', hintId: 'd1ReportHint',
