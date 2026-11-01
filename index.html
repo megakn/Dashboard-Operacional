@@ -425,6 +425,30 @@
     height:320px;
   }
   .chart-wrap.chart-wrap-tall{ height:380px; }
+  /* ---------- Análise D-1 ---------- */
+  .d1-toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:14px 0; }
+  .d1-badges{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .d1-badge{ font-family:var(--mono, 'JetBrains Mono', monospace); font-size:12px; font-weight:700; padding:5px 10px; border-radius:999px; background:#fff; border:1px solid #D7E0EE; color:#33415C; }
+  .d1-badge b{ color:#0B2545; }
+  .d1-badge.ok b{ color:#15803D; }
+  .d1-badge.warn b{ color:#C2410C; }
+  .d1-table input{ width:100%; box-sizing:border-box; font:inherit; font-size:12.5px; padding:6px 8px; border:1px solid #D7E0EE; border-radius:6px; background:#fff; color:#0B2545; }
+  .d1-table input:focus{ outline:2px solid #0B5FA5; outline-offset:0; border-color:#0B5FA5; }
+  .d1-table input.saved{ border-color:#86EFAC; }
+  .d1-table td{ vertical-align:middle; }
+  .d1-table .id-cell{ font-family:var(--mono, 'JetBrains Mono', monospace); font-weight:800; color:#0B2545; white-space:nowrap; }
+  .d1-table .copy-id{ border:0; background:none; cursor:pointer; font-size:13px; padding:2px 4px; opacity:.6; }
+  .d1-table .copy-id:hover{ opacity:1; }
+  .d1-table tr.done td{ background:rgba(22,163,74,0.05); }
+  .d1-import{ display:none; margin:0 0 14px; padding:14px; background:#fff; border:1px dashed #0B5FA5; border-radius:10px; }
+  .d1-import textarea{ width:100%; box-sizing:border-box; min-height:120px; font-family:var(--mono, 'JetBrains Mono', monospace); font-size:12px; padding:8px; border:1px solid #D7E0EE; border-radius:6px; }
+  .d1-import .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+  .d1-section-title{ font-size:15px; font-weight:800; color:#0B2545; margin:26px 0 10px; display:flex; align-items:center; gap:8px; }
+  #d1ReportArea{ background:#EEF2F8; padding:16px; border-radius:12px; }
+  #d1ReportArea .data-table td{ font-size:12.5px; }
+  .d1-empty-val{ color:#94A3B8; }
+  .d1-filter{ font:inherit; font-size:12.5px; padding:6px 10px; border:1px solid #D7E0EE; border-radius:8px; min-width:220px; }
+
 
   .panels-row{
     display:grid;
@@ -769,6 +793,7 @@
     <div class="app-sidebar">
       <button class="tab-btn active" id="tabBtnDashboard" type="button">📊 Dashboard</button>
       <button class="tab-btn" id="tabBtnChegada" type="button">🚚 Total por Origem</button>
+      <button class="tab-btn" id="tabBtnD1" type="button">🔎 Análise D-1</button>
     </div>
 
     <div class="app-main">
@@ -1012,6 +1037,89 @@
       </div>
     </div>
   </div><!-- /viewChegada -->
+
+  <div id="viewD1" style="display:none;">
+    <div class="chegada-wrap">
+      <div class="chegada-page-header">
+        <p class="eyebrow"><span class="dot"></span>Pacotes do dia anterior</p>
+        <h1>Análise D-1</h1>
+        <p>Os pacotes D-1 aparecem aqui sozinhos conforme a operação sobe a base do ciclo e os faltantes. Preencha a última movimentação e quem bipou; a descrição vem da query de valor. Tudo fica salvo e aparece pra todos.</p>
+        <div class="d1-badges">
+          <span class="d1-badge">D-1: <b id="d1Total">0</b></span>
+          <span class="d1-badge ok">com movimentação: <b id="d1ComMov">0</b></span>
+          <span class="d1-badge ok">com descrição: <b id="d1ComDesc">0</b></span>
+          <span class="d1-badge warn">pendentes: <b id="d1Pend">0</b></span>
+          <span class="d1-badge" id="d1SaveState">—</span>
+        </div>
+      </div>
+
+      <div class="d1-toolbar">
+        <button class="export-btn" id="btnD1CopyLines" type="button" disabled><span class="export-icon">📄</span> Copiar IDs (um por linha)</button>
+        <button class="export-btn" id="btnD1CopyQuery" type="button" disabled><span class="export-icon">🧾</span> Copiar IDs p/ query (separados por vírgula)</button>
+        <button class="export-btn" id="btnD1Import" type="button" disabled><span class="export-icon">📥</span> Importar resultado da query</button>
+        <input class="d1-filter" id="d1Filter" type="search" placeholder="buscar ID, nome ou descrição…">
+        <span class="export-hint" id="d1Hint">envie as duas bases para liberar</span>
+      </div>
+
+      <div class="d1-import" id="d1ImportBox">
+        <div style="font-weight:800;color:#0B2545;margin-bottom:6px;">Resultado da query de valor</div>
+        <div style="font-size:12.5px;color:#33415C;margin-bottom:8px;">Cole aqui o resultado (copiado do Excel/BigQuery, com cabeçalho) <b>ou</b> escolha o arquivo .csv/.xlsx. Eu acho sozinho a coluna do ID e a da descrição.</div>
+        <textarea id="d1ImportText" placeholder="ID	DESCRIÇÃO&#10;48380943770	Fone de ouvido bluetooth…"></textarea>
+        <div class="row">
+          <button class="export-btn" id="btnD1ImportApply" type="button"><span class="export-icon">✅</span> Aplicar texto colado</button>
+          <label class="export-btn" style="cursor:pointer;"><span class="export-icon">📂</span> Escolher arquivo<input type="file" id="d1ImportFile" accept=".csv,.tsv,.txt,.xlsx,.xls" style="display:none;"></label>
+          <span class="export-hint" id="d1ImportHint"></span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="table-scroll" style="max-height:none;">
+          <table class="data-table d1-table">
+            <thead>
+              <tr>
+                <th style="width:40px;">#</th>
+                <th style="width:170px;">ID do pacote</th>
+                <th style="width:210px;">Última movimentação (data e hora)</th>
+                <th style="width:220px;">Quem bipou</th>
+                <th>Descrição</th>
+              </tr>
+            </thead>
+            <tbody id="d1Body"></tbody>
+          </table>
+        </div>
+        <datalist id="d1Nomes"></datalist>
+      </div>
+      <div class="empty-hint" id="d1Empty">Envie a base do ciclo e os faltantes para listar os pacotes D-1.</div>
+
+      <div class="d1-section-title">📣 Report D-1</div>
+      <div id="d1ReportArea">
+        <div class="chegada-page-header" style="margin-bottom:10px;">
+          <p class="eyebrow"><span class="dot"></span>Report D-1 · <span id="d1ReportWhen"></span></p>
+          <h1 style="font-size:22px;">Pacotes D-1 — última movimentação</h1>
+          <p id="d1ReportSummary"></p>
+        </div>
+        <div class="panel">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>ID</th>
+                <th>Última movimentação</th>
+                <th>Quem bipou</th>
+                <th>Descrição</th>
+              </tr>
+            </thead>
+            <tbody id="d1ReportBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="actions-row" style="margin-top:12px;">
+        <button class="export-btn" id="btnD1ReportImg" type="button" disabled><span class="export-icon">🖼️</span> Copiar report (imagem)</button>
+        <button class="export-btn" id="btnD1ReportTxt" type="button" disabled><span class="export-icon">💬</span> Copiar report (texto p/ WhatsApp)</button>
+        <span class="export-hint" id="d1ReportHint"></span>
+      </div>
+    </div>
+  </div><!-- /viewD1 -->
 
 
 
@@ -1819,6 +1927,7 @@
       faltanteAvailable = true;
     }
     lastMetricIds = { d1: d1Ids, recebido: recebidoIds, onWay: onWayIds, faltante: faltanteIds, faltanteAvailable };
+    try{ renderD1Tab(); }catch(e){ console.warn('Análise D-1:', e); }
 
     renderCards({totalGeral, d1, onWay, recebido, noCarrinho});
     renderOrigemChart();
@@ -2467,19 +2576,269 @@
   const viewDashboard = document.getElementById('viewDashboard');
   const viewChegada = document.getElementById('viewChegada');
 
+  const tabBtnD1 = document.getElementById('tabBtnD1');
+  const viewD1 = document.getElementById('viewD1');
   function switchTab(tab){
     const isChegada = tab === 'chegada';
-    const isDashboard = !isChegada;
+    const isD1 = tab === 'd1';
+    const isDashboard = !isChegada && !isD1;
     tabBtnChegada.classList.toggle('active', isChegada);
+    tabBtnD1.classList.toggle('active', isD1);
     tabBtnDashboard.classList.toggle('active', isDashboard);
     viewChegada.style.display = isChegada ? 'block' : 'none';
+    viewD1.style.display = isD1 ? 'block' : 'none';
     viewDashboard.style.display = isDashboard ? 'block' : 'none';
     if(isChegada){
       renderChegadaTab();
     }
+    if(isD1){
+      renderD1Tab();
+      loadD1Analise();
+    }
   }
   tabBtnDashboard.addEventListener('click', ()=> switchTab('dashboard'));
   tabBtnChegada.addEventListener('click', ()=> switchTab('chegada'));
+  tabBtnD1.addEventListener('click', ()=> switchTab('d1'));
+
+  // ================= ANÁLISE D-1 =================
+  // dados preenchidos ficam numa linha da tabela painel_dados (chave d1_analise):
+  // { "<id>": { dt:"2026-11-01T14:32", nome:"...", desc:"...", upd:"<iso>" } }
+  const D1_KEY = 'd1_analise';
+  let d1Data = {};
+  let d1Dirty = {};          // id -> true (alterado aqui e ainda não gravado)
+  let d1SaveTimer = null;
+  let d1Saving = false;
+
+  function d1Esc(v){ return String(v === undefined || v === null ? '' : v).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function d1FmtDt(dt){
+    if(!dt) return '';
+    const m = String(dt).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+    return m ? (m[3] + '/' + m[2] + ' ' + m[4] + ':' + m[5]) : String(dt);
+  }
+  function d1Ids(){ return (lastMetricIds && lastMetricIds.d1) ? lastMetricIds.d1.slice() : []; }
+  function d1SetState(t){ const el = document.getElementById('d1SaveState'); if(el) el.textContent = t; }
+
+  function d1MergeRemote(remote){
+    // mantém o que foi alterado aqui e ainda não gravou; no resto vale o mais recente
+    for(const id in remote){
+      if(d1Dirty[id]) continue;
+      const r = remote[id], l = d1Data[id];
+      if(!l || !l.upd || (r.upd && r.upd >= l.upd)) d1Data[id] = r;
+    }
+  }
+
+  async function loadD1Analise(){
+    try{
+      const { data } = await supabaseClient.from(SUPABASE_TABLE).select('conteudo').eq('chave', D1_KEY).limit(1).maybeSingle();
+      if(data && data.conteudo){
+        d1MergeRemote(JSON.parse(data.conteudo));
+        if(viewD1.style.display !== 'none') renderD1Tab(true);
+      }
+    }catch(err){ console.warn('Não consegui ler a Análise D-1 salva:', err); }
+  }
+
+  function d1ScheduleSave(){
+    d1SetState('salvando…');
+    clearTimeout(d1SaveTimer);
+    d1SaveTimer = setTimeout(d1Save, 900);
+  }
+  async function d1Save(){
+    if(d1Saving){ d1ScheduleSave(); return; }
+    d1Saving = true;
+    const pending = Object.assign({}, d1Dirty);
+    try{
+      // relê antes de gravar pra não apagar o que outra pessoa preencheu
+      const { data } = await supabaseClient.from(SUPABASE_TABLE).select('conteudo').eq('chave', D1_KEY).limit(1).maybeSingle();
+      const remote = (data && data.conteudo) ? JSON.parse(data.conteudo) : {};
+      for(const id in pending) remote[id] = d1Data[id];
+      // limpa registros com mais de 7 dias
+      const lim = new Date(Date.now() - 7*864e5).toISOString();
+      for(const id in remote){ if(remote[id] && remote[id].upd && remote[id].upd < lim) delete remote[id]; }
+      const { error } = await supabaseClient.from(SUPABASE_TABLE).upsert({
+        chave: D1_KEY, filename: null, conteudo: JSON.stringify(remote), atualizado_em: new Date().toISOString()
+      }, { onConflict: 'chave' });
+      if(error) throw error;
+      for(const id in pending) delete d1Dirty[id];
+      d1MergeRemote(remote);
+      d1SetState('salvo ✓ ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}));
+      document.querySelectorAll('#d1Body input.dirty').forEach(i => { i.classList.remove('dirty'); i.classList.add('saved'); });
+    }catch(err){
+      d1SetState('NÃO salvo — tentando de novo');
+      console.error('Falha ao salvar Análise D-1:', err);
+      setTimeout(d1ScheduleSave, 5000);
+    }finally{
+      d1Saving = false;
+      renderD1Report();
+    }
+  }
+
+  function d1SetField(id, field, value){
+    const cur = Object.assign({ dt:'', nome:'', desc:'' }, d1Data[id] || {});
+    cur[field] = value;
+    cur.upd = new Date().toISOString();
+    d1Data[id] = cur;
+    d1Dirty[id] = true;
+    d1ScheduleSave();
+  }
+
+  function renderD1Tab(keepFocus){
+    if(!viewD1) return;
+    const ids = d1Ids();
+    const has = !!(base1Data && base2Rows);
+    ['btnD1CopyLines','btnD1CopyQuery','btnD1Import','btnD1ReportImg','btnD1ReportTxt'].forEach(b => document.getElementById(b).disabled = !has || ids.length === 0);
+    document.getElementById('d1Hint').textContent = !has ? 'envie as duas bases para liberar' : (ids.length ? '' : 'nenhum pacote D-1 nos faltantes atuais 🎉');
+    document.getElementById('d1Empty').style.display = (has && ids.length) ? 'none' : 'block';
+
+    // não redesenha a tabela enquanto alguém está digitando nela
+    const active = document.activeElement;
+    const typing = active && active.closest && active.closest('#d1Body');
+    if(!typing){
+      const q = (document.getElementById('d1Filter').value || '').trim().toLowerCase();
+      const nomes = new Set();
+      Object.values(d1Data).forEach(r => { if(r && r.nome) nomes.add(r.nome); });
+      document.getElementById('d1Nomes').innerHTML = Array.from(nomes).sort().map(n => '<option value="' + d1Esc(n) + '">').join('');
+      const rows = [];
+      ids.forEach((id, i) => {
+        const r = d1Data[id] || {};
+        if(q && !(id.toLowerCase().includes(q) || (r.nome||'').toLowerCase().includes(q) || (r.desc||'').toLowerCase().includes(q))) return;
+        const done = r.dt && r.nome;
+        rows.push(`<tr class="${done ? 'done' : ''}" data-id="${d1Esc(id)}">
+          <td>${i+1}</td>
+          <td class="id-cell">${d1Esc(id)} <button class="copy-id" type="button" title="copiar ID" data-copy="${d1Esc(id)}">📋</button></td>
+          <td><input type="datetime-local" data-f="dt" value="${d1Esc(r.dt||'')}"></td>
+          <td><input type="text" data-f="nome" list="d1Nomes" placeholder="nome de quem bipou" value="${d1Esc(r.nome||'')}"></td>
+          <td><input type="text" data-f="desc" placeholder="vem da query de valor" value="${d1Esc(r.desc||'')}"></td>
+        </tr>`);
+      });
+      document.getElementById('d1Body').innerHTML = rows.join('');
+    }
+
+    let comMov = 0, comDesc = 0, pend = 0;
+    ids.forEach(id => { const r = d1Data[id] || {}; if(r.dt && r.nome) comMov++; else pend++; if(r.desc) comDesc++; });
+    document.getElementById('d1Total').textContent = fmt(ids.length);
+    document.getElementById('d1ComMov').textContent = fmt(comMov);
+    document.getElementById('d1ComDesc').textContent = fmt(comDesc);
+    document.getElementById('d1Pend').textContent = fmt(pend);
+    renderD1Report();
+  }
+
+  function renderD1Report(){
+    const ids = d1Ids();
+    const now = new Date();
+    document.getElementById('d1ReportWhen').textContent = now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+    let comMov = 0;
+    document.getElementById('d1ReportBody').innerHTML = ids.map((id, i) => {
+      const r = d1Data[id] || {};
+      if(r.dt && r.nome) comMov++;
+      const e = '<span class="d1-empty-val">—</span>';
+      return `<tr><td>${i+1}</td><td class="origin-cell">${d1Esc(id)}</td><td>${r.dt ? d1Esc(d1FmtDt(r.dt)) : e}</td><td>${r.nome ? d1Esc(r.nome) : e}</td><td>${r.desc ? d1Esc(r.desc) : e}</td></tr>`;
+    }).join('');
+    document.getElementById('d1ReportSummary').textContent = fmt(ids.length) + ' pacotes D-1 · ' + fmt(comMov) + ' com última movimentação identificada';
+  }
+
+  function d1BuildText(){
+    const ids = d1Ids();
+    const now = new Date();
+    const lines = ['*REPORT D-1* — ' + now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}), 'Total: ' + ids.length + ' pacotes', ''];
+    ids.forEach((id, i) => {
+      const r = d1Data[id] || {};
+      lines.push((i+1) + ') *' + id + '*');
+      lines.push('   Última mov.: ' + (r.dt ? d1FmtDt(r.dt) : '—') + ' · ' + (r.nome || '—'));
+      if(r.desc) lines.push('   ' + r.desc);
+    });
+    return lines.join('\n');
+  }
+
+  async function d1Copy(text, hintId, msg){
+    try{ await navigator.clipboard.writeText(text); }
+    catch(e){ const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
+    const h = document.getElementById(hintId); if(h){ h.textContent = msg; setTimeout(()=>{ if(h.textContent === msg) h.textContent = ''; }, 4000); }
+  }
+
+  // ---- importação do resultado da query (ID + descrição) ----
+  function d1NormH(v){ return String(v === undefined || v === null ? '' : v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,''); }
+  function d1ApplyRows(rows){
+    rows = rows.filter(r => r && r.some(c => c !== null && c !== undefined && String(c).trim() !== ''));
+    if(!rows.length) return 'nada encontrado';
+    const idSet = new Set(d1Ids());
+    const nId = v => { let s = String(v === undefined || v === null ? '' : v).trim(); if(/^\d+\.0+$/.test(s)) s = s.split('.')[0]; return s; };
+    const ncols = Math.max(...rows.map(r => r.length));
+    // coluna do ID = a que mais bate com os IDs D-1
+    let idCol = -1, best = 0;
+    for(let c=0;c<ncols;c++){ let hits = 0; rows.forEach(r => { if(idSet.has(nId(r[c]))) hits++; }); if(hits > best){ best = hits; idCol = c; } }
+    if(idCol === -1) return 'não achei nenhum ID D-1 nesse resultado';
+    // cabeçalho = primeira linha cujo valor na coluna do ID não é um ID
+    const header = idSet.has(nId(rows[0][idCol])) ? null : rows[0];
+    const data = header ? rows.slice(1) : rows;
+    let descCol = -1;
+    if(header){
+      const prefs = ['descricao','description','desc','titulo','title','produto','item','nome'];
+      for(const p of prefs){ const i = header.findIndex((h, k) => k !== idCol && d1NormH(h).includes(p)); if(i !== -1){ descCol = i; break; } }
+    }
+    if(descCol === -1){
+      // a coluna com mais texto (não numérica)
+      let bestLen = 0;
+      for(let c=0;c<ncols;c++){ if(c === idCol) continue; let len = 0; data.forEach(r => { const v = r[c]; if(v !== null && v !== undefined && isNaN(Number(v))) len += String(v).length; }); if(len > bestLen){ bestLen = len; descCol = c; } }
+    }
+    if(descCol === -1) return 'achei os IDs, mas não a coluna de descrição';
+    let n = 0;
+    data.forEach(r => { const id = nId(r[idCol]); const d = r[descCol]; if(idSet.has(id) && d !== null && d !== undefined && String(d).trim() !== ''){ d1SetField(id, 'desc', String(d).trim()); n++; } });
+    renderD1Tab();
+    return n + ' descrições aplicadas' + (header ? ' (coluna "' + header[descCol] + '")' : '');
+  }
+  function d1ParseText(text){
+    const wb = XLSX.read(text, { type:'string', raw:true, FS: text.includes('\t') ? '\t' : undefined });
+    return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, raw:false, defval:null });
+  }
+
+  document.getElementById('btnD1CopyLines').addEventListener('click', ()=> d1Copy(d1Ids().join('\n'), 'd1Hint', d1Ids().length + ' IDs copiados (um por linha)'));
+  document.getElementById('btnD1CopyQuery').addEventListener('click', ()=> d1Copy(d1Ids().join(','), 'd1Hint', d1Ids().length + ' IDs copiados separados por vírgula'));
+  document.getElementById('btnD1Import').addEventListener('click', ()=>{
+    const box = document.getElementById('d1ImportBox');
+    box.style.display = box.style.display === 'block' ? 'none' : 'block';
+  });
+  document.getElementById('btnD1ImportApply').addEventListener('click', ()=>{
+    const t = document.getElementById('d1ImportText').value;
+    document.getElementById('d1ImportHint').textContent = t.trim() ? d1ApplyRows(d1ParseText(t)) : 'cole o resultado primeiro';
+  });
+  document.getElementById('d1ImportFile').addEventListener('change', (e)=>{
+    const f = e.target.files && e.target.files[0]; if(!f) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try{
+        let rows;
+        if(/\.xlsx?$/i.test(f.name)){
+          const wb = XLSX.read(ev.target.result, { type:'array' });
+          rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, raw:false, defval:null });
+        } else {
+          rows = d1ParseText(new TextDecoder('utf-8').decode(ev.target.result));
+        }
+        document.getElementById('d1ImportHint').textContent = d1ApplyRows(rows);
+      }catch(err){ document.getElementById('d1ImportHint').textContent = 'não consegui ler o arquivo: ' + err.message; }
+      e.target.value = '';
+    };
+    reader.readAsArrayBuffer(f);
+  });
+  document.getElementById('d1Body').addEventListener('input', (e)=>{
+    const inp = e.target; if(!inp.dataset || !inp.dataset.f) return;
+    const id = inp.closest('tr').dataset.id;
+    inp.classList.remove('saved'); inp.classList.add('dirty');
+    d1SetField(id, inp.dataset.f, inp.value);
+  });
+  document.getElementById('d1Body').addEventListener('focusout', ()=>{ setTimeout(()=>{ if(!document.activeElement || !document.activeElement.closest || !document.activeElement.closest('#d1Body')) renderD1Tab(); }, 50); });
+  document.getElementById('d1Body').addEventListener('click', (e)=>{
+    const b = e.target.closest && e.target.closest('.copy-id'); if(!b) return;
+    d1Copy(b.dataset.copy, 'd1Hint', 'ID ' + b.dataset.copy + ' copiado');
+  });
+  document.getElementById('d1Filter').addEventListener('input', ()=> renderD1Tab());
+  document.getElementById('btnD1ReportTxt').addEventListener('click', ()=> d1Copy(d1BuildText(), 'd1ReportHint', 'texto copiado — cole no WhatsApp'));
+  document.getElementById('btnD1ReportImg').addEventListener('click', ()=> exportImage({
+    elId: 'd1ReportArea', btnId: 'btnD1ReportImg', hintId: 'd1ReportHint',
+    fileNamePrefix: 'report_d1', shareTitle: 'Report D-1'
+  }));
+  // atualiza o que os outros preencheram junto com a busca automática de 45s
+  setInterval(()=>{ if(viewD1.style.display !== 'none') loadD1Analise(); }, 45000);
+  loadD1Analise();
 
   // ---------- file wiring ----------
   function wireDrop(dropEl, inputEl, statusEl, onFile){
