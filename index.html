@@ -756,7 +756,8 @@
   .d1-opt{ margin-left:auto; font-size:12.5px; font-weight:600; color:#33415C; display:flex; align-items:center; gap:6px; cursor:pointer; }
   .d1-section-title{ flex-wrap:wrap; }
   .d1r-outer{ overflow-x:auto; padding:4px; }
-  .fg{ width:100%; max-width:1120px; box-sizing:border-box; background:#F6F8FC; border-radius:20px; padding:22px; font-family:'Inter', system-ui, -apple-system, sans-serif; color:#0F1B2D; }
+  #viewD1 .chegada-wrap{ max-width:none; }
+  .fg{ width:100%; min-width:1240px; max-width:1500px; box-sizing:border-box; background:#F6F8FC; border-radius:20px; padding:22px; font-family:'Inter', system-ui, -apple-system, sans-serif; color:#0F1B2D; }
   .fg-head{ display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:16px; }
   .fg-title{ display:flex; align-items:center; gap:14px; }
   .fg-logo{ width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#0B2545,#0B5FA5); color:#fff; font-weight:900; font-size:14px; display:flex; align-items:center; justify-content:center; letter-spacing:-.02em; box-shadow:0 4px 12px rgba(11,95,165,.25); }
@@ -771,7 +772,12 @@
   .fg-rota-cell{ display:flex; flex-direction:column; align-items:flex-start; gap:5px; }
   .fg-vol{ display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:800; letter-spacing:.03em; text-transform:uppercase; padding:3px 8px; border-radius:6px; background:#F3E8FF; color:#7C3AED; border:1px solid #E9D5FF; white-space:nowrap; }
   .fg-vol::before{ content:'▣'; font-size:10px; }
-  .fg-tr{ display:grid; grid-template-columns:132px minmax(0,1fr) 104px 250px; gap:16px; align-items:center; padding:11px 18px; border-top:1px solid #EEF2F7; }
+  .fg-inb b{ display:block; font-size:12.5px; font-weight:700; }
+  .fg-inb small{ display:block; font-size:11.5px; color:#64748B; }
+  .fg-loc{ display:inline-block; font-size:11.5px; font-weight:700; padding:4px 9px; border-radius:999px; background:#F1F5F9; color:#334155; border:1px solid #E2E8F0; white-space:nowrap; }
+  .fg-loc.st{ background:#ECFDF5; color:#047857; border-color:#A7F3D0; }
+  .fg-loc.way{ background:#EFF6FF; color:#1D4ED8; border-color:#BFDBFE; }
+  .fg-tr{ display:grid; grid-template-columns:118px 96px 200px 88px 150px 96px minmax(0,1fr); gap:16px; align-items:center; padding:11px 18px; border-top:1px solid #EEF2F7; }
   .fg-th{ border-top:0; background:#FAFBFD; font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#64748B; padding:12px 18px; }
   .fg-id{ font-family:var(--mono, 'JetBrains Mono', monospace); font-size:12.5px; font-weight:700; color:#0F1B2D; letter-spacing:-.01em; }
   .fg-desc{ font-size:13px; color:#1E293B; line-height:1.35; }
@@ -1112,8 +1118,8 @@
                 <th style="width:40px;">#</th>
                 <th style="width:170px;">ID do pacote</th>
                 <th style="width:210px;">Última movimentação (data e hora)</th>
-                <th style="width:220px;">Quem bipou</th>
-                <th>Descrição</th>
+                <th style="width:220px;">Colaborador (quem bipou)</th>
+                <th>Detalhe do pacote</th>
               </tr>
             </thead>
             <tbody id="d1Body"></tbody>
@@ -1151,7 +1157,7 @@
         </div>
         <div class="fg-table">
           <div class="fg-tr fg-th">
-            <div>Nº do pedido</div><div>Descrição</div><div>Rota / área</div><div>Última movimentação</div>
+            <div>ID do pacote</div><div>Data de inbound</div><div>Colaborador</div><div>Rota</div><div>Localização do pacote</div><div>Tipo de pacote</div><div>Detalhe do pacote</div>
           </div>
           <div id="d1ReportBody"></div>
         </div>
@@ -2756,7 +2762,7 @@
           <td class="id-cell">${d1Esc(id)} <button class="copy-id" type="button" title="copiar ID" data-copy="${d1Esc(id)}">📋</button><div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;">${d1Rota(id) ? '<span class="fg-rota" style="font-size:10.5px;padding:2px 6px;">' + d1Esc(d1Rota(id)) + '</span>' : ''}${d1Detalhe(id) ? '<span class="fg-vol" style="font-size:9.5px;padding:2px 6px;">' + d1Esc(d1Detalhe(id)) + '</span>' : ''}</div></td>
           <td><input type="datetime-local" data-f="dt" value="${d1Esc(r.dt||'')}"></td>
           <td><input type="text" data-f="nome" list="d1Nomes" placeholder="nome de quem bipou" value="${d1Esc(r.nome||'')}"></td>
-          <td><input type="text" data-f="desc" placeholder="vem da query de valor" value="${d1Esc(r.desc||'')}"></td>
+          <td><input type="text" data-f="desc" placeholder="vem da query (detalhe do pacote)" value="${d1Esc(r.desc||'')}"></td>
         </tr>`);
       });
       document.getElementById('d1Body').innerHTML = rows.join('');
@@ -2794,6 +2800,12 @@
     if(row && row.rota) return row.rota;
     const rec = base1Data && base1Data.records && base1Data.records.get(id);
     return rec && rec.rota ? rec.rota : '';
+  }
+  function d1Inbound(row){
+    if(!row) return null;
+    const d = row.inboundDate;
+    if(d && !isNaN(d)) return { d: d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'}), t: d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) };
+    return row.inboundRaw ? { d: row.inboundRaw, t:'' } : null;
   }
   function d1Detalhe(id){
     const row = d1Row(id);
@@ -2844,11 +2856,19 @@
       } else {
         mov = '<span class="fg-wait">● aguardando consulta</span>';
       }
+      const row = d1Row(id) || {};
+      const inb = d1Inbound(row);
+      const loc = row.loc || '';
+      const locCls = /caminho/i.test(loc) ? 'way' : (/esta/i.test(loc) ? 'st' : '');
+      const tipo = d1Detalhe(id);
       return `<div class="fg-tr">
         <div class="fg-id">${d1Esc(id)}</div>
-        <div class="fg-desc${r.desc ? '' : ' empty'}">${r.desc ? d1Esc(r.desc) : 'sem descrição'}</div>
-        <div class="fg-rota-cell">${rota ? '<span class="fg-rota">' + d1Esc(rota) + '</span>' : '<span class="fg-desc empty">—</span>'}${d1Detalhe(id) ? '<span class="fg-vol">' + d1Esc(d1Detalhe(id)) + '</span>' : ''}</div>
+        <div class="fg-inb">${inb ? '<b>' + d1Esc(inb.d) + '</b>' + (inb.t ? '<small>' + d1Esc(inb.t) + '</small>' : '') : '<span class="fg-desc empty">—</span>'}</div>
         <div>${mov}</div>
+        <div>${rota ? '<span class="fg-rota">' + d1Esc(rota) + '</span>' : '<span class="fg-desc empty">—</span>'}</div>
+        <div>${loc ? '<span class="fg-loc ' + locCls + '">' + d1Esc(loc) + '</span>' : '<span class="fg-desc empty">—</span>'}</div>
+        <div>${tipo ? '<span class="fg-vol">' + d1Esc(tipo) + '</span>' : '<span class="fg-desc empty">—</span>'}</div>
+        <div class="fg-desc${r.desc ? '' : ' empty'}">${r.desc ? d1Esc(r.desc) : 'aguardando query'}</div>
       </div>`;
     }).join('') || '<div class="fg-empty">Nenhum pacote para mostrar.</div>';
     const sem = all.filter(id => { const r = d1Data[id] || {}; return !(r.dt || r.nome); }).length;
@@ -2865,14 +2885,16 @@
     ];
     ids.forEach(id => {
       const r = d1Data[id] || {};
+      const row = d1Row(id) || {};
+      const inb = d1Inbound(row);
       const rota = d1Rota(id);
-      const mp = d1MovParts(r.dt);
+      const tipo = d1Detalhe(id);
       lines.push('');
-      const det = d1Detalhe(id);
-      lines.push('*' + id + '*' + (rota ? '  ·  ' + rota : '') + (det ? '  ·  📦 *' + det.toUpperCase() + '*' : ''));
+      lines.push('*' + id + '*' + (tipo ? '  ·  📦 *' + tipo.toUpperCase() + '*' : ''));
+      lines.push('📥 Inbound: ' + (inb ? inb.d + (inb.t ? ' ' + inb.t : '') : '—') + '  ·  🛣️ Rota: ' + (rota || '—'));
+      lines.push('👤 Colaborador: ' + (r.nome ? d1TitleCase(r.nome) : 'aguardando consulta') + (r.dt ? ' (' + d1MovParts(r.dt).date + ')' : ''));
+      lines.push('📍 ' + (row.loc || '—'));
       if(r.desc) lines.push('📝 ' + r.desc);
-      if(r.nome || r.dt) lines.push('👤 ' + (mp.date ? mp.date + ' ' : '') + (r.nome ? d1TitleCase(r.nome) : ''));
-      else lines.push('⏳ aguardando consulta');
     });
     return lines.join('\n');
   }
