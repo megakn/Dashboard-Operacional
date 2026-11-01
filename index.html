@@ -796,6 +796,11 @@
   .fg-group.done b{ background:#DCFCE7; }
   .fg-group.pend{ background:#FFF7ED; color:#B45309; }
   .fg-group.pend b{ background:#FFEDD5; }
+  .fg-onlyscreen{ margin-left:auto; font-size:10px; font-weight:600; letter-spacing:.02em; text-transform:none; opacity:.7; }
+  .d1-filters{ display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end; background:#fff; border:1px solid #D7E0EE; border-radius:12px; padding:10px 12px; margin:0 0 12px; }
+  .d1-filters label{ display:flex; flex-direction:column; gap:3px; font-size:10.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:#5B6B85; }
+  .d1-filters select, .d1-filters input{ min-width:130px; }
+  .d1-filters .d1-fcount{ margin-left:auto; font-size:12.5px; font-weight:700; color:#0B2545; align-self:center; }
   .d1-pager{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:#33415C; margin-right:6px; }
   .d1-pager .export-btn{ padding:6px 10px; }
   .fg-tr{ display:grid; grid-template-columns:124px 220px 96px 120px 110px minmax(0,1fr); gap:16px; align-items:center; padding:11px 18px; border-top:1px solid #EEF2F7; }
@@ -1181,7 +1186,16 @@
             <option value="lista">Ordem da lista</option>
           </select>
         </span>
-        <label class="d1-opt" style="margin-left:12px;"><input type="checkbox" id="d1OnlyDone"> só com última movimentação</label>
+      </div>
+      <div class="d1-filters" id="d1Filters">
+        <label>Situação<select id="d1FSit" class="d1-filter"><option value="">Todos</option><option value="done">Já consultados</option><option value="pend">Aguardando consulta</option></select></label>
+        <label>Rota<select id="d1FRota" class="d1-filter"><option value="">Todas</option></select></label>
+        <label>Status<select id="d1FStatus" class="d1-filter"><option value="">Todos</option></select></label>
+        <label>Tipo<select id="d1FTipo" class="d1-filter"><option value="">Todos</option><option value="vol">Só volumoso</option><option value="nvol">Sem volumoso</option></select></label>
+        <label>Colaborador<select id="d1FColab" class="d1-filter"><option value="">Todos</option></select></label>
+        <label>Buscar<input id="d1FText" class="d1-filter" type="search" placeholder="ID ou detalhe…"></label>
+        <button class="export-btn" id="btnD1FClear" type="button" style="padding:6px 12px;">Limpar filtros</button>
+        <span class="d1-fcount" id="d1FCount"></span>
       </div>
       <div class="d1r-outer">
       <div id="d1ReportArea" class="fg">
@@ -1205,7 +1219,7 @@
           </div>
           <div id="d1ReportBody"></div>
         </div>
-        <div class="fg-foot"><span id="d1ReportSummary"></span><span>Kuehne+Nagel · Painel Operacional</span></div>
+        <div class="fg-foot"><span id="d1ReportSummary" class="no-print"></span><span style="margin-left:auto;">Kuehne+Nagel · Painel Operacional</span></div>
       </div>
       </div>
       <div class="actions-row" style="margin-top:12px;">
@@ -2518,7 +2532,8 @@
       scale: 6,
       useCORS: true,
       logging: false,
-      imageTimeout: 0
+      imageTimeout: 0,
+      ignoreElements: (node) => !!(node.classList && node.classList.contains('no-print'))
     });
     return await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
   }
@@ -2899,8 +2914,22 @@
   }
   function d1ReportIds(){
     let ids = d1Ids();
-    const only = document.getElementById('d1OnlyDone') && document.getElementById('d1OnlyDone').checked;
-    if(only) ids = ids.filter(id => { const r = d1Data[id] || {}; return r.dt || r.nome; });
+    const v = x => (document.getElementById(x) || {}).value || '';
+    const fSit = v('d1FSit'), fRota = v('d1FRota'), fSt = v('d1FStatus'), fTipo = v('d1FTipo'), fColab = v('d1FColab');
+    const fTxt = v('d1FText').trim().toLowerCase();
+    ids = ids.filter(id => {
+      const r = d1Data[id] || {};
+      if(fSit === 'done' && !d1Done(id)) return false;
+      if(fSit === 'pend' && d1Done(id)) return false;
+      if(fRota && d1Rota(id) !== fRota) return false;
+      if(fSt && d1Status(id).label !== fSt) return false;
+      const vol = /volum/i.test(d1Detalhe(id));
+      if(fTipo === 'vol' && !vol) return false;
+      if(fTipo === 'nvol' && vol) return false;
+      if(fColab && d1TitleCase(r.nome || '') !== fColab) return false;
+      if(fTxt && !(id.includes(fTxt) || (r.desc || '').toLowerCase().includes(fTxt))) return false;
+      return true;
+    });
     const ord = (document.getElementById('d1Order') || {}).value || 'rota';
     if(ord !== 'lista'){
       const key = id => {
@@ -2920,8 +2949,22 @@
   let d1Page = 0;
   function d1PageSize(){ const el = document.getElementById('d1PageSize'); return el ? Number(el.value) : 15; }
   function d1PageCount(n){ const ps = d1PageSize(); return ps ? Math.max(1, Math.ceil(n / ps)) : 1; }
+  function d1FillFilterOptions(){
+    const all = d1Ids();
+    const fill = (elId, values, firstLabel) => {
+      const el = document.getElementById(elId); if(!el) return;
+      const cur = el.value;
+      const uniq = Array.from(new Set(values.filter(Boolean))).sort((a,b) => a.localeCompare(b, 'pt-BR', {numeric:true}));
+      el.innerHTML = '<option value="">' + firstLabel + '</option>' + uniq.map(x => '<option value="' + d1Esc(x) + '">' + d1Esc(x) + '</option>').join('');
+      el.value = uniq.includes(cur) ? cur : '';
+    };
+    fill('d1FRota', all.map(d1Rota), 'Todas');
+    fill('d1FStatus', all.map(id => d1Status(id).label), 'Todos');
+    fill('d1FColab', all.map(id => d1TitleCase((d1Data[id] || {}).nome || '')), 'Todos');
+  }
   function renderD1Report(){
     const all = d1Ids();
+    if(!document.activeElement || !document.activeElement.closest || !document.activeElement.closest('#d1Filters')) d1FillFilterOptions();
     const fullIds = d1ReportIds();
     const pages = d1PageCount(fullIds.length);
     if(d1Page >= pages) d1Page = pages - 1;
@@ -2937,6 +2980,7 @@
     const now = new Date();
     document.getElementById('d1ReportWhen').textContent = 'Atualizado ' + now.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' às ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
     document.getElementById('d1rTotal').textContent = fmt(fullIds.length);
+    document.getElementById('d1FCount').textContent = fullIds.length === all.length ? fmt(all.length) + ' pacotes no report' : fmt(fullIds.length) + ' de ' + fmt(all.length) + ' pacotes (filtrado)';
     const nDone = fullIds.filter(d1Done).length, nPend = fullIds.length - nDone;
     let lastGroup = null;
     document.getElementById('d1ReportBody').innerHTML = ids.map(id => {
@@ -2945,8 +2989,8 @@
       let sep = '';
       if(g !== lastGroup){
         sep = g === 'done'
-          ? `<div class="fg-group done">✓ Já consultados <b>${fmt(nDone)}</b></div>`
-          : `<div class="fg-group pend">● Aguardando consulta <b>${fmt(nPend)}</b></div>`;
+          ? `<div class="fg-group done no-print">✓ Já consultados <b>${fmt(nDone)}</b> <span class="fg-onlyscreen">só na tela · não sai na imagem</span></div>`
+          : `<div class="fg-group pend no-print">● Aguardando consulta <b>${fmt(nPend)}</b> <span class="fg-onlyscreen">só na tela · não sai na imagem</span></div>`;
         lastGroup = g;
       }
       const rota = d1Rota(id);
@@ -3083,7 +3127,12 @@
   });
   document.getElementById('d1Filter').addEventListener('input', ()=> renderD1Tab());
   document.getElementById('d1Order').addEventListener('change', ()=> renderD1Report());
-  document.getElementById('d1OnlyDone').addEventListener('change', ()=>{ d1Page = 0; renderD1Report(); });
+  ['d1FSit','d1FRota','d1FStatus','d1FTipo','d1FColab'].forEach(x => document.getElementById(x).addEventListener('change', ()=>{ d1Page = 0; renderD1Report(); }));
+  document.getElementById('d1FText').addEventListener('input', ()=>{ d1Page = 0; renderD1Report(); });
+  document.getElementById('btnD1FClear').addEventListener('click', ()=>{
+    ['d1FSit','d1FRota','d1FStatus','d1FTipo','d1FColab','d1FText'].forEach(x => document.getElementById(x).value = '');
+    d1Page = 0; renderD1Report();
+  });
   document.getElementById('d1PageSize').addEventListener('change', ()=>{ d1Page = 0; renderD1Report(); });
   document.getElementById('btnD1Prev').addEventListener('click', ()=>{ d1Page--; renderD1Report(); });
   document.getElementById('btnD1Next').addEventListener('click', ()=>{ d1Page++; renderD1Report(); });
