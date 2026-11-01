@@ -1124,18 +1124,18 @@
       <div class="empty-hint" id="d1Empty">Envie a base do ciclo e os faltantes para listar os pacotes D-1.</div>
 
       <div class="d1-section-title">📣 Report D-1
-        <label class="d1-opt"><input type="checkbox" id="d1OnlyDone"> só pacotes já analisados</label>
+        <label class="d1-opt"><input type="checkbox" id="d1OnlyDone"> só os que já têm última movimentação</label>
       </div>
       <div class="d1r-outer">
       <div id="d1ReportArea" class="d1r">
         <div class="d1r-head">
-          <div class="d1r-brand"><span class="d1r-logo">K+N</span><div><div class="d1r-org">Kuehne+Nagel · SRJ1</div><div class="d1r-kicker">REPORT D-1 · ÚLTIMA MOVIMENTAÇÃO</div></div></div>
+          <div class="d1r-brand"><span class="d1r-logo">K+N</span><div><div class="d1r-org">Kuehne+Nagel · SRJ1</div><div class="d1r-kicker">PACOTES D-1 PENDENTES · FAVOR LOCALIZAR</div></div></div>
           <div class="d1r-when"><span>Atualizado</span><b id="d1ReportWhen"></b></div>
         </div>
         <div class="d1r-kpis">
-          <div class="d1r-kpi"><span>Pacotes D-1</span><b id="d1rTotal">0</b></div>
-          <div class="d1r-kpi ok"><span>Com última mov.</span><b id="d1rMov">0</b></div>
-          <div class="d1r-kpi warn"><span>Pendentes</span><b id="d1rPend">0</b></div>
+          <div class="d1r-kpi warn"><span>D-1 pendentes</span><b id="d1rTotal">0</b></div>
+          <div class="d1r-kpi ok"><span>Última mov. identificada</span><b id="d1rMov">0</b></div>
+          <div class="d1r-kpi"><span>Em consulta</span><b id="d1rPend">0</b></div>
           <div class="d1r-kpi"><span>Com descrição</span><b id="d1rDesc">0</b></div>
         </div>
         <div class="d1r-progress"><div id="d1rBar"></div></div>
@@ -1145,7 +1145,7 @@
           </thead>
           <tbody id="d1ReportBody"></tbody>
         </table>
-        <div class="d1r-foot"><span id="d1ReportSummary"></span><span>Painel Operacional · Kuehne+Nagel</span></div>
+        <div class="d1r-foot"><span id="d1ReportSummary"></span><span>Favor localizar e processar · Kuehne+Nagel</span></div>
       </div>
       </div>
       <div class="actions-row" style="margin-top:12px;">
@@ -2774,7 +2774,7 @@
   function d1ReportIds(){
     const ids = d1Ids();
     const only = document.getElementById('d1OnlyDone') && document.getElementById('d1OnlyDone').checked;
-    return only ? ids.filter(id => { const r = d1Data[id] || {}; return r.dt || r.nome || r.desc; }) : ids;
+    return only ? ids.filter(id => { const r = d1Data[id] || {}; return r.dt || r.nome; }) : ids;
   }
 
   function renderD1Report(){
@@ -2789,7 +2789,7 @@
     document.getElementById('d1rPend').textContent = fmt(all.length - mov);
     document.getElementById('d1rDesc').textContent = fmt(desc);
     document.getElementById('d1rBar').style.width = (all.length ? Math.round(mov / all.length * 100) : 0) + '%';
-    const pend = '<span class="d1r-pill">PENDENTE</span>';
+    const pend = '<span class="d1r-pill">EM CONSULTA</span>';
     document.getElementById('d1ReportBody').innerHTML = ids.map((id, i) => {
       const r = d1Data[id] || {};
       const ok = r.dt && r.nome;
@@ -2803,7 +2803,7 @@
         <td class="desc">${r.desc ? d1Esc(r.desc) : '—'}</td>
       </tr>`;
     }).join('') || '<tr><td colspan="6" style="text-align:center;color:#94A3B8;padding:18px;">nenhum pacote para mostrar</td></tr>';
-    document.getElementById('d1ReportSummary').textContent = fmt(ids.length) + (ids.length === all.length ? ' pacotes no report' : ' de ' + fmt(all.length) + ' pacotes (só analisados)');
+    document.getElementById('d1ReportSummary').textContent = fmt(ids.length) + (ids.length === all.length ? ' pacotes D-1 pendentes no report' : ' de ' + fmt(all.length) + ' pacotes D-1 pendentes (só os já consultados)');
   }
 
   function d1BuildText(){
@@ -2812,10 +2812,11 @@
     const now = new Date();
     let mov = 0; all.forEach(id => { const r = d1Data[id] || {}; if(r.dt && r.nome) mov++; });
     const lines = [
-      '📦 *REPORT D-1 — SRJ1*',
+      '🚨 *PACOTES D-1 PENDENTES — SRJ1*',
       '🗓️ ' + now.toLocaleDateString('pt-BR') + ' · ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}),
       '',
-      '*Total D-1:* ' + all.length + '  |  ✅ ' + mov + ' com última mov.  |  ⏳ ' + (all.length - mov) + ' pendentes',
+      '*' + all.length + ' pacotes D-1 ainda pendentes.* Favor localizar e processar.',
+      '📍 ' + mov + ' com última movimentação identificada  |  🔎 ' + (all.length - mov) + ' em consulta',
       '━━━━━━━━━━━━━━'
     ];
     ids.forEach((id, i) => {
@@ -2824,7 +2825,7 @@
       lines.push('');
       lines.push((i+1) + '. *' + id + '*' + (rota ? '  ·  ' + rota : ''));
       if(r.dt || r.nome) lines.push('   🕒 ' + (r.dt ? d1FmtDt(r.dt) : '—') + '  👤 ' + (r.nome || '—'));
-      else lines.push('   ⏳ pendente de consulta');
+      else lines.push('   🔎 em consulta');
       if(r.desc) lines.push('   📝 ' + r.desc);
     });
     return lines.join('\n');
