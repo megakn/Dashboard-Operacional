@@ -768,7 +768,10 @@
   .fg-chip-dark{ background:#0B2545; color:#fff; border-color:#0B2545; }
   .fg-dot{ width:7px; height:7px; border-radius:50%; background:#22C55E; box-shadow:0 0 0 3px rgba(34,197,94,.18); }
   .fg-table{ background:#fff; border:1px solid #E3E8F0; border-radius:16px; overflow:hidden; box-shadow:0 1px 3px rgba(15,27,45,.05), 0 8px 24px -12px rgba(15,27,45,.10); }
-  .fg-tr{ display:grid; grid-template-columns:132px minmax(0,1fr) 92px 250px; gap:16px; align-items:center; padding:11px 18px; border-top:1px solid #EEF2F7; }
+  .fg-rota-cell{ display:flex; flex-direction:column; align-items:flex-start; gap:5px; }
+  .fg-vol{ display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:800; letter-spacing:.03em; text-transform:uppercase; padding:3px 8px; border-radius:6px; background:#F3E8FF; color:#7C3AED; border:1px solid #E9D5FF; white-space:nowrap; }
+  .fg-vol::before{ content:'▣'; font-size:10px; }
+  .fg-tr{ display:grid; grid-template-columns:132px minmax(0,1fr) 104px 250px; gap:16px; align-items:center; padding:11px 18px; border-top:1px solid #EEF2F7; }
   .fg-th{ border-top:0; background:#FAFBFD; font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#64748B; padding:12px 18px; }
   .fg-id{ font-family:var(--mono, 'JetBrains Mono', monospace); font-size:12.5px; font-weight:700; color:#0F1B2D; letter-spacing:-.01em; }
   .fg-desc{ font-size:13px; color:#1E293B; line-height:1.35; }
@@ -1148,7 +1151,7 @@
         </div>
         <div class="fg-table">
           <div class="fg-tr fg-th">
-            <div>Nº do pedido</div><div>Descrição</div><div>Rota</div><div>Última movimentação</div>
+            <div>Nº do pedido</div><div>Descrição</div><div>Rota / área</div><div>Última movimentação</div>
           </div>
           <div id="d1ReportBody"></div>
         </div>
@@ -1869,6 +1872,7 @@
     const locIdx = findHeaderIndex(header, ['localização do pacote', 'localizacao do pacote']);
     const rotaIdx = findHeaderIndex(header, ['n.º rota', 'numero rota', 'n° rota', 'rota']);
     const inboundIdx = findHeaderIndex(header, ['data de inbound']);
+    const detalheIdx = findHeaderIndex(header, ['detalhe do pacote', 'detalhe']);
     if(idIdx === -1) throw new Error('Não encontrei a coluna "ID do pacote" no CSV.');
     if(locIdx === -1) throw new Error('Não encontrei a coluna "Localização do pacote" no CSV.');
 
@@ -1882,7 +1886,8 @@
       const rota = rotaIdx === -1 ? '' : (r[rotaIdx]||'').trim();
       const inboundRaw = inboundIdx === -1 ? '' : (r[inboundIdx]||'').trim();
       const inboundDate = parseInboundDate(inboundRaw);
-      out.push({id, loc, rota, inboundRaw, inboundDate});
+      const detalhe = detalheIdx === -1 ? '' : (r[detalheIdx]||'').trim();
+      out.push({id, loc, rota, inboundRaw, inboundDate, detalhe});
     }
     return out;
   }
@@ -2748,7 +2753,7 @@
         const done = r.dt && r.nome;
         rows.push(`<tr class="${done ? 'done' : ''}" data-id="${d1Esc(id)}">
           <td>${i+1}</td>
-          <td class="id-cell">${d1Esc(id)} <button class="copy-id" type="button" title="copiar ID" data-copy="${d1Esc(id)}">📋</button></td>
+          <td class="id-cell">${d1Esc(id)} <button class="copy-id" type="button" title="copiar ID" data-copy="${d1Esc(id)}">📋</button><div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;">${d1Rota(id) ? '<span class="fg-rota" style="font-size:10.5px;padding:2px 6px;">' + d1Esc(d1Rota(id)) + '</span>' : ''}${d1Detalhe(id) ? '<span class="fg-vol" style="font-size:9.5px;padding:2px 6px;">' + d1Esc(d1Detalhe(id)) + '</span>' : ''}</div></td>
           <td><input type="datetime-local" data-f="dt" value="${d1Esc(r.dt||'')}"></td>
           <td><input type="text" data-f="nome" list="d1Nomes" placeholder="nome de quem bipou" value="${d1Esc(r.nome||'')}"></td>
           <td><input type="text" data-f="desc" placeholder="vem da query de valor" value="${d1Esc(r.desc||'')}"></td>
@@ -2774,9 +2779,25 @@
     if(h < 48) return 'há ' + h + 'h';
     return 'há ' + Math.floor(h/24) + ' dias';
   }
+  // rota e detalhe (ex.: Volumoso) vêm do CSV de faltantes, que é o mais atual; rota cai pra base do ciclo se faltar
+  let d1RowCache = { src:null, map:new Map() };
+  function d1Row(id){
+    if(d1RowCache.src !== base2Rows){
+      const m = new Map();
+      (base2Rows || []).forEach(r => m.set(r.id, r));
+      d1RowCache = { src: base2Rows, map: m };
+    }
+    return d1RowCache.map.get(id);
+  }
   function d1Rota(id){
+    const row = d1Row(id);
+    if(row && row.rota) return row.rota;
     const rec = base1Data && base1Data.records && base1Data.records.get(id);
     return rec && rec.rota ? rec.rota : '';
+  }
+  function d1Detalhe(id){
+    const row = d1Row(id);
+    return row && row.detalhe ? row.detalhe : '';
   }
   const D1_AV_COLORS = ['#0B5FA5','#1E9E63','#C97D0C','#7C3AED','#DB2777','#0891B2','#DC2626','#4F46E5','#059669','#B45309'];
   function d1AvColor(n){ let h = 0; for(const c of String(n)) h = (h*31 + c.charCodeAt(0)) >>> 0; return D1_AV_COLORS[h % D1_AV_COLORS.length]; }
@@ -2826,7 +2847,7 @@
       return `<div class="fg-tr">
         <div class="fg-id">${d1Esc(id)}</div>
         <div class="fg-desc${r.desc ? '' : ' empty'}">${r.desc ? d1Esc(r.desc) : 'sem descrição'}</div>
-        <div>${rota ? '<span class="fg-rota">' + d1Esc(rota) + '</span>' : '<span class="fg-desc empty">—</span>'}</div>
+        <div class="fg-rota-cell">${rota ? '<span class="fg-rota">' + d1Esc(rota) + '</span>' : '<span class="fg-desc empty">—</span>'}${d1Detalhe(id) ? '<span class="fg-vol">' + d1Esc(d1Detalhe(id)) + '</span>' : ''}</div>
         <div>${mov}</div>
       </div>`;
     }).join('') || '<div class="fg-empty">Nenhum pacote para mostrar.</div>';
@@ -2847,7 +2868,8 @@
       const rota = d1Rota(id);
       const mp = d1MovParts(r.dt);
       lines.push('');
-      lines.push('*' + id + '*' + (rota ? '  ·  ' + rota : ''));
+      const det = d1Detalhe(id);
+      lines.push('*' + id + '*' + (rota ? '  ·  ' + rota : '') + (det ? '  ·  📦 *' + det.toUpperCase() + '*' : ''));
       if(r.desc) lines.push('📝 ' + r.desc);
       if(r.nome || r.dt) lines.push('👤 ' + (mp.date ? mp.date + ' ' : '') + (r.nome ? d1TitleCase(r.nome) : ''));
       else lines.push('⏳ aguardando consulta');
