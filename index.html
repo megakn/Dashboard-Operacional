@@ -1081,7 +1081,7 @@
   <div id="viewD1" style="display:none;">
     <div class="chegada-wrap">
       <div class="chegada-page-header">
-        <p class="eyebrow"><span class="dot"></span>Pacotes do dia anterior</p>
+        <p class="eyebrow"><span class="dot"></span>D-1 ausentes · deram entrada no SVC</p>
         <h1>Análise D-1</h1>
         <p>Os pacotes D-1 aparecem aqui sozinhos conforme a operação sobe a base do ciclo e os faltantes. Preencha a última movimentação e quem bipou; a descrição vem da query de valor. Tudo fica salvo e aparece pra todos.</p>
         <div class="d1-badges">
@@ -1089,6 +1089,7 @@
           <span class="d1-badge ok">com movimentação: <b id="d1ComMov">0</b></span>
           <span class="d1-badge ok">com descrição: <b id="d1ComDesc">0</b></span>
           <span class="d1-badge warn">pendentes: <b id="d1Pend">0</b></span>
+          <span class="d1-badge" title="D-1 que ainda estão a caminho e não deram entrada no SVC — não entram na análise">fora (a caminho): <b id="d1Fora">0</b></span>
           <span class="d1-badge" id="d1SaveState">—</span>
         </div>
       </div>
@@ -1148,7 +1149,7 @@
           <div class="fg-title">
             <span class="fg-logo">K+N</span>
             <div>
-              <div class="fg-h1">Pacotes D-1 pendentes</div>
+              <div class="fg-h1">Pacotes D-1 ausentes</div>
               <div class="fg-sub">SRJ1 · última movimentação registrada no sistema</div>
             </div>
           </div>
@@ -2685,7 +2686,15 @@
     const m = String(dt).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
     return m ? (m[3] + '/' + m[2] + ' ' + m[4] + ':' + m[5]) : String(dt);
   }
-  function d1Ids(){ return (lastMetricIds && lastMetricIds.d1) ? lastMetricIds.d1.slice() : []; }
+  // Análise D-1 = só os D-1 AUSENTES: deram entrada no SVC ("Na estação") e não foram processados.
+  // Os que estão "Caminho para a estação" ainda nem chegaram, então ficam fora.
+  function d1Entrou(id){
+    const row = d1Row(id);
+    const loc = row && row.loc ? String(row.loc).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase() : '';
+    return !/caminho/.test(loc);
+  }
+  function d1AllD1(){ return (lastMetricIds && lastMetricIds.d1) ? lastMetricIds.d1.slice() : []; }
+  function d1Ids(){ return d1AllD1().filter(d1Entrou); }
   function d1SetState(t){ const el = document.getElementById('d1SaveState'); if(el) el.textContent = t; }
 
   function d1MergeRemote(remote){
@@ -2786,6 +2795,7 @@
     let comMov = 0, comDesc = 0, pend = 0;
     ids.forEach(id => { const r = d1Data[id] || {}; if(r.dt && r.nome) comMov++; else pend++; if(r.desc) comDesc++; });
     document.getElementById('d1Total').textContent = fmt(ids.length);
+    document.getElementById('d1Fora').textContent = fmt(d1AllD1().length - ids.length);
     document.getElementById('d1ComMov').textContent = fmt(comMov);
     document.getElementById('d1ComDesc').textContent = fmt(comDesc);
     document.getElementById('d1Pend').textContent = fmt(pend);
@@ -2908,7 +2918,7 @@
     const ids = d1ReportIds();
     const now = new Date();
     const lines = [
-      '📦 *PACOTES D-1 PENDENTES — SRJ1*',
+      '📦 *PACOTES D-1 AUSENTES — SRJ1*',
       '🗓️ Atualizado ' + now.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' às ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) + '  ·  *' + ids.length + ' pacotes*',
       '━━━━━━━━━━━━━━'
     ];
