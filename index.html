@@ -2240,11 +2240,7 @@
       Chart.register(ChartDataLabels);
     }
     const data = computeOnWayByOrigin();
-    const canvas = document.getElementById('chartOrigem');
-    // barras deitadas: uma linha por origem, altura acompanha a quantidade de origens
-    const wrap = canvas.parentElement;
-    if(wrap) wrap.style.height = Math.max(300, data.length * 30 + 70) + 'px';
-    const ctx = canvas.getContext('2d');
+    const ctx = document.getElementById('chartOrigem').getContext('2d');
 
     const labels = data.map(d => d.origin);
     const onTime = data.map(d => d.OnTime);
@@ -2255,56 +2251,57 @@
 
     if(origemChartInstance) origemChartInstance.destroy();
 
-    const ds = (label, arr, color) => ({ label, data:arr, backgroundColor:color, stack:'s', borderRadius:3, borderSkipped:false, barPercentage:0.78, categoryPercentage:0.9 });
     const datasets = [
-      ds('On Time', onTime, '#C97D0C'),
-      ds('Early', early, '#94A3B8'),
-      ds('Delay', delay, '#0B5FA5'),
+      { label:'On Time', data:onTime, backgroundColor:'#C97D0C', stack:'s' },
+      { label:'Early', data:early, backgroundColor:'#94A3B8', stack:'s' },
+      { label:'Delay', data:delay, backgroundColor:'#0B5FA5', stack:'s' },
     ];
-    if(hasSemData) datasets.push(ds('Sem Data', semData, '#C4B5FD'));
+    if(hasSemData){
+      datasets.push({ label:'Sem Data', data:semData, backgroundColor:'#C4B5FD', stack:'s' });
+    }
 
-    // total de cada origem escrito no fim da barra
-    const totalAtEndPlugin = {
-      id:'totalAtEnd',
+    // escreve o total de cada origem em cima da barra
+    const totalOnTopPlugin = {
+      id:'totalOnTop',
       afterDatasetsDraw(chart){
         const c = chart.ctx;
         const metas = chart.data.datasets.map((_,i) => chart.getDatasetMeta(i)).filter(m => !m.hidden);
         if(!metas.length) return;
         c.save();
-        c.font = "800 12px 'JetBrains Mono', monospace";
+        c.font = "800 11px 'JetBrains Mono', monospace";
         c.fillStyle = '#0B2545';
-        c.textAlign = 'left';
-        c.textBaseline = 'middle';
+        c.textAlign = 'center';
+        c.textBaseline = 'bottom';
         chart.data.labels.forEach((_, idx) => {
-          let total = 0, endX = -Infinity, y = null;
+          let total = 0, topY = Infinity, x = null;
           metas.forEach(m => {
             const v = chart.data.datasets[m.index].data[idx] || 0;
             total += v;
             const el = m.data[idx];
-            if(el && v > 0){ endX = Math.max(endX, el.x); y = el.y; }
+            if(el && v > 0){ topY = Math.min(topY, el.y); x = el.x; }
           });
-          if(total > 0 && y !== null) c.fillText(String(total), endX + 6, y);
+          if(total > 0 && x !== null) c.fillText(String(total), x, topY - 3);
         });
         c.restore();
       }
     };
 
-    const mono = "'JetBrains Mono', monospace";
     origemChartInstance = new Chart(ctx, {
       type: 'bar',
-      plugins: [totalAtEndPlugin],
-      data: { labels, datasets },
+      plugins: [totalOnTopPlugin],
+      data: {
+        labels,
+        datasets
+      },
       options: {
-        indexAxis: 'y',
         responsive:true,
         maintainAspectRatio:false,
-        interaction:{ mode:'index', intersect:false, axis:'y' },
-        layout:{ padding:{ right:34 } },
+        interaction:{ mode:'index', intersect:false },
         plugins:{
           legend:{
             position:'top',
             align:'end',
-            labels:{ color:'#0B2545', boxWidth:12, font:{ family:mono, size:12, weight:'700' } }
+            labels:{ color:'#0B2545', boxWidth:12, font:{ family:"'JetBrains Mono', monospace", size:12, weight:'700' } }
           },
           tooltip:{
             backgroundColor:'#0B2545',
@@ -2312,40 +2309,44 @@
             borderWidth:1,
             titleColor:'#FFFFFF',
             bodyColor:'#CBD8E8',
-            bodyFont:{ family:mono },
-            titleFont:{ family:mono },
-            footerFont:{ family:mono, weight:'800' },
+            bodyFont:{ family:"'JetBrains Mono', monospace" },
+            titleFont:{ family:"'JetBrains Mono', monospace" },
+            footerFont:{ family:"'JetBrains Mono', monospace", weight:'800' },
             filter: (item) => item.raw > 0,
             callbacks:{
               footer: (items) => 'Total: ' + items.reduce((a,i) => a + (i.raw||0), 0)
             }
           },
           datalabels:{
-            // número dentro do bloco só quando ele tem largura pra caber
-            display: (c) => {
-              const v = c.dataset.data[c.dataIndex];
-              if(!(v > 0)) return false;
-              const x = c.chart.scales.x;
-              if(!x) return true;
-              return Math.abs(x.getPixelForValue(v) - x.getPixelForValue(0)) >= 24;
+            // só escreve o número dentro do bloco quando ele tem altura pra caber
+            // (blocos pequenos ficavam com números sobrepostos/cortados);
+            // o valor completo continua no tooltip e o total vai em cima da barra.
+            display: (ctx) => {
+              if(!(ctx.dataset.data[ctx.dataIndex] > 0)) return false;
+              // altura calculada pela escala (os elementos ainda estão animando quando o plugin decide)
+              const y = ctx.chart.scales.y;
+              if(!y) return true;
+              const h = Math.abs(y.getPixelForValue(0) - y.getPixelForValue(ctx.dataset.data[ctx.dataIndex]));
+              return h >= 15;
             },
             color: '#FFFFFF',
             clamp: true,
-            font:{ family:mono, size:11, weight:'800' },
+            font:{ family:"'JetBrains Mono', monospace", size:10.5, weight:'800' },
             formatter: (value) => value
           }
         },
+        layout:{ padding:{ top:6 } },
         scales:{
           x:{
             stacked:true,
-            grace:'8%',
-            ticks:{ color:'#5B6B85', font:{ family:mono, size:11, weight:'600' } },
+            ticks:{ color:'#33415C', autoSkip:false, maxRotation:45, minRotation:30, font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
             grid:{ color:'#E6ECF5' }
           },
           y:{
             stacked:true,
-            ticks:{ color:'#0B2545', autoSkip:false, font:{ family:mono, size:12, weight:'700' } },
-            grid:{ display:false }
+            grace:'12%',
+            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
+            grid:{ color:'#E6ECF5' }
           }
         }
       }
