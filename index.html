@@ -166,15 +166,15 @@
   /* ===== UPLOAD ZONE ===== */
   .upload-row{
     display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:16px;
-    margin-bottom:28px;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+    gap:12px;
+    margin-bottom:14px;
   }
   .drop{
     border:1.5px dashed var(--border);
     background:var(--bg-1);
     border-radius:10px;
-    padding:16px 18px;
+    padding:8px 14px;
     display:flex;
     align-items:center;
     gap:14px;
@@ -188,7 +188,7 @@
   .drop.is-loaded{ border-color:var(--green); }
   .drop input{ display:none; }
   .drop-icon{
-    width:36px;height:36px;border-radius:8px;
+    width:30px;height:30px;border-radius:8px;
     display:flex;align-items:center;justify-content:center;
     background:var(--bg-2);
     border:1px solid var(--border);
@@ -215,8 +215,14 @@
     font-size:11px;
     color:var(--text-lo);
     text-align:right;
-    max-width:180px;
+    max-width:min(380px, 50%);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
+  .drop-text{ min-width:0; }
+  .drop{ min-width:0; }
+  .drop-text .sub{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
   /* ===== CARDS ===== */
   .cards{
@@ -537,9 +543,20 @@
   .actions-row{
     display:flex;
     align-items:center;
-    gap:12px;
-    margin-bottom:22px;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:16px;
   }
+  .actions-row .filter-row.filter-inline{
+    margin:0;
+    padding:5px 10px;
+    gap:6px;
+    border-radius:10px;
+  }
+  .actions-row .filter-inline .filter-label{ font-size:11.5px; white-space:nowrap; }
+  .actions-row .filter-inline .filter-select{ font-size:11.5px; padding:5px 8px; max-width:140px; }
+  .actions-row .export-btn{ padding-top:8px; padding-bottom:8px; }
+  .actions-row .filter-inline .chip-list{ display:flex; flex-wrap:wrap; gap:4px; }
   .export-btn{
     display:flex;
     align-items:center;
@@ -874,23 +891,22 @@
     <button class="export-btn" id="btnClearSaved" type="button" title="Remove as bases salvas no banco de dados do painel">
       <span class="export-icon">🗑️</span> Limpar dados salvos
     </button>
+    <div class="filter-row filter-inline" id="filterRow" style="display:none;">
+      <span class="filter-label">Ver origem:</span>
+      <select id="originIsolateSelect" class="filter-select">
+        <option value="">+ selecionar origem…</option>
+      </select>
+      <button type="button" id="btnShowAllOrigins" class="chip-reset-btn" style="display:none;">Mostrar todas</button>
+    </div>
+
+    <div class="filter-row filter-inline" id="filterRowExclude" style="display:none;">
+      <span class="filter-label" title="Excluir origens do card e do gráfico On Way">Excluir do On Way:</span>
+      <select id="originFilterSelect" class="filter-select">
+        <option value="">+ selecionar origem…</option>
+      </select>
+      <div class="chip-list" id="excludedChips"></div>
+    </div>
     <span class="export-hint" id="exportHint">envie as duas bases para liberar</span>
-  </div>
-
-  <div class="filter-row" id="filterRow" style="display:none;">
-    <span class="filter-label">Ver somente esta origem:</span>
-    <select id="originIsolateSelect" class="filter-select">
-      <option value="">+ selecionar origem…</option>
-    </select>
-    <button type="button" id="btnShowAllOrigins" class="chip-reset-btn" style="display:none;">Mostrar todas</button>
-  </div>
-
-  <div class="filter-row" id="filterRowExclude" style="display:none;">
-    <span class="filter-label">Excluir origens do card/gráfico "On Way":</span>
-    <select id="originFilterSelect" class="filter-select">
-      <option value="">+ selecionar origem…</option>
-    </select>
-    <div class="chip-list" id="excludedChips"></div>
   </div>
 
   <div id="captureArea">
@@ -3336,6 +3352,7 @@
 
     dropEl._setStatus = (text, ok)=>{
       statusEl.textContent = text;
+      statusEl.title = text;
       dropEl.classList.toggle('is-loaded', !!ok);
     };
   }
