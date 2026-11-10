@@ -748,7 +748,7 @@
       <div class="drop-icon">①</div>
       <div class="drop-text">
         <div class="label">Base estrutura (.xlsx)</div>
-        <div class="sub">aceita formato BASE+PLANIFICATION ou Planification (RTG)</div>
+        <div class="sub">aceita BASE+PLANIFICATION ou qualquer aba com RTG_UNIT_EXTERNAL_ID / STATUS_ATUAL</div>
       </div>
       <div class="drop-status" id="statusBase1">arraste ou clique</div>
     </label>
@@ -1062,30 +1062,69 @@
     return bytes.buffer;
   }
 
+  // ---------- base estrutura: dados já processados vão pra TABELA (gzip+base64) ----------
+  // O Storage (pasta de arquivos) parou de aceitar gravação, então a base passou a ser
+  // salva como texto compactado na mesma tabela do CSV — assim qualquer dashboard ligado
+  // a este banco (ex.: Ps-Dashbord) abre já com a base que a operação subiu.
+  const BASE1_DATA_PREFIX = 'gz1:';
+  let lastBase1Stamp = null;
+
+  async function gzipToBase64(str){
+    const stream = new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'));
+    const buf = new Uint8Array(await new Response(stream).arrayBuffer());
+    let bin = '';
+    for(let i=0;i<buf.length;i+=0x8000) bin += String.fromCharCode.apply(null, buf.subarray(i, i+0x8000));
+    return btoa(bin);
+  }
+  async function base64ToGunzip(b64){
+    const stream = new Blob([base64ToArrayBuffer(b64)]).stream().pipeThrough(new DecompressionStream('gzip'));
+    return await new Response(stream).text();
+  }
+  async function serializeBase1(d){
+    const recs = [];
+    d.records.forEach((r, id) => recs.push([id, r.status, r.facility, r.promiseEnd ? r.promiseEnd.getTime() : null, r.rota || '']));
+    const obj = {
+      v:1, recs,
+      statusOnly: Array.from(d.statusMap.entries()).filter(([id]) => !d.records.has(id)),
+      totalGeral: d.totalGeral,
+      baseIds: d.baseIds ? Array.from(d.baseIds) : null,
+      arrival: d.arrivalByOrigin ? Array.from(d.arrivalByOrigin.entries()) : [],
+      estArrivalColumnFound: !!d.estArrivalColumnFound,
+      facilityColumnFound: !!d.facilityColumnFound,
+      planHeaderRaw: d.planHeaderRaw || [],
+      formatDetected: d.formatDetected || ''
+    };
+    return BASE1_DATA_PREFIX + await gzipToBase64(JSON.stringify(obj));
+  }
+  async function deserializeBase1(str){
+    const o = JSON.parse(await base64ToGunzip(str.slice(BASE1_DATA_PREFIX.length)));
+    const records = new Map(), statusMap = new Map();
+    for(const [id, status, facility, pe, rota] of o.recs){
+      records.set(id, { status, facility, promiseEnd: pe === null ? null : new Date(pe), rota });
+      statusMap.set(id, status);
+    }
+    for(const [id, st] of (o.statusOnly || [])) statusMap.set(id, st);
+    return {
+      statusMap, records,
+      totalGeral: o.totalGeral,
+      baseIds: o.baseIds ? new Set(o.baseIds) : null,
+      arrivalByOrigin: new Map(o.arrival || []),
+      estArrivalColumnFound: o.estArrivalColumnFound,
+      facilityColumnFound: o.facilityColumnFound,
+      planHeaderRaw: o.planHeaderRaw,
+      formatDetected: o.formatDetected
+    };
+  }
+
   async function saveBase1ToStorage(arrayBuffer, filename){
     try{
-      // Arquivo binário (XLSX) vai pro Storage do Supabase — evita timeout que
-      // acontecia tentando gravar o arquivo inteiro em base64 numa coluna de texto.
-      const { error: uploadError } = await supabaseClient
-        .storage
-        .from(STORAGE_BUCKET)
-        .upload(BASE1_STORAGE_PATH, arrayBuffer, {
-          upsert: true,
-          contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        });
-      if(uploadError) throw uploadError;
-
-      // Só o nome do arquivo e a data ficam na tabela (registro pequeno, rápido)
-      const { error: metaError } = await supabaseClient
+      const conteudo = await serializeBase1(base1Data);
+      const stamp = new Date().toISOString();
+      const { error } = await supabaseClient
         .from(SUPABASE_TABLE)
-        .upsert({
-          chave: 'base1',
-          filename,
-          conteudo: null,
-          atualizado_em: new Date().toISOString()
-        }, { onConflict: 'chave' });
-      if(metaError) throw metaError;
-
+        .upsert({ chave: 'base1', filename, conteudo, atualizado_em: stamp }, { onConflict: 'chave' });
+      if(error) throw error;
+      lastBase1Stamp = stamp;
       dropBase1._setStatus(filename + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || '') + ' (salvo no banco ✓)', true);
     }catch(err){
       console.error('Falha ao salvar base estrutura no Supabase:', err);
@@ -1154,27 +1193,40 @@
   }
 
   async function loadSavedData(){
-    // base1 (xlsx) — arquivo no Storage + nome/data na tabela
+    // base1 (estrutura) — dados processados na tabela; arquivo antigo no Storage como reserva
     try{
       const { data: metaRows } = await supabaseClient
         .from(SUPABASE_TABLE)
-        .select('filename')
+        .select('filename, atualizado_em')
         .eq('chave', 'base1')
         .limit(1);
       const meta = metaRows && metaRows[0];
 
-      const { data: fileBlob, error: downloadError } = await supabaseClient
-        .storage
-        .from(STORAGE_BUCKET)
-        .download(BASE1_STORAGE_PATH);
-      if(downloadError) throw downloadError;
-
-      const buf = await fileBlob.arrayBuffer();
-      base1Data = parseBase1(buf);
-      dropBase1._setStatus((meta && meta.filename || 'base salva') + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || '') + ' (salvo)', true);
-      renderChegadaTab();
+      // só baixa de novo se alguém subiu uma base nova desde a última leitura
+      if(!(meta && base1Data && meta.atualizado_em && meta.atualizado_em === lastBase1Stamp)){
+        const { data: rowC } = await supabaseClient
+          .from(SUPABASE_TABLE)
+          .select('conteudo')
+          .eq('chave', 'base1')
+          .limit(1)
+          .maybeSingle();
+        if(rowC && typeof rowC.conteudo === 'string' && rowC.conteudo.startsWith(BASE1_DATA_PREFIX)){
+          base1Data = await deserializeBase1(rowC.conteudo);
+        } else {
+          const { data: fileBlob, error: downloadError } = await supabaseClient
+            .storage
+            .from(STORAGE_BUCKET)
+            .download(BASE1_STORAGE_PATH);
+          if(downloadError) throw downloadError;
+          base1Data = parseBase1(await fileBlob.arrayBuffer());
+        }
+        lastBase1Stamp = meta ? meta.atualizado_em : null;
+        dropBase1._setStatus((meta && meta.filename || 'base salva') + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || '') + ' (salvo)', true);
+        renderChegadaTab();
+      }
     }catch(err){
       // ainda não há base estrutura salva — segue sem erro visível
+      console.warn('Base estrutura salva não carregou:', err);
     }
 
     // base2 (csv) — continua direto na tabela (arquivo pequeno)
@@ -1371,10 +1423,17 @@
     return s;
   }
 
+  // normaliza texto pra comparar nomes de aba/coluna: sem acento, minúsculo,
+  // sem espaços/underscore/pontuação ("RTG Unit External ID" == "rtg_unit_external_id")
+  function normKey(v){
+    if(v===undefined||v===null) return '';
+    return String(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  }
+
   function findHeaderIndex(headerRow, candidates){
-    const norm = headerRow.map(h => (h===undefined||h===null) ? '' : String(h).trim().toLowerCase());
+    const norm = (headerRow||[]).map(normKey);
     for(const cand of candidates){
-      const idx = norm.indexOf(cand.toLowerCase());
+      const idx = norm.indexOf(normKey(cand));
       if(idx !== -1) return idx;
     }
     return -1;
@@ -1383,45 +1442,84 @@
   function findSheetName(workbook, candidates){
     const names = workbook.SheetNames;
     for(const cand of candidates){
-      const hit = names.find(n => n.trim().toLowerCase() === cand.toLowerCase());
+      const hit = names.find(n => normKey(n) === normKey(cand));
       if(hit) return hit;
     }
     return null;
   }
 
+  // acha a linha de cabeçalho (nem sempre é a 1ª) procurando as colunas exigidas nas primeiras linhas
+  function findHeaderRow(rows, requiredGroups){
+    const lim = Math.min(rows.length, 25);
+    for(let r=0;r<lim;r++){
+      const row = rows[r] || [];
+      if(requiredGroups.every(g => findHeaderIndex(row, g) !== -1)) return r;
+    }
+    return -1;
+  }
+
+  function sheetRows(wb, name){
+    return XLSX.utils.sheet_to_json(wb.Sheets[name], {header:1, raw:true, defval:null});
+  }
+
+  const F2_ID = ['rtg_unit_external_id','rtg_unit_id','unit_external_id'];
+  const F2_STATUS = ['status_atual'];
+  const F1_ID = ['unit_id'];
+  const F1_STATUS = ['status'];
+
   // ---------- parse BASE1 (xlsx) ----------
   // ---------- ponto de entrada: detecta o formato do arquivo e delega ----------
   function parseBase1(arrayBuffer){
     const wb = XLSX.read(arrayBuffer, {type:'array', cellDates:true});
+    const names = wb.SheetNames;
 
     const baseSheetName = findSheetName(wb, ['BASE']);
-    const planSheetName = findSheetName(wb, ['PLANIFICATION']);
+    // aceita "PLANIFICATION", "Planification ", "Planificação", "PLANIFICATION (2)" etc.
+    const planSheetName = findSheetName(wb, ['PLANIFICATION','PLANIFICACAO','PLANIFICATIONS'])
+      || names.find(n => normKey(n).startsWith('planific')) || null;
+
+    // ordem de busca: aba de planification primeiro, depois todas as outras
+    const order = planSheetName ? [planSheetName, ...names.filter(n => n !== planSheetName)] : names.slice();
 
     // Formato 1: abas "BASE" + "PLANIFICATION" (unit_id / status / facility_origin ...)
     if(baseSheetName && planSheetName){
-      return parseFormat1(wb, baseSheetName, planSheetName);
+      const rows = sheetRows(wb, planSheetName);
+      const h = findHeaderRow(rows, [F1_ID, F1_STATUS]);
+      if(h !== -1) return parseFormat1(wb, baseSheetName, planSheetName, rows.slice(h));
     }
 
-    // Formato 2: aba única "Planification" com colunas RTG_UNIT_EXTERNAL_ID / STATUS_ATUAL / ...
-    if(planSheetName){
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[planSheetName], {header:1, raw:true, defval:null});
-      const header = rows[0] || [];
-      const looksLikeFormat2 =
-        findHeaderIndex(header, ['rtg_unit_external_id']) !== -1 &&
-        findHeaderIndex(header, ['status_atual']) !== -1;
-      if(looksLikeFormat2){
-        return parseFormat2(wb, planSheetName, rows, header);
+    // Formato 2: aba com colunas RTG_UNIT_EXTERNAL_ID / STATUS_ATUAL (qualquer nome de aba, cabeçalho em qualquer das primeiras linhas)
+    for(const name of order){
+      const rows = sheetRows(wb, name);
+      const h = findHeaderRow(rows, [F2_ID, F2_STATUS]);
+      if(h !== -1){
+        const sliced = rows.slice(h);
+        return parseFormat2(wb, name, sliced, sliced[0]);
       }
     }
 
-    throw new Error('Não reconheci o formato desta planilha. Formatos aceitos: (1) abas "BASE" + "PLANIFICATION"; (2) aba "Planification" com colunas RTG_UNIT_EXTERNAL_ID / STATUS_ATUAL.');
+    // Formato 1 sem aba BASE: usa a própria planification como total
+    for(const name of order){
+      if(name === baseSheetName) continue;
+      const rows = sheetRows(wb, name);
+      const h = findHeaderRow(rows, [F1_ID, F1_STATUS]);
+      if(h !== -1) return parseFormat1(wb, baseSheetName || name, name, rows.slice(h));
+    }
+
+    // nada reconhecido: mostra o que foi encontrado pra facilitar o ajuste
+    const info = names.slice(0,8).map(n => {
+      const rows = sheetRows(wb, n);
+      const first = (rows.find(r => r && r.some(c => c!==null && c!=='')) || []).filter(c => c!==null && c!=='').slice(0,8).join(', ');
+      return '"' + n + '"' + (first ? ' [' + first + ']' : ' [vazia]');
+    }).join(' · ');
+    throw new Error('Não reconheci o formato desta planilha. Preciso de uma aba com as colunas RTG_UNIT_EXTERNAL_ID + STATUS_ATUAL, ou abas BASE + PLANIFICATION com unit_id + status. Abas encontradas: ' + info);
   }
 
   // ---------- Formato 1: abas BASE + PLANIFICATION ----------
-  function parseFormat1(wb, baseSheetName, planSheetName){
+  function parseFormat1(wb, baseSheetName, planSheetName, planRowsParam){
     // Total geral = data rows in BASE sheet
     const baseRows = XLSX.utils.sheet_to_json(wb.Sheets[baseSheetName], {header:1, raw:true, defval:null});
-    const totalGeral = Math.max(0, baseRows.length - 1); // minus header
+    let totalGeral = Math.max(0, baseRows.length - 1); // minus header
 
     // try to also capture package IDs from BASE sheet (used to list "Faltante" IDs, not just the count)
     let baseIds = null;
@@ -1440,7 +1538,7 @@
     }
 
     // records map from PLANIFICATION: id -> {status, facility, promiseEnd, rota}
-    const planRows = XLSX.utils.sheet_to_json(wb.Sheets[planSheetName], {header:1, raw:true, defval:null});
+    const planRows = planRowsParam || XLSX.utils.sheet_to_json(wb.Sheets[planSheetName], {header:1, raw:true, defval:null});
     if(planRows.length < 1) throw new Error('Aba PLANIFICATION está vazia.');
     const header = planRows[0];
     const idIdx = findHeaderIndex(header, ['unit_id']);
@@ -1526,8 +1624,8 @@
     if(rows.length < 1) throw new Error('Aba "Planification" está vazia.');
     const header = headerParam || rows[0];
 
-    const idIdx = findHeaderIndex(header, ['rtg_unit_external_id']);
-    const statusIdx = findHeaderIndex(header, ['status_atual']);
+    const idIdx = findHeaderIndex(header, F2_ID);
+    const statusIdx = findHeaderIndex(header, F2_STATUS);
     const substatusIdx = findHeaderIndex(header, ['substatus_atual']);
     const facilityIdx = findHeaderIndex(header, ['origem']);
     const rotaIdx = findHeaderIndex(header, ['otimizado']);
@@ -2407,6 +2505,8 @@
         .delete()
         .in('chave', ['base1', 'base2', 'totalGeralManual']);
       if(error) throw error;
+      // se a policy do banco não deixar apagar, ao menos esvazia o conteúdo da base estrutura
+      await supabaseClient.from(SUPABASE_TABLE).upsert({ chave:'base1', filename:null, conteudo:null, atualizado_em:new Date().toISOString() }, { onConflict:'chave' });
       await supabaseClient.storage.from(STORAGE_BUCKET).remove([BASE1_STORAGE_PATH]);
     }catch(err){
       showError('Não consegui limpar os dados salvos: ' + (err.message || err));
