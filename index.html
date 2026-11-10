@@ -166,15 +166,15 @@
   /* ===== UPLOAD ZONE ===== */
   .upload-row{
     display:grid;
-    grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-    gap:12px;
-    margin-bottom:14px;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    margin-bottom:28px;
   }
   .drop{
     border:1.5px dashed var(--border);
     background:var(--bg-1);
     border-radius:10px;
-    padding:8px 14px;
+    padding:16px 18px;
     display:flex;
     align-items:center;
     gap:14px;
@@ -188,7 +188,7 @@
   .drop.is-loaded{ border-color:var(--green); }
   .drop input{ display:none; }
   .drop-icon{
-    width:30px;height:30px;border-radius:8px;
+    width:36px;height:36px;border-radius:8px;
     display:flex;align-items:center;justify-content:center;
     background:var(--bg-2);
     border:1px solid var(--border);
@@ -215,14 +215,8 @@
     font-size:11px;
     color:var(--text-lo);
     text-align:right;
-    max-width:min(380px, 50%);
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
+    max-width:180px;
   }
-  .drop-text{ min-width:0; }
-  .drop{ min-width:0; }
-  .drop-text .sub{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
   /* ===== CARDS ===== */
   .cards{
@@ -430,29 +424,6 @@
     position:relative;
     height:320px;
   }
-  .chart-wrap.chart-wrap-tall{ height:380px; }
-  /* ---------- Análise D-1 ---------- */
-  .d1-toolbar{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin:14px 0; }
-  .d1-badges{ display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
-  .d1-badge{ font-family:var(--mono, 'JetBrains Mono', monospace); font-size:12px; font-weight:700; padding:5px 10px; border-radius:999px; background:#fff; border:1px solid #D7E0EE; color:#33415C; }
-  .d1-badge b{ color:#0B2545; }
-  .d1-badge.ok b{ color:#15803D; }
-  .d1-badge.warn b{ color:#C2410C; }
-  .d1-table input{ width:100%; box-sizing:border-box; font:inherit; font-size:12.5px; padding:6px 8px; border:1px solid #D7E0EE; border-radius:6px; background:#fff; color:#0B2545; }
-  .d1-table input:focus{ outline:2px solid #0B5FA5; outline-offset:0; border-color:#0B5FA5; }
-  .d1-table input.saved{ border-color:#86EFAC; }
-  .d1-table td{ vertical-align:middle; }
-  .d1-table .id-cell{ font-family:var(--mono, 'JetBrains Mono', monospace); font-weight:800; color:#0B2545; white-space:nowrap; }
-  .d1-table .copy-id{ border:0; background:none; cursor:pointer; font-size:13px; padding:2px 4px; opacity:.6; }
-  .d1-table .copy-id:hover{ opacity:1; }
-  .d1-table tr.done td{ background:rgba(22,163,74,0.05); }
-  .d1-import{ display:none; margin:0 0 14px; padding:14px; background:#fff; border:1px dashed #0B5FA5; border-radius:10px; }
-  .d1-import textarea{ width:100%; box-sizing:border-box; min-height:120px; font-family:var(--mono, 'JetBrains Mono', monospace); font-size:12px; padding:8px; border:1px solid #D7E0EE; border-radius:6px; }
-  .d1-import .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:10px; }
-  .d1-section-title{ font-size:15px; font-weight:800; color:#0B2545; margin:26px 0 10px; display:flex; align-items:center; gap:8px; }
-  .d1-empty-val{ color:#94A3B8; }
-  .d1-filter{ font:inherit; font-size:12.5px; padding:6px 10px; border:1px solid #D7E0EE; border-radius:8px; min-width:220px; }
-
 
   .panels-row{
     display:grid;
@@ -543,20 +514,9 @@
   .actions-row{
     display:flex;
     align-items:center;
-    flex-wrap:wrap;
-    gap:10px;
-    margin-bottom:16px;
+    gap:12px;
+    margin-bottom:22px;
   }
-  .actions-row .filter-row.filter-inline{
-    margin:0;
-    padding:5px 10px;
-    gap:6px;
-    border-radius:10px;
-  }
-  .actions-row .filter-inline .filter-label{ font-size:11.5px; white-space:nowrap; }
-  .actions-row .filter-inline .filter-select{ font-size:11.5px; padding:5px 8px; max-width:140px; }
-  .actions-row .export-btn{ padding-top:8px; padding-bottom:8px; }
-  .actions-row .filter-inline .chip-list{ display:flex; flex-wrap:wrap; gap:4px; }
   .export-btn{
     display:flex;
     align-items:center;
@@ -768,72 +728,6 @@
   th.sortable{ cursor:pointer; user-select:none; }
   th.sortable:hover{ color:var(--kn-blue); }
   th.sortable .sort-arrow{ font-size:9px; opacity:.6; margin-left:3px; }
-
-  /* ---------- Report D-1 ---------- */
-  .d1-opt{ margin-left:auto; font-size:12.5px; font-weight:600; color:#33415C; display:flex; align-items:center; gap:6px; cursor:pointer; }
-  .d1-section-title{ flex-wrap:wrap; }
-  .d1r-outer{ overflow-x:auto; padding:4px; }
-  #viewD1 .chegada-wrap{ max-width:none; }
-  .fg{ width:100%; min-width:1240px; max-width:1500px; box-sizing:border-box; background:#F6F8FC; border-radius:20px; padding:22px; font-family:'Inter', system-ui, -apple-system, sans-serif; color:#0F1B2D; }
-  .fg-head{ display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:16px; }
-  .fg-title{ display:flex; align-items:center; gap:14px; }
-  .fg-logo{ width:44px; height:44px; border-radius:12px; background:linear-gradient(135deg,#0B2545,#0B5FA5); color:#fff; font-weight:900; font-size:14px; display:flex; align-items:center; justify-content:center; letter-spacing:-.02em; box-shadow:0 4px 12px rgba(11,95,165,.25); }
-  .fg-h1{ font-size:22px; font-weight:800; letter-spacing:-.02em; line-height:1.15; }
-  .fg-sub{ font-size:12.5px; color:#64748B; margin-top:3px; }
-  .fg-meta{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
-  .fg-chip{ display:inline-flex; align-items:center; gap:7px; background:#fff; border:1px solid #E3E8F0; border-radius:999px; padding:7px 13px; font-size:12.5px; font-weight:600; color:#334155; box-shadow:0 1px 2px rgba(15,27,45,.04); }
-  .fg-chip b{ font-weight:800; }
-  .fg-chip-dark{ background:#0B2545; color:#fff; border-color:#0B2545; }
-  .fg-dot{ width:7px; height:7px; border-radius:50%; background:#22C55E; box-shadow:0 0 0 3px rgba(34,197,94,.18); }
-  .fg-table{ background:#fff; border:1px solid #E3E8F0; border-radius:16px; overflow:hidden; box-shadow:0 1px 3px rgba(15,27,45,.05), 0 8px 24px -12px rgba(15,27,45,.10); }
-  .fg-rota-cell{ display:flex; flex-direction:column; align-items:flex-start; gap:5px; }
-  .fg-vol{ display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:800; letter-spacing:.03em; text-transform:uppercase; padding:3px 8px; border-radius:6px; background:#F3E8FF; color:#7C3AED; border:1px solid #E9D5FF; white-space:nowrap; }
-  .fg-vol::before{ content:'▣'; font-size:10px; }
-  .fg-inb b{ display:block; font-size:12.5px; font-weight:700; }
-  .fg-inb small{ display:block; font-size:11.5px; color:#64748B; }
-  .fg-loc{ display:inline-block; font-size:11.5px; font-weight:700; padding:4px 9px; border-radius:999px; background:#F1F5F9; color:#334155; border:1px solid #E2E8F0; white-space:nowrap; }
-  .fg-loc.st{ background:#ECFDF5; color:#047857; border-color:#A7F3D0; }
-  .fg-loc.way{ background:#EFF6FF; color:#1D4ED8; border-color:#BFDBFE; }
-  .fg-loc.srt{ background:#EFF6FF; color:#1D4ED8; border-color:#BFDBFE; }
-  .fg-loc.buf{ background:#FEF3C7; color:#92400E; border-color:#FDE68A; }
-  .d1-paste{ margin:14px 0 6px; background:#fff; border:1px solid #D7E0EE; border-left:4px solid #0B5FA5; border-radius:12px; padding:14px 16px; }
-  .d1-paste-head{ display:flex; justify-content:space-between; gap:14px; align-items:flex-start; flex-wrap:wrap; }
-  .d1-paste-title{ font-size:14.5px; font-weight:800; color:#0B2545; }
-  .d1-paste-sub{ font-size:12.5px; color:#33415C; margin-top:4px; max-width:820px; line-height:1.45; }
-  .d1-paste-grid{ display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:14px; margin-top:12px; }
-  @media (max-width:900px){ .d1-paste-grid{ grid-template-columns:1fr; } }
-  .d1-paste textarea{ width:100%; box-sizing:border-box; min-height:150px; font-family:var(--mono, monospace); font-size:11.5px; padding:10px; border:1.5px dashed #9FB7D6; border-radius:10px; background:#F8FAFD; resize:vertical; }
-  .d1-paste textarea:focus{ outline:none; border-color:#0B5FA5; background:#fff; }
-  .d1-paste-res{ display:flex; flex-direction:column; gap:8px; }
-  .d1-paste-res label{ display:flex; flex-direction:column; gap:3px; font-size:11px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:#5B6B85; }
-  .d1-paste-res .found{ border-color:#22C55E !important; background:#F0FDF4; }
-  .fg-group{ display:flex; align-items:center; gap:8px; padding:9px 18px; font-size:11.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; border-top:1px solid #EEF2F7; }
-  .fg-group b{ font-size:11px; padding:2px 8px; border-radius:999px; }
-  .fg-group.done{ background:#F0FDF4; color:#15803D; }
-  .fg-group.done b{ background:#DCFCE7; }
-  .fg-group.pend{ background:#FFF7ED; color:#B45309; }
-  .fg-group.pend b{ background:#FFEDD5; }
-  .fg-onlyscreen{ margin-left:auto; font-size:10px; font-weight:600; letter-spacing:.02em; text-transform:none; opacity:.7; }
-  .d1-filters{ display:flex; flex-wrap:wrap; gap:8px; align-items:flex-end; background:#fff; border:1px solid #D7E0EE; border-radius:12px; padding:10px 12px; margin:0 0 12px; }
-  .d1-filters label{ display:flex; flex-direction:column; gap:3px; font-size:10.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:#5B6B85; }
-  .d1-filters select, .d1-filters input{ min-width:130px; }
-  .d1-filters .d1-fcount{ margin-left:auto; font-size:12.5px; font-weight:700; color:#0B2545; align-self:center; }
-  .d1-pager{ display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:#33415C; margin-right:6px; }
-  .d1-pager .export-btn{ padding:6px 10px; }
-  .fg-tr{ display:grid; grid-template-columns:124px 220px 96px 120px 110px minmax(0,1fr); gap:16px; align-items:center; padding:11px 18px; border-top:1px solid #EEF2F7; }
-  .fg-th{ border-top:0; background:#FAFBFD; font-size:10.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#64748B; padding:12px 18px; }
-  .fg-id{ font-family:var(--mono, 'JetBrains Mono', monospace); font-size:12.5px; font-weight:700; color:#0F1B2D; letter-spacing:-.01em; }
-  .fg-desc{ font-size:13px; color:#1E293B; line-height:1.35; }
-  .fg-desc.empty{ color:#94A3B8; font-style:italic; }
-  .fg-rota{ display:inline-block; font-family:var(--mono, 'JetBrains Mono', monospace); font-size:11.5px; font-weight:800; padding:4px 9px; border-radius:8px; background:#EAF2FB; color:#0B5FA5; border:1px solid #D3E4F7; white-space:nowrap; }
-  .fg-mov{ display:flex; align-items:center; gap:10px; min-width:0; }
-  .fg-av{ flex:0 0 30px; width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:#fff; }
-  .fg-who{ min-width:0; }
-  .fg-who b{ display:block; font-size:12.5px; font-weight:700; color:#0F1B2D; line-height:1.25; }
-  .fg-who small{ display:block; font-size:11.5px; color:#64748B; margin-top:1px; }
-  .fg-wait{ display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; color:#B45309; background:#FFF7ED; border:1px solid #FED7AA; border-radius:999px; padding:4px 10px; }
-  .fg-empty{ padding:22px; text-align:center; color:#94A3B8; font-size:13px; }
-  .fg-foot{ display:flex; justify-content:space-between; margin-top:12px; padding:0 4px; font-size:11.5px; color:#64748B; }
 </style>
 </head>
 
@@ -848,13 +742,13 @@
     </div>
   </div>
 
-  <div class="upload-row" id="uploadRow">
+  <div class="upload-row">
     <label class="drop" id="dropBase1">
       <input type="file" id="fileBase1" accept=".xlsx,.xls">
       <div class="drop-icon">①</div>
       <div class="drop-text">
         <div class="label">Base estrutura (.xlsx)</div>
-        <div class="sub">aceita BASE+PLANIFICATION ou qualquer aba com RTG_UNIT_EXTERNAL_ID / STATUS_ATUAL</div>
+        <div class="sub">aceita formato BASE+PLANIFICATION ou Planification (RTG)</div>
       </div>
       <div class="drop-status" id="statusBase1">arraste ou clique</div>
     </label>
@@ -874,7 +768,6 @@
     <div class="app-sidebar">
       <button class="tab-btn active" id="tabBtnDashboard" type="button">📊 Dashboard</button>
       <button class="tab-btn" id="tabBtnChegada" type="button">🚚 Total por Origem</button>
-      <button class="tab-btn" id="tabBtnD1" type="button">🔎 Análise D-1</button>
     </div>
 
     <div class="app-main">
@@ -891,22 +784,23 @@
     <button class="export-btn" id="btnClearSaved" type="button" title="Remove as bases salvas no banco de dados do painel">
       <span class="export-icon">🗑️</span> Limpar dados salvos
     </button>
-    <div class="filter-row filter-inline" id="filterRow" style="display:none;">
-      <span class="filter-label">Ver origem:</span>
-      <select id="originIsolateSelect" class="filter-select">
-        <option value="">+ selecionar origem…</option>
-      </select>
-      <button type="button" id="btnShowAllOrigins" class="chip-reset-btn" style="display:none;">Mostrar todas</button>
-    </div>
-
-    <div class="filter-row filter-inline" id="filterRowExclude" style="display:none;">
-      <span class="filter-label" title="Excluir origens do card e do gráfico On Way">Excluir do On Way:</span>
-      <select id="originFilterSelect" class="filter-select">
-        <option value="">+ selecionar origem…</option>
-      </select>
-      <div class="chip-list" id="excludedChips"></div>
-    </div>
     <span class="export-hint" id="exportHint">envie as duas bases para liberar</span>
+  </div>
+
+  <div class="filter-row" id="filterRow" style="display:none;">
+    <span class="filter-label">Ver somente esta origem:</span>
+    <select id="originIsolateSelect" class="filter-select">
+      <option value="">+ selecionar origem…</option>
+    </select>
+    <button type="button" id="btnShowAllOrigins" class="chip-reset-btn" style="display:none;">Mostrar todas</button>
+  </div>
+
+  <div class="filter-row" id="filterRowExclude" style="display:none;">
+    <span class="filter-label">Excluir origens do card/gráfico "On Way":</span>
+    <select id="originFilterSelect" class="filter-select">
+      <option value="">+ selecionar origem…</option>
+    </select>
+    <div class="chip-list" id="excludedChips"></div>
   </div>
 
   <div id="captureArea">
@@ -974,7 +868,7 @@
     <div class="panels-row">
       <div class="panel">
         <p class="panel-title"><span class="swatch"></span>On Way por Origem (On Time / Early / Delay)</p>
-        <div class="chart-wrap chart-wrap-tall">
+        <div class="chart-wrap">
           <canvas id="chartOrigem"></canvas>
         </div>
       </div>
@@ -1118,146 +1012,6 @@
     </div>
   </div><!-- /viewChegada -->
 
-  <div id="viewD1" style="display:none;">
-    <div class="chegada-wrap">
-      <div class="chegada-page-header">
-        <p class="eyebrow"><span class="dot"></span>Pacotes D-1</p>
-        <h1>Análise D-1</h1>
-        <p>Os pacotes D-1 aparecem aqui sozinhos conforme a operação sobe a base do ciclo e os faltantes. Preencha a última movimentação e quem bipou; a descrição vem da query de valor. Tudo fica salvo e aparece pra todos.</p>
-        <div class="d1-badges">
-          <span class="d1-badge">D-1: <b id="d1Total">0</b></span>
-          <span class="d1-badge ok">com movimentação: <b id="d1ComMov">0</b></span>
-          <span class="d1-badge ok">com descrição: <b id="d1ComDesc">0</b></span>
-          <span class="d1-badge warn">pendentes: <b id="d1Pend">0</b></span>
-          <span class="d1-badge" id="d1SaveState">—</span>
-        </div>
-      </div>
-
-      <div class="d1-paste">
-        <div class="d1-paste-head">
-          <div>
-            <div class="d1-paste-title">⚡ Consulta rápida — cole a página do sistema</div>
-            <div class="d1-paste-sub">1) clique em <b>Copiar próximo ID</b> e cole na busca do sistema · 2) na página do pacote aperte <b>Ctrl+A</b> e <b>Ctrl+C</b> · 3) clique no quadro abaixo e aperte <b>Ctrl+V</b>. Pronto: a data, a hora e quem bipou são preenchidos e salvos sozinhos, e o próximo ID já fica copiado.</div>
-          </div>
-          <button class="export-btn" id="btnD1NextId" type="button" disabled><span class="export-icon">➡️</span> Copiar próximo ID</button>
-        </div>
-        <div class="d1-paste-grid">
-          <textarea id="d1PasteBox" placeholder="Cole aqui (Ctrl+V) o conteúdo da página de consulta do pacote…"></textarea>
-          <div class="d1-paste-res">
-            <label>Pacote<select id="d1PId" class="d1-filter" style="min-width:0;width:100%;"></select></label>
-            <label>Última bipagem<input id="d1PDt" type="datetime-local" class="d1-filter" style="min-width:0;width:100%;"></label>
-            <label>Quem bipou<input id="d1PNome" type="text" class="d1-filter" style="min-width:0;width:100%;" list="d1Nomes" placeholder="nome"></label>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-              <button class="export-btn" id="btnD1PSave" type="button" disabled><span class="export-icon">💾</span> Salvar (só se faltar algo)</button>
-              <span class="export-hint" id="d1PHint"></span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="d1-toolbar">
-        <button class="export-btn" id="btnD1CopyLines" type="button" disabled><span class="export-icon">📄</span> Copiar IDs (um por linha)</button>
-        <button class="export-btn" id="btnD1CopyQuery" type="button" disabled><span class="export-icon">🧾</span> Copiar IDs p/ query (separados por vírgula)</button>
-        <button class="export-btn" id="btnD1Import" type="button" disabled><span class="export-icon">📥</span> Importar resultado da query</button>
-        <input class="d1-filter" id="d1Filter" type="search" placeholder="buscar ID, nome ou descrição…">
-        <span class="export-hint" id="d1Hint">envie as duas bases para liberar</span>
-      </div>
-
-      <div class="d1-import" id="d1ImportBox">
-        <div style="font-weight:800;color:#0B2545;margin-bottom:6px;">Resultado da query de valor</div>
-        <div style="font-size:12.5px;color:#33415C;margin-bottom:8px;">Cole aqui o resultado (copiado do Excel/BigQuery, com cabeçalho) <b>ou</b> escolha o arquivo .csv/.xlsx. Eu acho sozinho a coluna do ID e a da descrição.</div>
-        <textarea id="d1ImportText" placeholder="ID	DESCRIÇÃO&#10;48380943770	Fone de ouvido bluetooth…"></textarea>
-        <div class="row">
-          <button class="export-btn" id="btnD1ImportApply" type="button"><span class="export-icon">✅</span> Aplicar texto colado</button>
-          <label class="export-btn" style="cursor:pointer;"><span class="export-icon">📂</span> Escolher arquivo<input type="file" id="d1ImportFile" accept=".csv,.tsv,.txt,.xlsx,.xls" style="display:none;"></label>
-          <span class="export-hint" id="d1ImportHint"></span>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="table-scroll" style="max-height:none;">
-          <table class="data-table d1-table">
-            <thead>
-              <tr>
-                <th style="width:40px;">#</th>
-                <th style="width:170px;">ID do pacote</th>
-                <th style="width:210px;">Última movimentação (data e hora)</th>
-                <th style="width:220px;">Colaborador (quem bipou)</th>
-                <th>Detalhe do pacote</th>
-              </tr>
-            </thead>
-            <tbody id="d1Body"></tbody>
-          </table>
-        </div>
-        <datalist id="d1Nomes"></datalist>
-      </div>
-      <div class="empty-hint" id="d1Empty">Envie a base do ciclo e os faltantes para listar os pacotes D-1.</div>
-
-      <div class="d1-section-title">📣 Report D-1 (pra mandar nos grupos)
-        <span class="d1-opt">ordenar por
-          <select id="d1Order" class="d1-filter" style="min-width:0;padding:4px 8px;">
-            <option value="rota">Rota</option>
-            <option value="nome">Quem bipou</option>
-            <option value="data">Última movimentação</option>
-            <option value="lista">Ordem da lista</option>
-          </select>
-        </span>
-      </div>
-      <div class="d1-filters" id="d1Filters">
-        <label>Situação<select id="d1FSit" class="d1-filter"><option value="">Todos</option><option value="done">Já consultados</option><option value="pend">Aguardando consulta</option></select></label>
-        <label>Rota<select id="d1FRota" class="d1-filter"><option value="">Todas</option></select></label>
-        <label>Status<select id="d1FStatus" class="d1-filter"><option value="">Todos</option></select></label>
-        <label>Tipo<select id="d1FTipo" class="d1-filter"><option value="">Todos</option><option value="vol">Só volumoso</option><option value="nvol">Sem volumoso</option></select></label>
-        <label>Colaborador<select id="d1FColab" class="d1-filter"><option value="">Todos</option></select></label>
-        <label>Buscar<input id="d1FText" class="d1-filter" type="search" placeholder="ID ou detalhe…"></label>
-        <button class="export-btn" id="btnD1FClear" type="button" style="padding:6px 12px;">Limpar filtros</button>
-        <span class="d1-fcount" id="d1FCount"></span>
-      </div>
-      <div class="d1r-outer">
-      <div id="d1ReportArea" class="fg">
-        <div class="fg-head">
-          <div class="fg-title">
-            <span class="fg-logo">K+N</span>
-            <div>
-              <div class="fg-h1">Pacotes D-1</div>
-              <div class="fg-sub">SRJ1 · última movimentação registrada no sistema</div>
-            </div>
-          </div>
-          <div class="fg-meta">
-            <div class="fg-chip fg-chip-dark"><b id="d1rTotal">0</b> pacotes</div>
-            <div class="fg-chip" id="d1rPageChip" style="display:none;">Página <b id="d1rPageNum">1</b>/<b id="d1rPageTot">1</b></div>
-            <div class="fg-chip"><span class="fg-dot"></span><span id="d1ReportWhen"></span></div>
-          </div>
-        </div>
-        <div class="fg-table">
-          <div class="fg-tr fg-th">
-            <div>ID do pacote</div><div>Colaborador</div><div>Rota</div><div>Status</div><div>Tipo de pacote</div><div>Detalhe do pacote</div>
-          </div>
-          <div id="d1ReportBody"></div>
-        </div>
-        <div class="fg-foot"><span id="d1ReportSummary" class="no-print"></span><span style="margin-left:auto;">Kuehne+Nagel · Painel Operacional</span></div>
-      </div>
-      </div>
-      <div class="actions-row" style="margin-top:12px;">
-        <span class="d1-pager">
-          <button class="export-btn" id="btnD1Prev" type="button" title="página anterior">◀</button>
-          <span id="d1PagerLbl">Página 1 de 1</span>
-          <button class="export-btn" id="btnD1Next" type="button" title="próxima página">▶</button>
-          <select id="d1PageSize" class="d1-filter" style="min-width:0;padding:4px 8px;" title="pacotes por imagem">
-            <option value="12">12 por imagem</option>
-            <option value="15" selected>15 por imagem</option>
-            <option value="20">20 por imagem</option>
-            <option value="0">tudo numa imagem</option>
-          </select>
-        </span>
-        <button class="export-btn" id="btnD1ReportImg" type="button" disabled><span class="export-icon">🖼️</span> Copiar esta página (imagem)</button>
-        <button class="export-btn" id="btnD1ReportAll" type="button" disabled><span class="export-icon">🗂️</span> Gerar todas as páginas</button>
-        <button class="export-btn" id="btnD1ReportTxt" type="button" disabled><span class="export-icon">💬</span> Copiar report (texto p/ WhatsApp)</button>
-        <span class="export-hint" id="d1ReportHint"></span>
-      </div>
-    </div>
-  </div><!-- /viewD1 -->
-
 
 
     </div><!-- /app-main -->
@@ -1308,69 +1062,30 @@
     return bytes.buffer;
   }
 
-  // ---------- base estrutura: dados já processados vão pra TABELA (gzip+base64) ----------
-  // O Storage (pasta de arquivos) parou de aceitar gravação, então a base passou a ser
-  // salva como texto compactado na mesma tabela do CSV — assim qualquer dashboard ligado
-  // a este banco (ex.: Ps-Dashbord) abre já com a base que a operação subiu.
-  const BASE1_DATA_PREFIX = 'gz1:';
-  let lastBase1Stamp = null;
-
-  async function gzipToBase64(str){
-    const stream = new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'));
-    const buf = new Uint8Array(await new Response(stream).arrayBuffer());
-    let bin = '';
-    for(let i=0;i<buf.length;i+=0x8000) bin += String.fromCharCode.apply(null, buf.subarray(i, i+0x8000));
-    return btoa(bin);
-  }
-  async function base64ToGunzip(b64){
-    const stream = new Blob([base64ToArrayBuffer(b64)]).stream().pipeThrough(new DecompressionStream('gzip'));
-    return await new Response(stream).text();
-  }
-  async function serializeBase1(d){
-    const recs = [];
-    d.records.forEach((r, id) => recs.push([id, r.status, r.facility, r.promiseEnd ? r.promiseEnd.getTime() : null, r.rota || '']));
-    const obj = {
-      v:1, recs,
-      statusOnly: Array.from(d.statusMap.entries()).filter(([id]) => !d.records.has(id)),
-      totalGeral: d.totalGeral,
-      baseIds: d.baseIds ? Array.from(d.baseIds) : null,
-      arrival: d.arrivalByOrigin ? Array.from(d.arrivalByOrigin.entries()) : [],
-      estArrivalColumnFound: !!d.estArrivalColumnFound,
-      facilityColumnFound: !!d.facilityColumnFound,
-      planHeaderRaw: d.planHeaderRaw || [],
-      formatDetected: d.formatDetected || ''
-    };
-    return BASE1_DATA_PREFIX + await gzipToBase64(JSON.stringify(obj));
-  }
-  async function deserializeBase1(str){
-    const o = JSON.parse(await base64ToGunzip(str.slice(BASE1_DATA_PREFIX.length)));
-    const records = new Map(), statusMap = new Map();
-    for(const [id, status, facility, pe, rota] of o.recs){
-      records.set(id, { status, facility, promiseEnd: pe === null ? null : new Date(pe), rota });
-      statusMap.set(id, status);
-    }
-    for(const [id, st] of (o.statusOnly || [])) statusMap.set(id, st);
-    return {
-      statusMap, records,
-      totalGeral: o.totalGeral,
-      baseIds: o.baseIds ? new Set(o.baseIds) : null,
-      arrivalByOrigin: new Map(o.arrival || []),
-      estArrivalColumnFound: o.estArrivalColumnFound,
-      facilityColumnFound: o.facilityColumnFound,
-      planHeaderRaw: o.planHeaderRaw,
-      formatDetected: o.formatDetected
-    };
-  }
-
   async function saveBase1ToStorage(arrayBuffer, filename){
     try{
-      const conteudo = await serializeBase1(base1Data);
-      const stamp = new Date().toISOString();
-      const { error } = await supabaseClient
+      // Arquivo binário (XLSX) vai pro Storage do Supabase — evita timeout que
+      // acontecia tentando gravar o arquivo inteiro em base64 numa coluna de texto.
+      const { error: uploadError } = await supabaseClient
+        .storage
+        .from(STORAGE_BUCKET)
+        .upload(BASE1_STORAGE_PATH, arrayBuffer, {
+          upsert: true,
+          contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+      if(uploadError) throw uploadError;
+
+      // Só o nome do arquivo e a data ficam na tabela (registro pequeno, rápido)
+      const { error: metaError } = await supabaseClient
         .from(SUPABASE_TABLE)
-        .upsert({ chave: 'base1', filename, conteudo, atualizado_em: stamp }, { onConflict: 'chave' });
-      if(error) throw error;
-      lastBase1Stamp = stamp;
+        .upsert({
+          chave: 'base1',
+          filename,
+          conteudo: null,
+          atualizado_em: new Date().toISOString()
+        }, { onConflict: 'chave' });
+      if(metaError) throw metaError;
+
       dropBase1._setStatus(filename + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || '') + ' (salvo no banco ✓)', true);
     }catch(err){
       console.error('Falha ao salvar base estrutura no Supabase:', err);
@@ -1439,40 +1154,27 @@
   }
 
   async function loadSavedData(){
-    // base1 (estrutura) — dados processados na tabela; arquivo antigo no Storage como reserva
+    // base1 (xlsx) — arquivo no Storage + nome/data na tabela
     try{
       const { data: metaRows } = await supabaseClient
         .from(SUPABASE_TABLE)
-        .select('filename, atualizado_em')
+        .select('filename')
         .eq('chave', 'base1')
         .limit(1);
       const meta = metaRows && metaRows[0];
 
-      // só baixa de novo se alguém subiu uma base nova desde a última leitura
-      if(!(meta && base1Data && meta.atualizado_em && meta.atualizado_em === lastBase1Stamp)){
-        const { data: rowC } = await supabaseClient
-          .from(SUPABASE_TABLE)
-          .select('conteudo')
-          .eq('chave', 'base1')
-          .limit(1)
-          .maybeSingle();
-        if(rowC && typeof rowC.conteudo === 'string' && rowC.conteudo.startsWith(BASE1_DATA_PREFIX)){
-          base1Data = await deserializeBase1(rowC.conteudo);
-        } else {
-          const { data: fileBlob, error: downloadError } = await supabaseClient
-            .storage
-            .from(STORAGE_BUCKET)
-            .download(BASE1_STORAGE_PATH);
-          if(downloadError) throw downloadError;
-          base1Data = parseBase1(await fileBlob.arrayBuffer());
-        }
-        lastBase1Stamp = meta ? meta.atualizado_em : null;
-        dropBase1._setStatus((meta && meta.filename || 'base salva') + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || '') + ' (salvo)', true);
-        renderChegadaTab();
-      }
+      const { data: fileBlob, error: downloadError } = await supabaseClient
+        .storage
+        .from(STORAGE_BUCKET)
+        .download(BASE1_STORAGE_PATH);
+      if(downloadError) throw downloadError;
+
+      const buf = await fileBlob.arrayBuffer();
+      base1Data = parseBase1(buf);
+      dropBase1._setStatus((meta && meta.filename || 'base salva') + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || '') + ' (salvo)', true);
+      renderChegadaTab();
     }catch(err){
       // ainda não há base estrutura salva — segue sem erro visível
-      console.warn('Base estrutura salva não carregou:', err);
     }
 
     // base2 (csv) — continua direto na tabela (arquivo pequeno)
@@ -1669,17 +1371,10 @@
     return s;
   }
 
-  // normaliza texto pra comparar nomes de aba/coluna: sem acento, minúsculo,
-  // sem espaços/underscore/pontuação ("RTG Unit External ID" == "rtg_unit_external_id")
-  function normKey(v){
-    if(v===undefined||v===null) return '';
-    return String(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,'');
-  }
-
   function findHeaderIndex(headerRow, candidates){
-    const norm = (headerRow||[]).map(normKey);
+    const norm = headerRow.map(h => (h===undefined||h===null) ? '' : String(h).trim().toLowerCase());
     for(const cand of candidates){
-      const idx = norm.indexOf(normKey(cand));
+      const idx = norm.indexOf(cand.toLowerCase());
       if(idx !== -1) return idx;
     }
     return -1;
@@ -1688,84 +1383,45 @@
   function findSheetName(workbook, candidates){
     const names = workbook.SheetNames;
     for(const cand of candidates){
-      const hit = names.find(n => normKey(n) === normKey(cand));
+      const hit = names.find(n => n.trim().toLowerCase() === cand.toLowerCase());
       if(hit) return hit;
     }
     return null;
   }
 
-  // acha a linha de cabeçalho (nem sempre é a 1ª) procurando as colunas exigidas nas primeiras linhas
-  function findHeaderRow(rows, requiredGroups){
-    const lim = Math.min(rows.length, 25);
-    for(let r=0;r<lim;r++){
-      const row = rows[r] || [];
-      if(requiredGroups.every(g => findHeaderIndex(row, g) !== -1)) return r;
-    }
-    return -1;
-  }
-
-  function sheetRows(wb, name){
-    return XLSX.utils.sheet_to_json(wb.Sheets[name], {header:1, raw:true, defval:null});
-  }
-
-  const F2_ID = ['rtg_unit_external_id','rtg_unit_id','unit_external_id'];
-  const F2_STATUS = ['status_atual'];
-  const F1_ID = ['unit_id'];
-  const F1_STATUS = ['status'];
-
   // ---------- parse BASE1 (xlsx) ----------
   // ---------- ponto de entrada: detecta o formato do arquivo e delega ----------
   function parseBase1(arrayBuffer){
     const wb = XLSX.read(arrayBuffer, {type:'array', cellDates:true});
-    const names = wb.SheetNames;
 
     const baseSheetName = findSheetName(wb, ['BASE']);
-    // aceita "PLANIFICATION", "Planification ", "Planificação", "PLANIFICATION (2)" etc.
-    const planSheetName = findSheetName(wb, ['PLANIFICATION','PLANIFICACAO','PLANIFICATIONS'])
-      || names.find(n => normKey(n).startsWith('planific')) || null;
-
-    // ordem de busca: aba de planification primeiro, depois todas as outras
-    const order = planSheetName ? [planSheetName, ...names.filter(n => n !== planSheetName)] : names.slice();
+    const planSheetName = findSheetName(wb, ['PLANIFICATION']);
 
     // Formato 1: abas "BASE" + "PLANIFICATION" (unit_id / status / facility_origin ...)
     if(baseSheetName && planSheetName){
-      const rows = sheetRows(wb, planSheetName);
-      const h = findHeaderRow(rows, [F1_ID, F1_STATUS]);
-      if(h !== -1) return parseFormat1(wb, baseSheetName, planSheetName, rows.slice(h));
+      return parseFormat1(wb, baseSheetName, planSheetName);
     }
 
-    // Formato 2: aba com colunas RTG_UNIT_EXTERNAL_ID / STATUS_ATUAL (qualquer nome de aba, cabeçalho em qualquer das primeiras linhas)
-    for(const name of order){
-      const rows = sheetRows(wb, name);
-      const h = findHeaderRow(rows, [F2_ID, F2_STATUS]);
-      if(h !== -1){
-        const sliced = rows.slice(h);
-        return parseFormat2(wb, name, sliced, sliced[0]);
+    // Formato 2: aba única "Planification" com colunas RTG_UNIT_EXTERNAL_ID / STATUS_ATUAL / ...
+    if(planSheetName){
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[planSheetName], {header:1, raw:true, defval:null});
+      const header = rows[0] || [];
+      const looksLikeFormat2 =
+        findHeaderIndex(header, ['rtg_unit_external_id']) !== -1 &&
+        findHeaderIndex(header, ['status_atual']) !== -1;
+      if(looksLikeFormat2){
+        return parseFormat2(wb, planSheetName, rows, header);
       }
     }
 
-    // Formato 1 sem aba BASE: usa a própria planification como total
-    for(const name of order){
-      if(name === baseSheetName) continue;
-      const rows = sheetRows(wb, name);
-      const h = findHeaderRow(rows, [F1_ID, F1_STATUS]);
-      if(h !== -1) return parseFormat1(wb, baseSheetName || name, name, rows.slice(h));
-    }
-
-    // nada reconhecido: mostra o que foi encontrado pra facilitar o ajuste
-    const info = names.slice(0,8).map(n => {
-      const rows = sheetRows(wb, n);
-      const first = (rows.find(r => r && r.some(c => c!==null && c!=='')) || []).filter(c => c!==null && c!=='').slice(0,8).join(', ');
-      return '"' + n + '"' + (first ? ' [' + first + ']' : ' [vazia]');
-    }).join(' · ');
-    throw new Error('Não reconheci o formato desta planilha. Preciso de uma aba com as colunas RTG_UNIT_EXTERNAL_ID + STATUS_ATUAL, ou abas BASE + PLANIFICATION com unit_id + status. Abas encontradas: ' + info);
+    throw new Error('Não reconheci o formato desta planilha. Formatos aceitos: (1) abas "BASE" + "PLANIFICATION"; (2) aba "Planification" com colunas RTG_UNIT_EXTERNAL_ID / STATUS_ATUAL.');
   }
 
   // ---------- Formato 1: abas BASE + PLANIFICATION ----------
-  function parseFormat1(wb, baseSheetName, planSheetName, planRowsParam){
+  function parseFormat1(wb, baseSheetName, planSheetName){
     // Total geral = data rows in BASE sheet
     const baseRows = XLSX.utils.sheet_to_json(wb.Sheets[baseSheetName], {header:1, raw:true, defval:null});
-    let totalGeral = Math.max(0, baseRows.length - 1); // minus header
+    const totalGeral = Math.max(0, baseRows.length - 1); // minus header
 
     // try to also capture package IDs from BASE sheet (used to list "Faltante" IDs, not just the count)
     let baseIds = null;
@@ -1784,7 +1440,7 @@
     }
 
     // records map from PLANIFICATION: id -> {status, facility, promiseEnd, rota}
-    const planRows = planRowsParam || XLSX.utils.sheet_to_json(wb.Sheets[planSheetName], {header:1, raw:true, defval:null});
+    const planRows = XLSX.utils.sheet_to_json(wb.Sheets[planSheetName], {header:1, raw:true, defval:null});
     if(planRows.length < 1) throw new Error('Aba PLANIFICATION está vazia.');
     const header = planRows[0];
     const idIdx = findHeaderIndex(header, ['unit_id']);
@@ -1870,8 +1526,8 @@
     if(rows.length < 1) throw new Error('Aba "Planification" está vazia.');
     const header = headerParam || rows[0];
 
-    const idIdx = findHeaderIndex(header, F2_ID);
-    const statusIdx = findHeaderIndex(header, F2_STATUS);
+    const idIdx = findHeaderIndex(header, ['rtg_unit_external_id']);
+    const statusIdx = findHeaderIndex(header, ['status_atual']);
     const substatusIdx = findHeaderIndex(header, ['substatus_atual']);
     const facilityIdx = findHeaderIndex(header, ['origem']);
     const rotaIdx = findHeaderIndex(header, ['otimizado']);
@@ -1964,7 +1620,6 @@
     const locIdx = findHeaderIndex(header, ['localização do pacote', 'localizacao do pacote']);
     const rotaIdx = findHeaderIndex(header, ['n.º rota', 'numero rota', 'n° rota', 'rota']);
     const inboundIdx = findHeaderIndex(header, ['data de inbound']);
-    const detalheIdx = findHeaderIndex(header, ['detalhe do pacote', 'detalhe']);
     if(idIdx === -1) throw new Error('Não encontrei a coluna "ID do pacote" no CSV.');
     if(locIdx === -1) throw new Error('Não encontrei a coluna "Localização do pacote" no CSV.');
 
@@ -1978,8 +1633,7 @@
       const rota = rotaIdx === -1 ? '' : (r[rotaIdx]||'').trim();
       const inboundRaw = inboundIdx === -1 ? '' : (r[inboundIdx]||'').trim();
       const inboundDate = parseInboundDate(inboundRaw);
-      const detalhe = detalheIdx === -1 ? '' : (r[detalheIdx]||'').trim();
-      out.push({id, loc, rota, inboundRaw, inboundDate, detalhe});
+      out.push({id, loc, rota, inboundRaw, inboundDate});
     }
     return out;
   }
@@ -2066,7 +1720,6 @@
       faltanteAvailable = true;
     }
     lastMetricIds = { d1: d1Ids, recebido: recebidoIds, onWay: onWayIds, faltante: faltanteIds, faltanteAvailable };
-    try{ renderD1Tab(); }catch(e){ console.warn('Análise D-1:', e); }
 
     renderCards({totalGeral, d1, onWay, recebido, noCarrinho});
     renderOrigemChart();
@@ -2260,35 +1913,8 @@
       datasets.push({ label:'Sem Data', data:semData, backgroundColor:'#C4B5FD', stack:'s' });
     }
 
-    // escreve o total de cada origem em cima da barra
-    const totalOnTopPlugin = {
-      id:'totalOnTop',
-      afterDatasetsDraw(chart){
-        const c = chart.ctx;
-        const metas = chart.data.datasets.map((_,i) => chart.getDatasetMeta(i)).filter(m => !m.hidden);
-        if(!metas.length) return;
-        c.save();
-        c.font = "800 11px 'JetBrains Mono', monospace";
-        c.fillStyle = '#0B2545';
-        c.textAlign = 'center';
-        c.textBaseline = 'bottom';
-        chart.data.labels.forEach((_, idx) => {
-          let total = 0, topY = Infinity, x = null;
-          metas.forEach(m => {
-            const v = chart.data.datasets[m.index].data[idx] || 0;
-            total += v;
-            const el = m.data[idx];
-            if(el && v > 0){ topY = Math.min(topY, el.y); x = el.x; }
-          });
-          if(total > 0 && x !== null) c.fillText(String(total), x, topY - 3);
-        });
-        c.restore();
-      }
-    };
-
     origemChartInstance = new Chart(ctx, {
       type: 'bar',
-      plugins: [totalOnTopPlugin],
       data: {
         labels,
         datasets
@@ -2310,41 +1936,23 @@
             titleColor:'#FFFFFF',
             bodyColor:'#CBD8E8',
             bodyFont:{ family:"'JetBrains Mono', monospace" },
-            titleFont:{ family:"'JetBrains Mono', monospace" },
-            footerFont:{ family:"'JetBrains Mono', monospace", weight:'800' },
-            filter: (item) => item.raw > 0,
-            callbacks:{
-              footer: (items) => 'Total: ' + items.reduce((a,i) => a + (i.raw||0), 0)
-            }
+            titleFont:{ family:"'JetBrains Mono', monospace" }
           },
           datalabels:{
-            // só escreve o número dentro do bloco quando ele tem altura pra caber
-            // (blocos pequenos ficavam com números sobrepostos/cortados);
-            // o valor completo continua no tooltip e o total vai em cima da barra.
-            display: (ctx) => {
-              if(!(ctx.dataset.data[ctx.dataIndex] > 0)) return false;
-              // altura calculada pela escala (os elementos ainda estão animando quando o plugin decide)
-              const y = ctx.chart.scales.y;
-              if(!y) return true;
-              const h = Math.abs(y.getPixelForValue(0) - y.getPixelForValue(ctx.dataset.data[ctx.dataIndex]));
-              return h >= 15;
-            },
+            display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
             color: '#FFFFFF',
-            clamp: true,
             font:{ family:"'JetBrains Mono', monospace", size:10.5, weight:'800' },
             formatter: (value) => value
           }
         },
-        layout:{ padding:{ top:6 } },
         scales:{
           x:{
             stacked:true,
-            ticks:{ color:'#33415C', autoSkip:false, maxRotation:45, minRotation:30, font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
+            ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
             grid:{ color:'#E6ECF5' }
           },
           y:{
             stacked:true,
-            grace:'12%',
             ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
             grid:{ color:'#E6ECF5' }
           }
@@ -2352,7 +1960,6 @@
       }
     });
   }
-
 
   // ---------- Origens Com % Mais Early ----------
   function renderEarlyTable(){
@@ -2549,8 +2156,7 @@
       scale: 6,
       useCORS: true,
       logging: false,
-      imageTimeout: 0,
-      ignoreElements: (node) => !!(node.classList && node.classList.contains('no-print'))
+      imageTimeout: 0
     });
     return await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
   }
@@ -2717,623 +2323,19 @@
   const viewDashboard = document.getElementById('viewDashboard');
   const viewChegada = document.getElementById('viewChegada');
 
-  const tabBtnD1 = document.getElementById('tabBtnD1');
-  const viewD1 = document.getElementById('viewD1');
   function switchTab(tab){
     const isChegada = tab === 'chegada';
-    const isD1 = tab === 'd1';
-    const isDashboard = !isChegada && !isD1;
+    const isDashboard = !isChegada;
     tabBtnChegada.classList.toggle('active', isChegada);
-    tabBtnD1.classList.toggle('active', isD1);
     tabBtnDashboard.classList.toggle('active', isDashboard);
     viewChegada.style.display = isChegada ? 'block' : 'none';
-    viewD1.style.display = isD1 ? 'block' : 'none';
     viewDashboard.style.display = isDashboard ? 'block' : 'none';
-    // na Análise D-1 não precisa subir planilha — esconde a área de envio
-    document.getElementById('uploadRow').style.display = isD1 ? 'none' : '';
     if(isChegada){
       renderChegadaTab();
-    }
-    if(isD1){
-      renderD1Tab();
-      loadD1Analise();
     }
   }
   tabBtnDashboard.addEventListener('click', ()=> switchTab('dashboard'));
   tabBtnChegada.addEventListener('click', ()=> switchTab('chegada'));
-  tabBtnD1.addEventListener('click', ()=> switchTab('d1'));
-
-  // ================= ANÁLISE D-1 =================
-  // dados preenchidos ficam numa linha da tabela painel_dados (chave d1_analise):
-  // { "<id>": { dt:"2026-11-01T14:32", nome:"...", desc:"...", upd:"<iso>" } }
-  const D1_KEY = 'd1_analise';
-  let d1Data = {};
-  let d1Dirty = {};          // id -> true (alterado aqui e ainda não gravado)
-  let d1SaveTimer = null;
-  let d1Saving = false;
-
-  function d1Esc(v){ return String(v === undefined || v === null ? '' : v).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-  function d1FmtDt(dt){
-    if(!dt) return '';
-    const m = String(dt).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
-    return m ? (m[3] + '/' + m[2] + ' ' + m[4] + ':' + m[5]) : String(dt);
-  }
-  // Análise D-1 = só os D-1 AUSENTES: deram entrada no SVC ("Na estação") e não foram processados.
-  // Os que estão "Caminho para a estação" ainda nem chegaram, então ficam fora.
-  function d1Entrou(id){
-    const row = d1Row(id);
-    const loc = row && row.loc ? String(row.loc).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase() : '';
-    return !/caminho/.test(loc);
-  }
-  function d1AllD1(){ return (lastMetricIds && lastMetricIds.d1) ? lastMetricIds.d1.slice() : []; }
-  function d1Ids(){ return d1AllD1(); }
-  function d1SetState(t){ const el = document.getElementById('d1SaveState'); if(el) el.textContent = t; }
-
-  function d1MergeRemote(remote){
-    // mantém o que foi alterado aqui e ainda não gravou; no resto vale o mais recente
-    for(const id in remote){
-      if(d1Dirty[id]) continue;
-      const r = remote[id], l = d1Data[id];
-      if(!l || !l.upd || (r.upd && r.upd >= l.upd)) d1Data[id] = r;
-    }
-  }
-
-  async function loadD1Analise(){
-    try{
-      const { data } = await supabaseClient.from(SUPABASE_TABLE).select('conteudo').eq('chave', D1_KEY).limit(1).maybeSingle();
-      if(data && data.conteudo){
-        d1MergeRemote(JSON.parse(data.conteudo));
-        if(viewD1.style.display !== 'none') renderD1Tab(true);
-      }
-    }catch(err){ console.warn('Não consegui ler a Análise D-1 salva:', err); }
-  }
-
-  function d1ScheduleSave(){
-    d1SetState('salvando…');
-    clearTimeout(d1SaveTimer);
-    d1SaveTimer = setTimeout(d1Save, 900);
-  }
-  async function d1Save(){
-    if(d1Saving){ d1ScheduleSave(); return; }
-    d1Saving = true;
-    const pending = Object.assign({}, d1Dirty);
-    try{
-      // relê antes de gravar pra não apagar o que outra pessoa preencheu
-      const { data } = await supabaseClient.from(SUPABASE_TABLE).select('conteudo').eq('chave', D1_KEY).limit(1).maybeSingle();
-      const remote = (data && data.conteudo) ? JSON.parse(data.conteudo) : {};
-      for(const id in pending) remote[id] = d1Data[id];
-      // limpa registros com mais de 7 dias
-      const lim = new Date(Date.now() - 7*864e5).toISOString();
-      for(const id in remote){ if(remote[id] && remote[id].upd && remote[id].upd < lim) delete remote[id]; }
-      const { error } = await supabaseClient.from(SUPABASE_TABLE).upsert({
-        chave: D1_KEY, filename: null, conteudo: JSON.stringify(remote), atualizado_em: new Date().toISOString()
-      }, { onConflict: 'chave' });
-      if(error) throw error;
-      for(const id in pending) delete d1Dirty[id];
-      d1MergeRemote(remote);
-      d1SetState('salvo ✓ ' + new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}));
-      document.querySelectorAll('#d1Body input.dirty').forEach(i => { i.classList.remove('dirty'); i.classList.add('saved'); });
-    }catch(err){
-      d1SetState('NÃO salvo — tentando de novo');
-      console.error('Falha ao salvar Análise D-1:', err);
-      setTimeout(d1ScheduleSave, 5000);
-    }finally{
-      d1Saving = false;
-      renderD1Report();
-    }
-  }
-
-  function d1SetField(id, field, value){
-    const cur = Object.assign({ dt:'', nome:'', desc:'' }, d1Data[id] || {});
-    cur[field] = value;
-    cur.upd = new Date().toISOString();
-    d1Data[id] = cur;
-    d1Dirty[id] = true;
-    d1ScheduleSave();
-  }
-
-  function renderD1Tab(keepFocus){
-    if(!viewD1) return;
-    const ids = d1Ids();
-    const has = !!(base1Data && base2Rows);
-    ['btnD1CopyLines','btnD1CopyQuery','btnD1Import','btnD1ReportImg','btnD1ReportAll','btnD1ReportTxt'].forEach(b => document.getElementById(b).disabled = !has || ids.length === 0);
-    document.getElementById('d1Hint').textContent = !has ? 'envie as duas bases para liberar' : (ids.length ? '' : 'nenhum pacote D-1 nos faltantes atuais 🎉');
-    document.getElementById('d1Empty').style.display = (has && ids.length) ? 'none' : 'block';
-
-    // não redesenha a tabela enquanto alguém está digitando nela
-    const active = document.activeElement;
-    const typing = active && active.closest && active.closest('#d1Body');
-    if(!typing){
-      const q = (document.getElementById('d1Filter').value || '').trim().toLowerCase();
-      const nomes = new Set();
-      Object.values(d1Data).forEach(r => { if(r && r.nome) nomes.add(r.nome); });
-      document.getElementById('d1Nomes').innerHTML = Array.from(nomes).sort().map(n => '<option value="' + d1Esc(n) + '">').join('');
-      const rows = [];
-      d1DoneFirst(ids).forEach((id, i) => {
-        const r = d1Data[id] || {};
-        if(q && !(id.toLowerCase().includes(q) || (r.nome||'').toLowerCase().includes(q) || (r.desc||'').toLowerCase().includes(q))) return;
-        const done = r.dt && r.nome;
-        rows.push(`<tr class="${done ? 'done' : ''}" data-id="${d1Esc(id)}">
-          <td>${i+1}</td>
-          <td class="id-cell">${d1Esc(id)} <button class="copy-id" type="button" title="copiar ID" data-copy="${d1Esc(id)}">📋</button><div style="margin-top:3px;display:flex;gap:4px;flex-wrap:wrap;">${d1Rota(id) ? '<span class="fg-rota" style="font-size:10.5px;padding:2px 6px;">' + d1Esc(d1Rota(id)) + '</span>' : ''}${d1Detalhe(id) ? '<span class="fg-vol" style="font-size:9.5px;padding:2px 6px;">' + d1Esc(d1Detalhe(id)) + '</span>' : ''}</div></td>
-          <td><input type="datetime-local" data-f="dt" value="${d1Esc(r.dt||'')}"></td>
-          <td><input type="text" data-f="nome" list="d1Nomes" placeholder="nome de quem bipou" value="${d1Esc(r.nome||'')}"></td>
-          <td><input type="text" data-f="desc" placeholder="vem da query (detalhe do pacote)" value="${d1Esc(r.desc||'')}"></td>
-        </tr>`);
-      });
-      document.getElementById('d1Body').innerHTML = rows.join('');
-    }
-
-    let comMov = 0, comDesc = 0, pend = 0;
-    ids.forEach(id => { const r = d1Data[id] || {}; if(r.dt && r.nome) comMov++; else pend++; if(r.desc) comDesc++; });
-    document.getElementById('d1Total').textContent = fmt(ids.length);
-    if(document.activeElement !== document.getElementById('d1PId')) d1FillPasteIdSelect(document.getElementById('d1PId').value);
-    document.getElementById('d1ComMov').textContent = fmt(comMov);
-    document.getElementById('d1ComDesc').textContent = fmt(comDesc);
-    document.getElementById('d1Pend').textContent = fmt(pend);
-    renderD1Report();
-  }
-
-  function d1Ago(dt){
-    if(!dt) return '';
-    const d = new Date(dt); if(isNaN(d)) return '';
-    const h = Math.floor((Date.now() - d.getTime()) / 36e5);
-    if(h < 1) return 'há menos de 1h';
-    if(h < 48) return 'há ' + h + 'h';
-    return 'há ' + Math.floor(h/24) + ' dias';
-  }
-  // rota e detalhe (ex.: Volumoso) vêm do CSV de faltantes, que é o mais atual; rota cai pra base do ciclo se faltar
-  let d1RowCache = { src:null, map:new Map() };
-  function d1Row(id){
-    if(d1RowCache.src !== base2Rows){
-      const m = new Map();
-      (base2Rows || []).forEach(r => m.set(r.id, r));
-      d1RowCache = { src: base2Rows, map: m };
-    }
-    return d1RowCache.map.get(id);
-  }
-  function d1Rota(id){
-    const row = d1Row(id);
-    if(row && row.rota) return row.rota;
-    const rec = base1Data && base1Data.records && base1Data.records.get(id);
-    return rec && rec.rota ? rec.rota : '';
-  }
-  // status do pacote na base do ciclo (planification): "at_station|sorting" -> "Sorting"
-  const D1_ST_LABEL = { sorting:'Sorting', buffered:'Buffered', at_station:'Na estação', on_way:'A caminho', in_transit:'Em trânsito', delivered:'Entregue', picked:'Separado', staged:'Staged', ready_to_ship:'Pronto p/ envio', shipped:'Expedido', not_delivered:'Não entregue', returned:'Devolvido' };
-  function d1Status(id){
-    const raw = (base1Data && base1Data.statusMap && base1Data.statusMap.get(id)) || '';
-    if(!raw) return { label:'', cls:'' };
-    const [main, sub] = String(raw).split('|');
-    const key = (sub || main || '').trim().toLowerCase();
-    const label = D1_ST_LABEL[key] || key.replace(/_/g,' ').replace(/^\w/, c => c.toUpperCase());
-    const cls = key === 'sorting' ? 'srt' : (key === 'buffered' ? 'buf' : '');
-    return { label, cls, raw };
-  }
-  function d1Inbound(row){
-    if(!row) return null;
-    const d = row.inboundDate;
-    if(d && !isNaN(d)) return { d: d.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit', year:'numeric'}), t: d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) };
-    return row.inboundRaw ? { d: row.inboundRaw, t:'' } : null;
-  }
-  function d1Detalhe(id){
-    const row = d1Row(id);
-    return row && row.detalhe ? row.detalhe : '';
-  }
-  const D1_AV_COLORS = ['#0B5FA5','#1E9E63','#C97D0C','#7C3AED','#DB2777','#0891B2','#DC2626','#4F46E5','#059669','#B45309'];
-  function d1AvColor(n){ let h = 0; for(const c of String(n)) h = (h*31 + c.charCodeAt(0)) >>> 0; return D1_AV_COLORS[h % D1_AV_COLORS.length]; }
-  function d1Initials(n){ const p = String(n).trim().split(/\s+/).filter(Boolean); return ((p[0]||'')[0] || '') .toUpperCase() + ((p.length > 1 ? p[p.length-1][0] : '') || '').toUpperCase(); }
-  function d1TitleCase(n){ return String(n||'').toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase()).replace(/\b(De|Da|Do|Dos|Das|E)\b/g, m => m.toLowerCase()); }
-  function d1MovParts(dt){
-    if(!dt) return { date:'', time:'' };
-    const m = String(dt).match(/^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2}))?/);
-    if(!m) return { date:String(dt), time:'' };
-    return { date: m[3] + '/' + m[2], time: m[4] ? (m[4] + ':' + m[5]) : '' };
-  }
-  function d1ReportIds(){
-    let ids = d1Ids();
-    const v = x => (document.getElementById(x) || {}).value || '';
-    const fSit = v('d1FSit'), fRota = v('d1FRota'), fSt = v('d1FStatus'), fTipo = v('d1FTipo'), fColab = v('d1FColab');
-    const fTxt = v('d1FText').trim().toLowerCase();
-    ids = ids.filter(id => {
-      const r = d1Data[id] || {};
-      if(fSit === 'done' && !d1Done(id)) return false;
-      if(fSit === 'pend' && d1Done(id)) return false;
-      if(fRota && d1Rota(id) !== fRota) return false;
-      if(fSt && d1Status(id).label !== fSt) return false;
-      const vol = /volum/i.test(d1Detalhe(id));
-      if(fTipo === 'vol' && !vol) return false;
-      if(fTipo === 'nvol' && vol) return false;
-      if(fColab && d1TitleCase(r.nome || '') !== fColab) return false;
-      if(fTxt && !(id.includes(fTxt) || (r.desc || '').toLowerCase().includes(fTxt))) return false;
-      return true;
-    });
-    const ord = (document.getElementById('d1Order') || {}).value || 'rota';
-    if(ord !== 'lista'){
-      const key = id => {
-        const r = d1Data[id] || {};
-        if(ord === 'rota') return d1Rota(id) || '~';
-        if(ord === 'nome') return (r.nome || '~').toLowerCase();
-        return r.dt || '~';
-      };
-      ids = ids.slice().sort((x, y) => key(x).localeCompare(key(y), 'pt-BR', { numeric:true }) || x.localeCompare(y));
-    }
-    // já consultados juntos no topo, depois os que faltam
-    return d1DoneFirst(ids);
-  }
-  function d1Done(id){ const r = d1Data[id] || {}; return !!(r.dt || r.nome); }
-  function d1DoneFirst(ids){ return ids.filter(d1Done).concat(ids.filter(id => !d1Done(id))); }
-
-  let d1Page = 0;
-  function d1PageSize(){ const el = document.getElementById('d1PageSize'); return el ? Number(el.value) : 15; }
-  function d1PageCount(n){ const ps = d1PageSize(); return ps ? Math.max(1, Math.ceil(n / ps)) : 1; }
-  function d1FillFilterOptions(){
-    const all = d1Ids();
-    const fill = (elId, values, firstLabel) => {
-      const el = document.getElementById(elId); if(!el) return;
-      const cur = el.value;
-      const uniq = Array.from(new Set(values.filter(Boolean))).sort((a,b) => a.localeCompare(b, 'pt-BR', {numeric:true}));
-      el.innerHTML = '<option value="">' + firstLabel + '</option>' + uniq.map(x => '<option value="' + d1Esc(x) + '">' + d1Esc(x) + '</option>').join('');
-      el.value = uniq.includes(cur) ? cur : '';
-    };
-    fill('d1FRota', all.map(d1Rota), 'Todas');
-    fill('d1FStatus', all.map(id => d1Status(id).label), 'Todos');
-    fill('d1FColab', all.map(id => d1TitleCase((d1Data[id] || {}).nome || '')), 'Todos');
-  }
-  function renderD1Report(){
-    const all = d1Ids();
-    if(!document.activeElement || !document.activeElement.closest || !document.activeElement.closest('#d1Filters')) d1FillFilterOptions();
-    const fullIds = d1ReportIds();
-    const pages = d1PageCount(fullIds.length);
-    if(d1Page >= pages) d1Page = pages - 1;
-    if(d1Page < 0) d1Page = 0;
-    const ps = d1PageSize();
-    const ids = ps ? fullIds.slice(d1Page * ps, d1Page * ps + ps) : fullIds;
-    document.getElementById('d1PagerLbl').textContent = 'Página ' + (d1Page + 1) + ' de ' + pages;
-    document.getElementById('btnD1Prev').disabled = d1Page === 0;
-    document.getElementById('btnD1Next').disabled = d1Page >= pages - 1;
-    document.getElementById('d1rPageChip').style.display = pages > 1 ? '' : 'none';
-    document.getElementById('d1rPageNum').textContent = d1Page + 1;
-    document.getElementById('d1rPageTot').textContent = pages;
-    const now = new Date();
-    document.getElementById('d1ReportWhen').textContent = 'Atualizado ' + now.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' às ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-    document.getElementById('d1rTotal').textContent = fmt(fullIds.length);
-    document.getElementById('d1FCount').textContent = fullIds.length === all.length ? fmt(all.length) + ' pacotes no report' : fmt(fullIds.length) + ' de ' + fmt(all.length) + ' pacotes (filtrado)';
-    const nDone = fullIds.filter(d1Done).length, nPend = fullIds.length - nDone;
-    let lastGroup = null;
-    document.getElementById('d1ReportBody').innerHTML = ids.map(id => {
-      const r = d1Data[id] || {};
-      const g = d1Done(id) ? 'done' : 'pend';
-      let sep = '';
-      if(g !== lastGroup){
-        sep = g === 'done'
-          ? `<div class="fg-group done no-print">✓ Já consultados <b>${fmt(nDone)}</b> <span class="fg-onlyscreen">só na tela · não sai na imagem</span></div>`
-          : `<div class="fg-group pend no-print">● Aguardando consulta <b>${fmt(nPend)}</b> <span class="fg-onlyscreen">só na tela · não sai na imagem</span></div>`;
-        lastGroup = g;
-      }
-      const rota = d1Rota(id);
-      const mp = d1MovParts(r.dt);
-      let mov;
-      if(r.nome || r.dt){
-        const nome = r.nome ? d1TitleCase(r.nome) : '—';
-        const av = r.nome ? `<span class="fg-av" style="background:${d1AvColor(nome)}">${d1Esc(d1Initials(nome))}</span>` : '';
-        mov = `<div class="fg-mov">${av}<div class="fg-who"><b>${d1Esc(nome)}</b><small>${d1Esc(mp.date)}${mp.time ? ' · ' + d1Esc(mp.time) : ''}</small></div></div>`;
-      } else {
-        mov = '<span class="fg-wait">● aguardando consulta</span>';
-      }
-      const row = d1Row(id) || {};
-      const st = d1Status(id);
-      const tipo = d1Detalhe(id);
-      return sep + `<div class="fg-tr">
-        <div class="fg-id">${d1Esc(id)}</div>
-        <div>${mov}</div>
-        <div>${rota ? '<span class="fg-rota">' + d1Esc(rota) + '</span>' : '<span class="fg-desc empty">—</span>'}</div>
-        <div>${st.label ? '<span class="fg-loc ' + st.cls + '">' + d1Esc(st.label) + '</span>' : '<span class="fg-desc empty">—</span>'}</div>
-        <div>${tipo ? '<span class="fg-vol">' + d1Esc(tipo) + '</span>' : '<span class="fg-desc empty">—</span>'}</div>
-        <div class="fg-desc${r.desc ? '' : ' empty'}">${r.desc ? d1Esc(r.desc) : 'aguardando query'}</div>
-      </div>`;
-    }).join('') || '<div class="fg-empty">Nenhum pacote para mostrar.</div>';
-    const sem = all.filter(id => { const r = d1Data[id] || {}; return !(r.dt || r.nome); }).length;
-    document.getElementById('d1ReportSummary').textContent = fmt(all.length) + ' pacotes D-1' + (sem ? ' · ' + fmt(sem) + ' aguardando consulta' : ' · todos consultados');
-  }
-
-  function d1BuildText(){
-    const ids = d1ReportIds();
-    const now = new Date();
-    const lines = [
-      '📦 *PACOTES D-1 — SRJ1*',
-      '🗓️ Atualizado ' + now.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'}) + ' às ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'}) + '  ·  *' + ids.length + ' pacotes*',
-      '━━━━━━━━━━━━━━'
-    ];
-    ids.forEach(id => {
-      const r = d1Data[id] || {};
-      const row = d1Row(id) || {};
-      const rota = d1Rota(id);
-      const tipo = d1Detalhe(id);
-      const st = d1Status(id);
-      lines.push('');
-      lines.push('*' + id + '*' + (tipo ? '  ·  📦 *' + tipo.toUpperCase() + '*' : ''));
-      lines.push('🛣️ Rota: ' + (rota || '—') + '  ·  📊 Status: ' + (st.label || '—'));
-      lines.push('👤 Colaborador: ' + (r.nome ? d1TitleCase(r.nome) : 'aguardando consulta') + (r.dt ? ' (' + d1MovParts(r.dt).date + ')' : ''));
-      if(r.desc) lines.push('📝 ' + r.desc);
-    });
-    return lines.join('\n');
-  }
-
-  async function d1Copy(text, hintId, msg){
-    try{ await navigator.clipboard.writeText(text); }
-    catch(e){ const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); }
-    const h = document.getElementById(hintId); if(h){ h.textContent = msg; setTimeout(()=>{ if(h.textContent === msg) h.textContent = ''; }, 4000); }
-  }
-
-  // ---- importação do resultado da query (ID + descrição) ----
-  function d1NormH(v){ return String(v === undefined || v === null ? '' : v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,''); }
-  function d1ApplyRows(rows){
-    rows = rows.filter(r => r && r.some(c => c !== null && c !== undefined && String(c).trim() !== ''));
-    if(!rows.length) return 'nada encontrado';
-    const idSet = new Set(d1Ids());
-    const nId = v => { let s = String(v === undefined || v === null ? '' : v).trim(); if(/^\d+\.0+$/.test(s)) s = s.split('.')[0]; return s; };
-    const ncols = Math.max(...rows.map(r => r.length));
-    // coluna do ID = a que mais bate com os IDs D-1
-    let idCol = -1, best = 0;
-    for(let c=0;c<ncols;c++){ let hits = 0; rows.forEach(r => { if(idSet.has(nId(r[c]))) hits++; }); if(hits > best){ best = hits; idCol = c; } }
-    if(idCol === -1) return 'não achei nenhum ID D-1 nesse resultado';
-    // cabeçalho = primeira linha cujo valor na coluna do ID não é um ID
-    const header = idSet.has(nId(rows[0][idCol])) ? null : rows[0];
-    const data = header ? rows.slice(1) : rows;
-    let descCol = -1;
-    if(header){
-      const prefs = ['descricao','description','desc','titulo','title','produto','item','nome'];
-      for(const p of prefs){ const i = header.findIndex((h, k) => k !== idCol && d1NormH(h).includes(p)); if(i !== -1){ descCol = i; break; } }
-    }
-    if(descCol === -1){
-      // a coluna com mais texto (não numérica)
-      let bestLen = 0;
-      for(let c=0;c<ncols;c++){ if(c === idCol) continue; let len = 0; data.forEach(r => { const v = r[c]; if(v !== null && v !== undefined && isNaN(Number(v))) len += String(v).length; }); if(len > bestLen){ bestLen = len; descCol = c; } }
-    }
-    if(descCol === -1) return 'achei os IDs, mas não a coluna de descrição';
-    let n = 0;
-    const acc = new Map();
-    data.forEach(r => { const id = nId(r[idCol]); const d = r[descCol]; if(idSet.has(id) && d !== null && d !== undefined && String(d).trim() !== ''){ if(!acc.has(id)) acc.set(id, []); const v = String(d).trim(); if(!acc.get(id).includes(v)) acc.get(id).push(v); } });
-    acc.forEach((list, id) => { d1SetField(id, 'desc', list.join(' + ')); n++; });
-    renderD1Tab();
-    return n + ' descrições aplicadas' + (header ? ' (coluna "' + header[descCol] + '")' : '');
-  }
-  function d1ParseText(text){
-    const wb = XLSX.read(text, { type:'string', raw:true, FS: text.includes('\t') ? '\t' : undefined });
-    return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, raw:false, defval:null });
-  }
-
-  document.getElementById('btnD1CopyLines').addEventListener('click', ()=> d1Copy(d1Ids().join('\n'), 'd1Hint', d1Ids().length + ' IDs copiados (um por linha)'));
-  document.getElementById('btnD1CopyQuery').addEventListener('click', ()=> d1Copy(d1Ids().join(','), 'd1Hint', d1Ids().length + ' IDs copiados separados por vírgula'));
-  document.getElementById('btnD1Import').addEventListener('click', ()=>{
-    const box = document.getElementById('d1ImportBox');
-    box.style.display = box.style.display === 'block' ? 'none' : 'block';
-  });
-  document.getElementById('btnD1ImportApply').addEventListener('click', ()=>{
-    const t = document.getElementById('d1ImportText').value;
-    document.getElementById('d1ImportHint').textContent = t.trim() ? d1ApplyRows(d1ParseText(t)) : 'cole o resultado primeiro';
-  });
-  document.getElementById('d1ImportFile').addEventListener('change', (e)=>{
-    const f = e.target.files && e.target.files[0]; if(!f) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      try{
-        let rows;
-        if(/\.xlsx?$/i.test(f.name)){
-          const wb = XLSX.read(ev.target.result, { type:'array' });
-          rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, raw:false, defval:null });
-        } else {
-          rows = d1ParseText(new TextDecoder('utf-8').decode(ev.target.result));
-        }
-        document.getElementById('d1ImportHint').textContent = d1ApplyRows(rows);
-      }catch(err){ document.getElementById('d1ImportHint').textContent = 'não consegui ler o arquivo: ' + err.message; }
-      e.target.value = '';
-    };
-    reader.readAsArrayBuffer(f);
-  });
-  document.getElementById('d1Body').addEventListener('input', (e)=>{
-    const inp = e.target; if(!inp.dataset || !inp.dataset.f) return;
-    const id = inp.closest('tr').dataset.id;
-    inp.classList.remove('saved'); inp.classList.add('dirty');
-    d1SetField(id, inp.dataset.f, inp.value);
-  });
-  document.getElementById('d1Body').addEventListener('focusout', ()=>{ setTimeout(()=>{ if(!document.activeElement || !document.activeElement.closest || !document.activeElement.closest('#d1Body')) renderD1Tab(); }, 50); });
-  document.getElementById('d1Body').addEventListener('click', (e)=>{
-    const b = e.target.closest && e.target.closest('.copy-id'); if(!b) return;
-    d1Copy(b.dataset.copy, 'd1Hint', 'ID ' + b.dataset.copy + ' copiado');
-  });
-  document.getElementById('d1Filter').addEventListener('input', ()=> renderD1Tab());
-  document.getElementById('d1Order').addEventListener('change', ()=> renderD1Report());
-  ['d1FSit','d1FRota','d1FStatus','d1FTipo','d1FColab'].forEach(x => document.getElementById(x).addEventListener('change', ()=>{ d1Page = 0; renderD1Report(); }));
-  document.getElementById('d1FText').addEventListener('input', ()=>{ d1Page = 0; renderD1Report(); });
-  document.getElementById('btnD1FClear').addEventListener('click', ()=>{
-    ['d1FSit','d1FRota','d1FStatus','d1FTipo','d1FColab','d1FText'].forEach(x => document.getElementById(x).value = '');
-    d1Page = 0; renderD1Report();
-  });
-  document.getElementById('d1PageSize').addEventListener('change', ()=>{ d1Page = 0; renderD1Report(); });
-  document.getElementById('btnD1Prev').addEventListener('click', ()=>{ d1Page--; renderD1Report(); });
-  document.getElementById('btnD1Next').addEventListener('click', ()=>{ d1Page++; renderD1Report(); });
-  document.getElementById('btnD1ReportAll').addEventListener('click', async ()=>{
-    const btn = document.getElementById('btnD1ReportAll');
-    const hint = document.getElementById('d1ReportHint');
-    if(typeof html2canvas === 'undefined'){ showError('A biblioteca de exportação não carregou. Recarregue a página.'); return; }
-    const original = btn.innerHTML, keep = d1Page;
-    btn.disabled = true;
-    const total = d1PageCount(d1ReportIds().length);
-    const files = [];
-    try{
-      for(let i=0;i<total;i++){
-        btn.innerHTML = '<span class="export-icon">⏳</span> Gerando ' + (i+1) + '/' + total + '...';
-        d1Page = i; renderD1Report();
-        await new Promise(r => setTimeout(r, 60));
-        const blob = await captureElementBlob('d1ReportArea');
-        files.push(new File([blob], 'report_d1_' + new Date().toISOString().slice(0,10) + '_pag' + (i+1) + '.png', { type:'image/png' }));
-      }
-      const isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-      if(isMobile && navigator.canShare && navigator.canShare({ files })){
-        try{ await navigator.share({ files, title:'Report D-1' }); hint.textContent = 'compartilhado!'; return; }
-        catch(e){ if(e && e.name === 'AbortError') return; }
-      }
-      for(const f of files){
-        const url = URL.createObjectURL(f);
-        const a = document.createElement('a'); a.href = url; a.download = f.name;
-        document.body.appendChild(a); a.click(); a.remove();
-        setTimeout(()=> URL.revokeObjectURL(url), 2000);
-        await new Promise(r => setTimeout(r, 350));
-      }
-      hint.textContent = total + ' imagens baixadas — envie todas juntas no grupo';
-    }catch(err){
-      showError('Não consegui gerar as páginas: ' + err.message);
-    }finally{
-      d1Page = keep; renderD1Report();
-      btn.disabled = false; btn.innerHTML = original;
-    }
-  });
-  document.getElementById('btnD1ReportTxt').addEventListener('click', ()=> d1Copy(d1BuildText(), 'd1ReportHint', 'texto copiado — cole no WhatsApp'));
-  document.getElementById('btnD1ReportImg').addEventListener('click', ()=> exportImage({
-    elId: 'd1ReportArea', btnId: 'btnD1ReportImg', hintId: 'd1ReportHint',
-    fileNamePrefix: 'report_d1', shareTitle: 'Report D-1'
-  }));
-  // ---------- Consulta rápida: colar a página do sistema e extrair a última bipagem ----------
-  const D1_MESES = {jan:1,fev:2,feb:2,mar:3,abr:4,apr:4,mai:5,may:5,jun:6,jul:7,ago:8,aug:8,set:9,sep:9,out:10,oct:10,nov:11,dez:12,dec:12};
-  function d1Pad(n){ return String(n).padStart(2,'0'); }
-  function d1FindDates(text){
-    const out = [];
-    const yNow = new Date().getFullYear();
-    const push = (idx, y, mo, d, h, mi) => {
-      y = Number(y || yNow); if(y < 100) y += 2000;
-      mo = Number(mo); d = Number(d); h = Number(h); mi = Number(mi);
-      if(mo < 1 || mo > 12 || d < 1 || d > 31 || h > 23 || mi > 59) return;
-      out.push({ idx, t: new Date(y, mo-1, d, h, mi).getTime(), v: y + '-' + d1Pad(mo) + '-' + d1Pad(d) + 'T' + d1Pad(h) + ':' + d1Pad(mi) });
-    };
-    let m;
-    // 29/10/2026 14:32 · 29/10/26 - 14:32 · 29/10 14:32
-    const r1 = /(?<![\d-])(\d{1,2})[\/.-](\d{1,2})(?:[\/.-](\d{2,4}))?[\s,·|à-]*(?:as|às|at)?\s*(\d{1,2})[:h](\d{2})/gi;
-    while((m = r1.exec(text))) push(m.index, m[3], m[2], m[1], m[4], m[5]);
-    // 2026-10-29 14:32 / 2026-10-29T14:32
-    const r2 = /(\d{4})-(\d{2})-(\d{2})[T\s]+(\d{1,2}):(\d{2})/g;
-    while((m = r2.exec(text))) push(m.index, m[1], m[2], m[3], m[4], m[5]);
-    // 29 out 2026 14:32 · 29 de outubro de 2026, 14:32 · 29 out. 14:32
-    const r3 = /(?<!\d)(\d{1,2})\s*(?:de\s+)?(jan|fev|feb|mar|abr|apr|mai|may|jun|jul|ago|aug|set|sep|out|oct|nov|dez|dec)[a-zç]*\.?\s*(?:de\s+)?(\d{4})?[\s,·|-]*(?:as|às|at)?\s*(\d{1,2})[:h](\d{2})/gi;
-    while((m = r3.exec(text))) push(m.index, m[3], D1_MESES[m[2].toLowerCase()], m[1], m[4], m[5]);
-    return out;
-  }
-  const D1_NAME_STOP = /(esta[cç][aã]o|pacote|rota|status|sorting|buffer|inbound|outbound|entregue|carrinho|gaiola|transfer|caminho|recebid|processad|hist[oó]rico|movimenta|localiza|svc|srj|facility|shipment|data|hora|detalhe|volumoso|usu[aá]rio|operador|evento|a[cç][aã]o|tipo|origem|destino|motivo)/i;
-  function d1LooksName(line){
-    const t = line.replace(/^[\s•·:\-–|]+|[\s•·:\-–|]+$/g,'').trim();
-    if(!t || t.length < 5 || t.length > 60 || /\d/.test(t) || D1_NAME_STOP.test(t)) return '';
-    const w = t.split(/\s+/);
-    if(w.length < 2 || w.length > 7) return '';
-    if(!w.every(x => /^[A-Za-zÀ-ÿ'.]+$/.test(x))) return '';
-    return t;
-  }
-  function d1FindName(lines, li){
-    // 1) rótulos explícitos perto da data
-    const lab = /(?:usu[aá]rio|operador|respons[aá]vel|colaborador|bipad[oa]\s+por|realizad[oa]\s+por|feito\s+por|por|user|nome)\s*[:\-–]?\s*([A-Za-zÀ-ÿ'. ]{5,60}|[a-z0-9._-]{4,40})\s*$/i;
-    for(let d=0; d<=4; d++){
-      for(const k of [li+d, li-d]){
-        if(k < 0 || k >= lines.length) continue;
-        const m = lines[k].match(lab);
-        if(m){ const v = m[1].trim(); if(v && !D1_NAME_STOP.test(v)) return v; }
-      }
-    }
-    // 2) a própria linha da data, sem a data
-    // 3) linhas vizinhas que parecem nome de pessoa
-    for(let d=0; d<=4; d++){
-      for(const k of [li+d, li-d]){
-        if(k < 0 || k >= lines.length) continue;
-        const parts = lines[k].split(/\t|\s{2,}|\s[|·-]\s/);
-        for(const part of parts){ const n = d1LooksName(part); if(n) return n; }
-      }
-    }
-    return '';
-  }
-  function d1ParsePage(text){
-    const res = { id:'', dt:'', nome:'' };
-    const ids = d1Ids();
-    const set = new Set(ids);
-    const nums = text.match(/\d{10,13}/g) || [];
-    res.id = nums.find(n => set.has(n)) || '';
-    const dates = d1FindDates(text);
-    if(dates.length){
-      const last = dates.reduce((a, b) => b.t > a.t ? b : a);
-      res.dt = last.v;
-      const before = text.slice(0, last.idx);
-      const lines = text.split(/\r?\n/);
-      const li = before.split(/\r?\n/).length - 1;
-      // linha da data sem a data, depois vizinhas
-      const own = lines[li] ? lines[li].replace(/\d{1,4}[\/.-]\d{1,2}([\/.-]\d{2,4})?[\s,·|à-]*(as|às)?\s*\d{1,2}[:h]\d{2}(:\d{2})?/gi,' ') : '';
-      // login no formato nome.sobrenome na própria linha
-      const login = (own.match(/(?:^|\s)([a-z]{2,}[._][a-z]{2,}(?:[._][a-z]{2,})?)(?=\s|$)/i) || [])[1] || '';
-      res.nome = d1LooksName(own) || d1FindName(lines, li) || login;
-    }
-    return res;
-  }
-  function d1FillPasteIdSelect(sel){
-    const el = document.getElementById('d1PId');
-    const ids = d1Ids();
-    el.innerHTML = '<option value="">— escolha o pacote —</option>' + ids.map(id => {
-      const r = d1Data[id] || {};
-      return '<option value="' + d1Esc(id) + '">' + d1Esc(id) + (r.dt && r.nome ? '  ✓' : '') + '</option>';
-    }).join('');
-    if(sel) el.value = sel;
-    document.getElementById('btnD1NextId').disabled = !ids.length;
-  }
-  function d1NextPending(after){
-    const ids = d1Ids();
-    const start = after ? ids.indexOf(after) + 1 : 0;
-    for(let k=0;k<ids.length;k++){ const id = ids[(start + k) % ids.length]; const r = d1Data[id] || {}; if(!(r.dt && r.nome)) return id; }
-    return '';
-  }
-  function d1MarkFound(el, ok){ el.classList.toggle('found', !!ok); }
-  function d1ApplyPaste(auto){
-    const text = document.getElementById('d1PasteBox').value;
-    if(!text.trim()) return;
-    const r = d1ParsePage(text);
-    const cur = document.getElementById('d1PId').value;
-    d1FillPasteIdSelect(r.id || cur);
-    const dtEl = document.getElementById('d1PDt'), nmEl = document.getElementById('d1PNome');
-    dtEl.value = r.dt || ''; nmEl.value = r.nome ? d1TitleCase(r.nome) : '';
-    d1MarkFound(document.getElementById('d1PId'), r.id); d1MarkFound(dtEl, r.dt); d1MarkFound(nmEl, r.nome);
-    const miss = [!r.id && !cur ? 'ID' : '', !r.dt ? 'data/hora' : '', !r.nome ? 'nome' : ''].filter(Boolean);
-    document.getElementById('d1PHint').textContent = miss.length ? 'não achei: ' + miss.join(', ') + ' — confira e complete' : 'achei tudo ✓ confira e salve';
-    document.getElementById('btnD1PSave').disabled = false;
-    // achou tudo: salva sozinho e já copia o próximo ID
-    if(auto && !miss.length && document.getElementById('d1PId').value){
-      document.getElementById('btnD1PSave').click();
-      document.getElementById('d1PasteBox').focus();
-      return;
-    }
-    (miss.length ? (miss.includes('nome') ? nmEl : dtEl) : document.getElementById('btnD1PSave')).focus();
-  }
-  document.getElementById('d1PasteBox').addEventListener('paste', ()=> setTimeout(()=> d1ApplyPaste(true), 30));
-  document.getElementById('d1PasteBox').addEventListener('input', ()=>{ clearTimeout(window.__d1pt); window.__d1pt = setTimeout(()=> d1ApplyPaste(false), 400); });
-  document.getElementById('btnD1NextId').addEventListener('click', ()=>{
-    const id = d1NextPending(document.getElementById('d1PId').value);
-    if(!id){ document.getElementById('d1PHint').textContent = 'todos os D-1 já têm última bipagem 🎉'; return; }
-    d1FillPasteIdSelect(id);
-    d1Copy(id, 'd1PHint', 'ID ' + id + ' copiado — cole na busca do sistema');
-    document.getElementById('d1PasteBox').value = '';
-    ['d1PDt','d1PNome','d1PId'].forEach(x => d1MarkFound(document.getElementById(x), false));
-    document.getElementById('d1PDt').value = ''; document.getElementById('d1PNome').value = '';
-  });
-  document.getElementById('btnD1PSave').addEventListener('click', ()=>{
-    const id = document.getElementById('d1PId').value;
-    const dt = document.getElementById('d1PDt').value;
-    const nome = document.getElementById('d1PNome').value.trim();
-    if(!id){ document.getElementById('d1PHint').textContent = 'escolha o pacote'; return; }
-    if(dt) d1SetField(id, 'dt', dt);
-    if(nome) d1SetField(id, 'nome', nome);
-    renderD1Tab();
-    // já prepara o próximo e mostra o que foi salvo
-    document.getElementById('btnD1NextId').click();
-    const nx = document.getElementById('d1PId').value;
-    setTimeout(()=>{ document.getElementById('d1PHint').textContent = '✓ ' + id + ' salvo (' + d1FmtDt(dt) + ' · ' + d1TitleCase(nome) + ')' + (nx ? ' — próximo ID ' + nx + ' já copiado' : ' — todos feitos 🎉'); }, 150);
-  });
-
-  // atualiza o que os outros preencheram junto com a busca automática de 45s
-  setInterval(()=>{ if(viewD1.style.display !== 'none') loadD1Analise(); }, 45000);
-  loadD1Analise();
 
   // ---------- file wiring ----------
   function wireDrop(dropEl, inputEl, statusEl, onFile){
@@ -3353,7 +2355,6 @@
 
     dropEl._setStatus = (text, ok)=>{
       statusEl.textContent = text;
-      statusEl.title = text;
       dropEl.classList.toggle('is-loaded', !!ok);
     };
   }
@@ -3406,8 +2407,6 @@
         .delete()
         .in('chave', ['base1', 'base2', 'totalGeralManual']);
       if(error) throw error;
-      // se a policy do banco não deixar apagar, ao menos esvazia o conteúdo da base estrutura
-      await supabaseClient.from(SUPABASE_TABLE).upsert({ chave:'base1', filename:null, conteudo:null, atualizado_em:new Date().toISOString() }, { onConflict:'chave' });
       await supabaseClient.storage.from(STORAGE_BUCKET).remove([BASE1_STORAGE_PATH]);
     }catch(err){
       showError('Não consegui limpar os dados salvos: ' + (err.message || err));
