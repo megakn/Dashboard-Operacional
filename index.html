@@ -2147,8 +2147,34 @@
       datasets.push({ label:'Sem Data', data:semData, backgroundColor:'#C4B5FD', stack:'s' });
     }
 
+    const totalOnTopPlugin = {
+      id:'totalOnTop',
+      afterDatasetsDraw(chart){
+        const c = chart.ctx;
+        const metas = chart.data.datasets.map((_,i) => chart.getDatasetMeta(i)).filter(m => !m.hidden);
+        if(!metas.length) return;
+        c.save();
+        c.font = "800 11px 'JetBrains Mono', monospace";
+        c.fillStyle = '#0B2545';
+        c.textAlign = 'center';
+        c.textBaseline = 'bottom';
+        chart.data.labels.forEach((_, idx) => {
+          let total = 0, topY = Infinity, x = null;
+          metas.forEach(m => {
+            const v = chart.data.datasets[m.index].data[idx] || 0;
+            total += v;
+            const el = m.data[idx];
+            if(el && v > 0){ topY = Math.min(topY, el.y); x = el.x; }
+          });
+          if(total > 0 && x !== null) c.fillText(String(total), x, topY - 3);
+        });
+        c.restore();
+      }
+    };
+
     origemChartInstance = new Chart(ctx, {
       type: 'bar',
+      plugins: [totalOnTopPlugin],
       data: {
         labels,
         datasets
@@ -2170,15 +2196,28 @@
             titleColor:'#FFFFFF',
             bodyColor:'#CBD8E8',
             bodyFont:{ family:"'JetBrains Mono', monospace" },
-            titleFont:{ family:"'JetBrains Mono', monospace" }
+            titleFont:{ family:"'JetBrains Mono', monospace" },
+            footerFont:{ family:"'JetBrains Mono', monospace", weight:'800' },
+            filter: (item) => item.raw > 0,
+            callbacks:{ footer: (items) => 'Total: ' + items.reduce((a,i) => a + (i.raw||0), 0) }
           },
           datalabels:{
-            display: (ctx) => ctx.dataset.data[ctx.dataIndex] > 0,
+            // só escreve o número dentro do bloco quando ele tem altura pra caber;
+            // o valor continua no tooltip e o total vai em cima da barra
+            display: (ctx) => {
+              if(!(ctx.dataset.data[ctx.dataIndex] > 0)) return false;
+              const y = ctx.chart.scales.y;
+              if(!y) return true;
+              const h = Math.abs(y.getPixelForValue(0) - y.getPixelForValue(ctx.dataset.data[ctx.dataIndex]));
+              return h >= 15;
+            },
             color: '#FFFFFF',
+            clamp: true,
             font:{ family:"'JetBrains Mono', monospace", size:10.5, weight:'800' },
             formatter: (value) => value
           }
         },
+        layout:{ padding:{ top:6 } },
         scales:{
           x:{
             stacked:true,
@@ -2187,6 +2226,7 @@
           },
           y:{
             stacked:true,
+            grace:'12%',
             ticks:{ color:'#33415C', font:{ family:"'JetBrains Mono', monospace", size:11, weight:'600' } },
             grid:{ color:'#E6ECF5' }
           }
