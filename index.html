@@ -947,6 +947,7 @@
   </div>
 
   <div class="empty-hint" id="emptyHint">Envie as duas bases acima para calcular os indicadores.</div>
+  <div id="syncNotice" role="status" aria-live="polite" style="display:none;margin-top:12px;border:1px solid #e4b653;background:#fff7df;color:#784c0b;border-radius:9px;padding:12px 15px;font-size:13px;"></div>
   </div>
 
   </div><!-- /viewDashboard -->
@@ -1325,11 +1326,32 @@
     lastStamps[chave] = r ? r.atualizado_em : null;
   }
 
+  // Avisos de sincronização visíveis sem apagar dados existentes.
+  function syncNotice(message){
+    const el = document.getElementById('syncNotice');
+    if(!el) return;
+    el.textContent = message || '';
+    el.style.display = message ? 'block' : 'none';
+  }
+  function atualizarEstadoBases(){
+    if(!base1Data){
+      document.getElementById('emptyHint').textContent = base2Rows
+        ? 'A base de faltantes está salva, mas a Base Estrutura está vazia ou indisponível no banco. Reenvie apenas a Base Estrutura (.xlsx) para reativar os indicadores; a base de faltantes será preservada.'
+        : 'Ainda não há Base Estrutura nem Base Faltantes válidas no banco. Envie as duas bases.';
+      syncNotice('ATENÇÃO: Base Estrutura não disponível. O painel precisa de uma estrutura válida para calcular D-1 e totais. Os dados existentes não foram apagados.');
+    }else if(!base2Rows){
+      document.getElementById('emptyHint').textContent = 'A Base Estrutura está carregada, mas falta o CSV de faltantes.';
+      syncNotice('Base faltantes indisponível. Reenvie o CSV para restaurar os indicadores.');
+    }else{
+      syncNotice('');
+    }
+  }
+
   async function loadSavedData(){
-    try{ stampsCache = await fetchStamps(); }catch(e){ stampsCache = null; }
+    try{ stampsCache = await fetchStamps(); }catch(e){ stampsCache = null; console.warn('Falha ao consultar atualizações:', e); }
     // nada mudou desde a última busca: não baixa nada
     if(stampsCache && (base1Data || base2Rows) &&
-       !changed('base1') && !changed('base2') && !changed('totalGeralManual')) return;
+       !changed('base1') && !changed('base2') && !changed('totalGeralManual')) { atualizarEstadoBases(); return; }
 
     // base1 (estrutura) — dados processados na tabela; arquivo antigo no Storage como reserva
     if(changed('base1')) try{
@@ -1337,21 +1359,18 @@
 
       // só baixa de novo se alguém subiu uma base nova desde a última leitura
       if(!(meta && base1Data && meta.atualizado_em && meta.atualizado_em === lastBase1Stamp)){
-        const { data: rowC } = await supabaseClient
+        const { data: rowC, error: erroBase1 } = await supabaseClient
           .from(SUPABASE_TABLE)
           .select('conteudo')
           .eq('chave', 'base1')
           .limit(1)
           .maybeSingle();
+        if(erroBase1) throw erroBase1;
         if(rowC && typeof rowC.conteudo === 'string' && rowC.conteudo.startsWith(BASE1_DATA_PREFIX)){
           base1Data = await deserializeBase1(rowC.conteudo);
         } else {
-          const { data: fileBlob, error: downloadError } = await supabaseClient
-            .storage
-            .from(STORAGE_BUCKET)
-            .download(BASE1_STORAGE_PATH);
-          if(downloadError) throw downloadError;
-          base1Data = parseBase1(await fileBlob.arrayBuffer());
+          // O Storage antigo foi desativado durante a migração para Sheets.
+          throw new Error('Base Estrutura ausente ou vazia no Google Sheets (base1). Reenvie o .xlsx.');
         }
         lastBase1Stamp = meta ? meta.atualizado_em : null;
         dropBase1._setStatus((meta && meta.filename || 'base salva') + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || '') + ' (salvo)', true);
@@ -1359,8 +1378,9 @@
       }
       markSeen('base1');
     }catch(err){
-      // ainda não há base estrutura salva — segue sem erro visível
       console.warn('Base estrutura salva não carregou:', err);
+      dropBase1._setStatus('base ausente/vazia · reenvie .xlsx', false);
+      // Uma base válida já carregada em memória não será descartada.
     }
 
     // base2 (csv) — continua direto na tabela (arquivo pequeno)
@@ -1377,7 +1397,7 @@
       }
       markSeen('base2');
     }catch(err){
-      // ainda não há base faltantes salva — segue sem erro visível
+      console.warn('Base faltantes salva não carregou:', err);
     }
 
     // total geral manual (override) — se existir, sobrescreve o valor calculado da base
@@ -1400,7 +1420,8 @@
     }
     updateTotalManualUI();
 
-    if(base1Data || base2Rows) compute();
+    if(base1Data && base2Rows) compute();
+    atualizarEstadoBases();
   }
 
   function getAllOrigins(){
@@ -2641,10 +2662,13 @@
     const reader = new FileReader();
     reader.onload = (e)=>{
       try{
-        base1Data = parseBase1(e.target.result);
+        const novaBase1 = parseBase1(e.target.result);
+        if(!novaBase1 || !novaBase1.statusMap || novaBase1.statusMap.size === 0) throw new Error('Não há pacotes com ID e status válidos. Base anterior preservada.');
+        base1Data = novaBase1;
         dropBase1._setStatus(file.name + ' · ' + fmt(base1Data.totalGeral) + ' pacotes · ' + (base1Data.formatDetected || ''), true);
         compute();
         renderChegadaTab();
+        atualizarEstadoBases();
         saveBase1ToStorage(e.target.result, file.name);
       }catch(err){
         dropBase1._setStatus('erro ao ler arquivo', false);
@@ -2660,9 +2684,12 @@
     const reader = new FileReader();
     reader.onload = (e)=>{
       try{
-        base2Rows = parseBase2(e.target.result);
+        const novasLinhas = parseBase2(e.target.result);
+        if(!novasLinhas.length) throw new Error('CSV sem IDs de pacotes válidos. Base anterior preservada.');
+        base2Rows = novasLinhas;
         dropBase2._setStatus(file.name + ' · ' + fmt(base2Rows.length) + ' linhas', true);
         compute();
+        atualizarEstadoBases();
         saveBase2ToStorage(e.target.result, file.name);
       }catch(err){
         dropBase2._setStatus('erro ao ler arquivo', false);
@@ -2755,7 +2782,7 @@
   document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) refreshData(false); });
 
   // ---------- carregar dados salvos do banco de dados ao abrir o painel ----------
-  loadSavedData();
+  loadSavedData().catch(err=>{ console.error('Falha inicial de sincronização:',err); syncNotice('Não foi possível consultar o banco agora. Clique em Atualizar para tentar novamente.'); });
 </script>
 
 </body>
