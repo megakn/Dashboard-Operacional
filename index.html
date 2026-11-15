@@ -1382,11 +1382,13 @@
       ? 'ALERTA: as bases não correspondem ao mesmo conjunto de pacotes. '
       : 'D-1 não identificado pelo cruzamento. ';
     if(totalCruzamento < 0.5){
-      document.getElementById('valD1').textContent = '—';
-      document.getElementById('pctD1').textContent = 'bases incompatíveis';
-      document.getElementById('barD1').style.width = '0%';
-      document.getElementById('btnExtractData').disabled = true;
-      document.getElementById('exportHint').textContent = 'D-1 pendente: confira se XLSX e CSV são do mesmo ciclo';
+      // Não esconder D-1: mesmo sem correspondência suficiente, o painel
+      // mantém visíveis os totais separados na estrutura e no CSV.
+      // Só o cruzamento é suspeito, não os status observados na estrutura.
+      document.getElementById('pctD1').textContent = 'cruzamento pendente · ' +
+        fmt(cruzados) + ' IDs coincidentes';
+      document.getElementById('exportHint').textContent =
+        'Atenção: confira se XLSX e CSV pertencem ao mesmo ciclo';
     }
     syncNotice(motivo+'IDs coincidentes: '+fmt(cruzados)+
       ' de '+fmt(csvIds.size)+' no CSV. Status D-1 na estrutura: '+fmt(statusD1NaEstrutura)+
