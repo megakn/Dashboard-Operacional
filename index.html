@@ -1359,6 +1359,12 @@
       }
     }
     const totalCruzamento = csvIds.size ? cruzados / csvIds.size : 0;
+    if(totalCruzamento >= 0.95 && !d1Cruzados && statusD1NaEstrutura > 0){
+      syncNotice('Cruzamento confirmado: '+fmt(cruzados)+' de '+fmt(csvIds.size)+
+        ' IDs do CSV constam na PLANIFICATION. Os '+fmt(statusD1NaEstrutura)+
+        ' pacotes com status de D-1 na estrutura não constam no CSV de faltantes atual. Por isso, o D-1 cruzado é 0. Confira se ambos os arquivos são do mesmo ciclo e se esses pacotes já saíram da lista de faltantes.');
+      return;
+    }
     if(d1Cruzados && totalCruzamento >= 0.5) { syncNotice(''); return; }
     const maisComuns = Array.from(statusCounts.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5)
       .map(([st,n])=>st+' ('+fmt(n)+')').join(' · ');
@@ -1627,9 +1633,10 @@
 
   function normId(v){
     if(v === null || v === undefined) return null;
-    let s = String(v).trim();
-    // Excel pode fornecer IDs numéricos em notação científica.
-    if(/^\d+(?:\.\d+)?e\+?\d+$/i.test(s)){
+    let s = String(v).trim().replace(/^\uFEFF/, '').replace(/^'/,'');
+    // Normaliza o mesmo ID quando vem do XLSX como 4.8125930984E10
+    // e do CSV como 48125930984, sem perder precisão em inteiros seguros.
+    if(/^\d+(?:\.\d+)?e[+\-]?\d+$/i.test(s)){
       const n = Number(s);
       if(Number.isSafeInteger(n)) s = String(n);
     }
