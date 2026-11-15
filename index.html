@@ -835,10 +835,14 @@
     </div>
 
     <div class="card d1" style="--accent:var(--amber)">
-      <div class="label">D-1</div>
+      <div class="label">D-1 · pendentes no CSV</div>
       <div class="value" id="valD1">—</div>
       <div class="foot"><span class="pct" id="pctD1">0%</span></div>
       <div class="bar-track"><div class="bar-fill" id="barD1"></div></div>
+      <div style="font-size:12px;line-height:1.6;margin-top:9px;color:var(--text-mid);">
+        Na estrutura: <b id="valD1Estrutura">—</b>
+        <span style="margin:0 4px">·</span> Fora do CSV: <b id="valD1ForaCSV">—</b>
+      </div>
 
     </div>
 
@@ -1340,6 +1344,8 @@
     // Não publicar contagem sem cruzamento com o CSV de faltantes.
     document.getElementById('valTotal').textContent = fmt(getEffectiveTotalGeral());
     document.getElementById('valD1').textContent = '—';
+    document.getElementById('valD1Estrutura').textContent = fmt(Array.from(base1Data.statusMap.values()).filter(ehStatusD1).length);
+    document.getElementById('valD1ForaCSV').textContent = '—';
     document.getElementById('pctD1').textContent = 'aguardando CSV de faltantes';
     document.getElementById('barD1').style.width = '0%';
     lastMetricIds.d1 = [];
@@ -1361,8 +1367,8 @@
     const totalCruzamento = csvIds.size ? cruzados / csvIds.size : 0;
     if(totalCruzamento >= 0.95 && !d1Cruzados && statusD1NaEstrutura > 0){
       syncNotice('Cruzamento confirmado: '+fmt(cruzados)+' de '+fmt(csvIds.size)+
-        ' IDs do CSV constam na PLANIFICATION. Os '+fmt(statusD1NaEstrutura)+
-        ' pacotes com status de D-1 na estrutura não constam no CSV de faltantes atual. Por isso, o D-1 cruzado é 0. Confira se ambos os arquivos são do mesmo ciclo e se esses pacotes já saíram da lista de faltantes.');
+        ' IDs do CSV constam na PLANIFICATION. D-1 na estrutura: '+fmt(statusD1NaEstrutura)+
+        '; D-1 pendentes no CSV: 0. Fora do CSV não significa necessariamente no carrinho.');
       return;
     }
     if(d1Cruzados && totalCruzamento >= 0.5) { syncNotice(''); return; }
@@ -2002,6 +2008,10 @@
   function recomputeAll(){
     const { statusMap, baseIds } = base1Data;
     const totalGeral = getEffectiveTotalGeral();
+    const d1EstruturaIds = new Set(Array.from(statusMap.entries()).filter(([id,st])=>ehStatusD1(st)).map(([id])=>id));
+    const csvIdSetD1 = new Set(base2Rows.map(r=>r.id));
+    const d1Estrutura = d1EstruturaIds.size;
+    const d1ForaCSV = Array.from(d1EstruturaIds).filter(id=>!csvIdSetD1.has(id)).length;
     // D-1 normalizado por ehStatusD1
     const allRows = base2Rows;        // everything except On Way uses the full data
     const visibleRows = getVisibleRows(); // filtered by excludedOrigins — only feeds On Way
@@ -2056,7 +2066,7 @@
     }
     lastMetricIds = { d1: d1Ids, recebido: recebidoIds, onWay: onWayIds, faltante: faltanteIds, faltanteAvailable };
 
-    renderCards({totalGeral, d1, onWay, recebido, noCarrinho});
+    renderCards({totalGeral, d1, d1Estrutura, d1ForaCSV, onWay, recebido, noCarrinho});
     // O diagnóstico aparece em atualizarEstadoBases e não deve ser apagado por renderizações.
     renderOrigemChart();
     renderStatusChart({d1, onWay, recebido, noCarrinho, totalGeral});
@@ -2431,6 +2441,8 @@
 
     document.getElementById('valTotal').textContent = fmt(d.totalGeral);
     document.getElementById('valD1').textContent = fmt(d.d1);
+    document.getElementById('valD1Estrutura').textContent = fmt(d.d1Estrutura);
+    document.getElementById('valD1ForaCSV').textContent = fmt(d.d1ForaCSV);
     document.getElementById('valOnWay').textContent = fmt(d.onWay);
     document.getElementById('valRecebido').textContent = fmt(d.recebido);
     document.getElementById('valCarrinho').textContent = fmt(d.noCarrinho);
