@@ -1343,6 +1343,33 @@
     document.getElementById('barD1').style.width = '0%';
     lastMetricIds.d1 = [];
   }
+  function diagnosticarD1(){
+    if(!base1Data || !base2Rows) return;
+    const csvIds = new Set(base2Rows.map(r=>r.id));
+    const statusCounts = new Map();
+    let cruzados = 0, statusD1NaEstrutura = 0, d1Cruzados = 0;
+    for(const [id, raw] of base1Data.statusMap){
+      const st = String(raw || '').trim() || '(vazio)';
+      statusCounts.set(st, (statusCounts.get(st) || 0) + 1);
+      if(ehStatusD1(raw)) statusD1NaEstrutura++;
+      if(csvIds.has(id)){
+        cruzados++;
+        if(ehStatusD1(raw)) d1Cruzados++;
+      }
+    }
+    if(d1Cruzados) { syncNotice(''); return; }
+    const maisComuns = Array.from(statusCounts.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5)
+      .map(([st,n])=>st+' ('+fmt(n)+')').join(' · ');
+    const antigosNoCSV = new Set(base2Rows.filter(r =>
+      r.loc === 'Na estação' && r.inboundDate &&
+      r.inboundDate.getTime() < new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()).getTime()
+    ).map(r=>r.id)).size;
+    syncNotice('D-1 não identificado pelo cruzamento. IDs coincidentes: '+fmt(cruzados)+
+      ' de '+fmt(csvIds.size)+' no CSV. Status D-1 na estrutura: '+fmt(statusD1NaEstrutura)+
+      '. Recebidos na estação com inbound anterior a hoje: '+fmt(antigosNoCSV)+
+      ' (somente diagnóstico, não soma ao D-1). Status mais frequentes: '+maisComuns+
+      '. Confira as colunas STATUS e SUBSTATUS da PLANIFICATION; o número 0 ainda não está validado.');
+  }
   function atualizarEstadoBases(){
     atualizarD1Parcial();
     if(!base1Data){
@@ -1354,7 +1381,7 @@
       document.getElementById('emptyHint').textContent = 'A Base Estrutura está carregada, mas falta o CSV de faltantes.';
       syncNotice('CSV indisponível: D-1 e reporte dependem do cruzamento com os faltantes. Reenvie o CSV para obter dados confiáveis.');
     }else{
-      syncNotice('');
+      diagnosticarD1();
     }
   }
 
@@ -2006,12 +2033,7 @@
     lastMetricIds = { d1: d1Ids, recebido: recebidoIds, onWay: onWayIds, faltante: faltanteIds, faltanteAvailable };
 
     renderCards({totalGeral, d1, onWay, recebido, noCarrinho});
-    const classificaveis = Array.from(statusMap.values()).filter(ehStatusD1).length;
-    if(d1 === 0 && classificaveis === 0 && statusMap.size){
-      syncNotice('D-1 não identificado: a Base Estrutura salva não contém status sorting/buffered reconhecíveis. Reenvie o XLSX para ler status e substatus da PLANIFICATION. Não interprete zero como ausência confirmada de D-1.');
-    }else{
-      syncNotice('');
-    }
+    // O diagnóstico aparece em atualizarEstadoBases e não deve ser apagado por renderizações.
     renderOrigemChart();
     renderStatusChart({d1, onWay, recebido, noCarrinho, totalGeral});
     renderEarlyTable();
