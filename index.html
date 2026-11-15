@@ -1333,7 +1333,18 @@
     el.textContent = message || '';
     el.style.display = message ? 'block' : 'none';
   }
+  function atualizarD1Parcial(){
+    if(!base1Data || base2Rows) return;
+    // A estrutura sozinha pode incluir pacotes já colocados no carrinho.
+    // Não publicar contagem sem cruzamento com o CSV de faltantes.
+    document.getElementById('valTotal').textContent = fmt(getEffectiveTotalGeral());
+    document.getElementById('valD1').textContent = '—';
+    document.getElementById('pctD1').textContent = 'aguardando CSV de faltantes';
+    document.getElementById('barD1').style.width = '0%';
+    lastMetricIds.d1 = [];
+  }
   function atualizarEstadoBases(){
+    atualizarD1Parcial();
     if(!base1Data){
       document.getElementById('emptyHint').textContent = base2Rows
         ? 'A base de faltantes está salva, mas a Base Estrutura está vazia ou indisponível no banco. Reenvie apenas a Base Estrutura (.xlsx) para reativar os indicadores; a base de faltantes será preservada.'
@@ -1341,7 +1352,7 @@
       syncNotice('ATENÇÃO: Base Estrutura não disponível. O painel precisa de uma estrutura válida para calcular D-1 e totais. Os dados existentes não foram apagados.');
     }else if(!base2Rows){
       document.getElementById('emptyHint').textContent = 'A Base Estrutura está carregada, mas falta o CSV de faltantes.';
-      syncNotice('Base faltantes indisponível. Reenvie o CSV para restaurar os indicadores.');
+      syncNotice('CSV indisponível: D-1 e reporte dependem do cruzamento com os faltantes. Reenvie o CSV para obter dados confiáveis.');
     }else{
       syncNotice('');
     }
@@ -1385,19 +1396,22 @@
 
     // base2 (csv) — continua direto na tabela (arquivo pequeno)
     if(changed('base2')) try{
-      const { data: row2 } = await supabaseClient
+      const { data: row2, error: erroBase2 } = await supabaseClient
         .from(SUPABASE_TABLE)
         .select('filename, conteudo')
         .eq('chave', 'base2')
         .limit(1)
         .maybeSingle();
-      if(row2 && row2.conteudo){
-        base2Rows = parseBase2(row2.conteudo);
-        dropBase2._setStatus((row2.filename||'base salva') + ' · ' + fmt(base2Rows.length) + ' linhas (salvo)', true);
-      }
+      if(erroBase2) throw erroBase2;
+      if(!row2 || !row2.conteudo) throw new Error('CSV de faltantes não encontrado na planilha');
+      const linhas = parseBase2(row2.conteudo);
+      if(!linhas.length) throw new Error('CSV sem IDs válidos');
+      base2Rows = linhas;
+      dropBase2._setStatus((row2.filename||'base salva') + ' · ' + fmt(base2Rows.length) + ' linhas (salvo)', true);
       markSeen('base2');
     }catch(err){
       console.warn('Base faltantes salva não carregou:', err);
+      dropBase2._setStatus('falha ao recuperar CSV · tente Atualizar', false);
     }
 
     // total geral manual (override) — se existir, sobrescreve o valor calculado da base
@@ -1700,6 +1714,7 @@
     const header = planRows[0];
     const idIdx = findHeaderIndex(header, ['unit_id']);
     const statusIdx = findHeaderIndex(header, ['status']);
+    const substatusIdx = findHeaderIndex(header, ['substatus', 'sub_status', 'substatus_atual', 'status_detail', 'status_detail_name']);
     const facilityIdx = findHeaderIndex(header, ['facility_origin']);
     const promiseEndIdx = findHeaderIndex(header, ['promise_date_end']);
     const rotaIdx = findHeaderIndex(header, ['n.º rota', 'numero rota', 'n° rota', 'rota', 'route_id', 'route']);
@@ -1749,7 +1764,9 @@
       if(!row) continue;
       const id = normId(row[idIdx]);
       if(id === null) continue;
-      const status = row[statusIdx] === null || row[statusIdx] === undefined ? '' : String(row[statusIdx]).trim();
+      const statusMain = row[statusIdx] === null || row[statusIdx] === undefined ? '' : String(row[statusIdx]).trim();
+      const statusSub = substatusIdx === -1 || row[substatusIdx] === null || row[substatusIdx] === undefined ? '' : String(row[substatusIdx]).trim();
+      const status = statusSub && !statusMain.includes('|') ? statusMain + '|' + statusSub : statusMain;
       const facility = (facilityIdx === -1 || row[facilityIdx] === null || row[facilityIdx] === undefined) ? null : String(row[facilityIdx]).trim();
       let promiseEnd = null;
       if(promiseEndIdx !== -1 && row[promiseEndIdx]){
@@ -1925,20 +1942,28 @@
   }
 
   let lastMetricIds = { d1: [], recebido: [], onWay: [], faltante: [], faltanteAvailable: false };
+  function ehStatusD1(status){
+    if(status == null) return false;
+    const s = String(status).trim().toLowerCase().replace(/\s*\|\s*/g,'|').replace(/[\s-]+/g,'_');
+    return s === 'at_station|sorting' || s === 'at_station|buffered';
+  }
 
   function recomputeAll(){
     const { statusMap, baseIds } = base1Data;
     const totalGeral = getEffectiveTotalGeral();
-    const D1_STATUSES = new Set(['at_station|sorting','at_station|buffered']);
+    // D-1 normalizado por ehStatusD1
     const allRows = base2Rows;        // everything except On Way uses the full data
     const visibleRows = getVisibleRows(); // filtered by excludedOrigins — only feeds On Way
 
     let d1 = 0, recebido = 0;
     const d1Ids = [], recebidoIds = [];
     const recebidoRows = [];
+    const idsContados = new Set();
     for(const r of allRows){
+      if(idsContados.has(r.id)) continue;
+      idsContados.add(r.id);
       const status = statusMap.get(r.id);
-      const isD1 = status !== undefined && D1_STATUSES.has(status);
+      const isD1 = ehStatusD1(status);
       if(isD1){
         d1++;
         d1Ids.push(r.id);
@@ -1951,16 +1976,20 @@
 
     let onWay = 0;
     const onWayIds = [];
+    const idsOnWay = new Set();
     for(const r of visibleRows){
+      if(idsOnWay.has(r.id)) continue;
       const status = statusMap.get(r.id);
-      const isD1 = status !== undefined && D1_STATUSES.has(status);
+      const isD1 = ehStatusD1(status);
       if(!isD1 && r.loc === 'Caminho para a estação'){
         onWay++;
         onWayIds.push(r.id);
+        idsOnWay.add(r.id);
       }
     }
 
-    const noCarrinho = totalGeral - allRows.length;
+    // Diferença de totais é estimativa, não confirmação de status "no carrinho".
+    const noCarrinho = Math.max(0, totalGeral - new Set(allRows.map(r => r.id)).size);
 
     // "Faltante" IDs = package IDs present in the BASE sheet but absent from the
     // uploaded "faltantes" CSV (base2). Only possible if we could find an ID
@@ -1977,6 +2006,12 @@
     lastMetricIds = { d1: d1Ids, recebido: recebidoIds, onWay: onWayIds, faltante: faltanteIds, faltanteAvailable };
 
     renderCards({totalGeral, d1, onWay, recebido, noCarrinho});
+    const classificaveis = Array.from(statusMap.values()).filter(ehStatusD1).length;
+    if(d1 === 0 && classificaveis === 0 && statusMap.size){
+      syncNotice('D-1 não identificado: a Base Estrutura salva não contém status sorting/buffered reconhecíveis. Reenvie o XLSX para ler status e substatus da PLANIFICATION. Não interprete zero como ausência confirmada de D-1.');
+    }else{
+      syncNotice('');
+    }
     renderOrigemChart();
     renderStatusChart({d1, onWay, recebido, noCarrinho, totalGeral});
     renderEarlyTable();
@@ -2100,14 +2135,14 @@
 
   function computeOnWayByOrigin(){
     const { statusMap, records } = base1Data;
-    const D1_STATUSES = new Set(['at_station|sorting','at_station|buffered']);
+    // D-1 normalizado por ehStatusD1
     const visibleRows = getVisibleRows(); // mesmo filtro de origem usado no card On Way
     const today = new Date();
     const byOrigin = new Map(); // origin -> {OnTime, Early, Delay, SemData}
 
     for(const r of visibleRows){
       const status = statusMap.get(r.id);
-      const isD1 = status !== undefined && D1_STATUSES.has(status);
+      const isD1 = ehStatusD1(status);
       if(isD1 || r.loc !== 'Caminho para a estação') continue; // só os pacotes que contam pro card On Way
 
       const rec = records.get(r.id);
@@ -2448,12 +2483,12 @@
     const el = document.getElementById(elId);
     const canvas = await html2canvas(el, {
       backgroundColor: '#EEF2F8',
-      scale: 6,
+      scale: Math.min(2, window.devicePixelRatio || 1.5),
       useCORS: true,
       logging: false,
-      imageTimeout: 0
+      imageTimeout: 12000
     });
-    return await new Promise(resolve => canvas.toBlob(resolve, 'image/png', 1.0));
+    return await new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Falha ao gerar PNG')), 'image/png'));
   }
 
   async function exportImage(opts){
@@ -2533,7 +2568,7 @@
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
       hint.textContent = 'baixado — envie como arquivo/documento no WhatsApp p/ manter qualidade';
     }catch(err){
       showError('Não consegui gerar a imagem: ' + err.message);
