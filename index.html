@@ -1367,9 +1367,7 @@
     }
     const totalCruzamento = csvIds.size ? cruzados / csvIds.size : 0;
     if(totalCruzamento >= 0.95 && !d1Cruzados && statusD1NaEstrutura > 0){
-      syncNotice('Cruzamento confirmado: '+fmt(cruzados)+' de '+fmt(csvIds.size)+
-        ' IDs do CSV constam na PLANIFICATION. D-1 na estrutura: '+fmt(statusD1NaEstrutura)+
-        '; D-1 pendentes no CSV: 0. Fora do CSV não significa necessariamente no carrinho.');
+      syncNotice('');
       return;
     }
     if(d1Cruzados && totalCruzamento >= 0.5) { syncNotice(''); return; }
@@ -1386,16 +1384,15 @@
       // Não esconder D-1: mesmo sem correspondência suficiente, o painel
       // mantém visíveis os totais separados na estrutura e no CSV.
       // Só o cruzamento é suspeito, não os status observados na estrutura.
-      document.getElementById('pctD1').textContent = 'cruzamento pendente · ' +
-        fmt(cruzados) + ' IDs coincidentes';
+      // Diagnóstico do cruzamento somente no console, sem mensagem no cartão.
+      console.info('Conferência D-1: '+fmt(cruzados)+' IDs coincidentes de '+fmt(csvIds.size));
       document.getElementById('exportHint').textContent =
         'Atenção: confira se XLSX e CSV pertencem ao mesmo ciclo';
     }
-    syncNotice(motivo+'IDs coincidentes: '+fmt(cruzados)+
+    console.warn(motivo+'IDs coincidentes: '+fmt(cruzados)+
       ' de '+fmt(csvIds.size)+' no CSV. Status D-1 na estrutura: '+fmt(statusD1NaEstrutura)+
-      '. Recebidos na estação com inbound anterior a hoje: '+fmt(antigosNoCSV)+
-      ' (somente diagnóstico, não soma ao D-1). Status mais frequentes: '+maisComuns+
-      '. Confira as colunas STATUS e SUBSTATUS da PLANIFICATION; o número 0 ainda não está validado.');
+      '. Status mais frequentes: '+maisComuns);
+    syncNotice('');
   }
   function atualizarEstadoBases(){
     atualizarD1Parcial();
