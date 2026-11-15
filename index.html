@@ -810,8 +810,9 @@
         <p>Ciclo PM &middot; SRJ1</p>
       </div>
       <div class="clock">
-        Última atualização
+        Horário local
         <strong id="clockTime">--:--</strong>
+        <small id="dataSyncStatus" style="display:block;font-size:11px;margin:5px 0;color:#dce9fa;">Dados: aguardando consulta</small>
         <button id="btnRefreshData" class="refresh-btn" type="button" title="Atualiza sozinho a cada 45s — clique pra forçar agora">
           <span id="refreshIcon">🔄</span> Atualizar
         </button>
@@ -1411,18 +1412,27 @@
     }
   }
 
-  async function loadSavedData(){
-    try{ stampsCache = await fetchStamps(); }catch(e){ stampsCache = null; console.warn('Falha ao consultar atualizações:', e); }
+  async function loadSavedData(force=false){
+    let falhas = [];
+    try{ stampsCache = await fetchStamps(); }
+    catch(e){
+      stampsCache = null;
+      falhas.push('metadados: '+(e.message||e));
+      console.warn('Falha ao consultar atualizações:', e);
+    }
     // nada mudou desde a última busca: não baixa nada
-    if(stampsCache && (base1Data || base2Rows) &&
-       !changed('base1') && !changed('base2') && !changed('totalGeralManual')) { atualizarEstadoBases(); return; }
+    if(!force && stampsCache && base1Data && base2Rows &&
+       !changed('base1') && !changed('base2') && !changed('totalGeralManual')) {
+      atualizarEstadoBases();
+      return {ok:true, unchanged:true};
+    }
 
     // base1 (estrutura) — dados processados na tabela; arquivo antigo no Storage como reserva
-    if(changed('base1')) try{
+    if(force || changed('base1')) try{
       const meta = stampsCache ? stampsCache['base1'] : null;
 
       // só baixa de novo se alguém subiu uma base nova desde a última leitura
-      if(!(meta && base1Data && meta.atualizado_em && meta.atualizado_em === lastBase1Stamp)){
+      if(force || !(meta && base1Data && meta.atualizado_em && meta.atualizado_em === lastBase1Stamp)){
         const { data: rowC, error: erroBase1 } = await supabaseClient
           .from(SUPABASE_TABLE)
           .select('conteudo')
@@ -1443,12 +1453,13 @@
       markSeen('base1');
     }catch(err){
       console.warn('Base estrutura salva não carregou:', err);
-      dropBase1._setStatus('base ausente/vazia · reenvie .xlsx', false);
+      falhas.push('Base Estrutura: '+(err.message||err));
+      dropBase1._setStatus('falha ao consultar Base Estrutura', false);
       // Uma base válida já carregada em memória não será descartada.
     }
 
     // base2 (csv) — continua direto na tabela (arquivo pequeno)
-    if(changed('base2')) try{
+    if(force || changed('base2')) try{
       const { data: row2, error: erroBase2 } = await supabaseClient
         .from(SUPABASE_TABLE)
         .select('filename, conteudo')
@@ -1464,11 +1475,12 @@
       markSeen('base2');
     }catch(err){
       console.warn('Base faltantes salva não carregou:', err);
+      falhas.push('CSV de faltantes: '+(err.message||err));
       dropBase2._setStatus('falha ao recuperar CSV · tente Atualizar', false);
     }
 
     // total geral manual (override) — se existir, sobrescreve o valor calculado da base
-    if(changed('totalGeralManual')) try{
+    if(force || changed('totalGeralManual')) try{
       const { data: rowManual } = await supabaseClient
         .from(SUPABASE_TABLE)
         .select('conteudo')
@@ -1489,6 +1501,7 @@
 
     if(base1Data && base2Rows) compute();
     atualizarEstadoBases();
+    return {ok:falhas.length===0, falhas};
   }
 
   function getAllOrigins(){
@@ -2822,7 +2835,18 @@
     const icon = document.getElementById('refreshIcon');
     if(showSpinner){ btn.disabled = true; icon.classList.add('spinning'); }
     try{
-      await loadSavedData();
+      const result = await loadSavedData(!!showSpinner);
+      const el = document.getElementById('dataSyncStatus');
+      if(result && result.ok){
+        if(el) el.textContent = 'Banco consultado: '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      }else{
+        if(el) el.textContent = 'Falha ao atualizar dados';
+        if(showSpinner) showError('Não foi possível consultar todas as bases: '+((result&&result.falhas)||[]).join(' | '),'save');
+      }
+    }catch(err){
+      const el = document.getElementById('dataSyncStatus');
+      if(el) el.textContent = 'Falha ao atualizar dados';
+      showError('Falha na atualização: '+(err.message||err),'save');
     }finally{
       isRefreshing = false;
       if(showSpinner){ icon.classList.remove('spinning'); btn.disabled = false; }
@@ -2877,7 +2901,17 @@
   document.addEventListener('visibilitychange', ()=>{ if(!document.hidden) refreshData(false); });
 
   // ---------- carregar dados salvos do banco de dados ao abrir o painel ----------
-  loadSavedData().catch(err=>{ console.error('Falha inicial de sincronização:',err); syncNotice('Não foi possível consultar o banco agora. Clique em Atualizar para tentar novamente.'); });
+  loadSavedData().then(result=>{
+    const el = document.getElementById('dataSyncStatus');
+    if(el) el.textContent = result && result.ok
+      ? 'Banco consultado: '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})
+      : 'Falha ao consultar dados';
+  }).catch(err=>{
+    console.error('Falha inicial de sincronização:',err);
+    const el = document.getElementById('dataSyncStatus');
+    if(el) el.textContent = 'Falha ao consultar dados';
+    syncNotice('Não foi possível consultar o banco agora. Clique em Atualizar para tentar novamente.');
+  });
 </script>
 
 </body>
