@@ -1628,7 +1628,11 @@
   function normId(v){
     if(v === null || v === undefined) return null;
     let s = String(v).trim();
-    // strip trailing .0 from numeric-looking ids
+    // Excel pode fornecer IDs numéricos em notação científica.
+    if(/^\d+(?:\.\d+)?e\+?\d+$/i.test(s)){
+      const n = Number(s);
+      if(Number.isSafeInteger(n)) s = String(n);
+    }
     if(/^\d+\.0+$/.test(s)) s = s.split('.')[0];
     return s;
   }
@@ -1674,7 +1678,7 @@
 
   const F2_ID = ['rtg_unit_external_id','rtg_unit_id','unit_external_id'];
   const F2_STATUS = ['status_atual'];
-  const F1_ID = ['unit_id'];
+  const F1_ID = ['unit_id','id_unidad','id_unidade','rtg_unit_external_id'];
   const F1_STATUS = ['status'];
 
   // ---------- parse BASE1 (xlsx) ----------
@@ -1683,7 +1687,8 @@
     const wb = XLSX.read(arrayBuffer, {type:'array', cellDates:true});
     const names = wb.SheetNames;
 
-    const baseSheetName = findSheetName(wb, ['BASE']);
+    const baseSheetName = findSheetName(wb, ['BASE'])
+      || names.find(n => normKey(n).startsWith('base')) || null;
     // aceita "PLANIFICATION", "Planification ", "Planificação", "PLANIFICATION (2)" etc.
     const planSheetName = findSheetName(wb, ['PLANIFICATION','PLANIFICACAO','PLANIFICATIONS'])
       || names.find(n => normKey(n).startsWith('planific')) || null;
@@ -1735,7 +1740,7 @@
     let baseIds = null;
     if(baseRows.length > 0){
       const baseHeader = baseRows[0];
-      const baseIdIdx = findHeaderIndex(baseHeader, ['rtg_unit_external_id','unit_id','id do pacote','id_pacote','pacote_id','id']);
+      const baseIdIdx = findHeaderIndex(baseHeader, ['rtg_unit_external_id','unit_id','id_unidad','id do pacote','id_pacote','pacote_id','id']);
       if(baseIdIdx !== -1){
         baseIds = new Set();
         for(let i=1;i<baseRows.length;i++){
@@ -1751,14 +1756,14 @@
     const planRows = planRowsParam || XLSX.utils.sheet_to_json(wb.Sheets[planSheetName], {header:1, raw:true, defval:null});
     if(planRows.length < 1) throw new Error('Aba PLANIFICATION está vazia.');
     const header = planRows[0];
-    const idIdx = findHeaderIndex(header, ['unit_id']);
+    const idIdx = findHeaderIndex(header, F1_ID);
     const statusIdx = findHeaderIndex(header, ['status']);
     const substatusIdx = findHeaderIndex(header, ['substatus', 'sub_status', 'substatus_atual', 'status_detail', 'status_detail_name']);
-    const facilityIdx = findHeaderIndex(header, ['facility_origin']);
+    const facilityIdx = findHeaderIndex(header, ['facility_origin','facility_origem']);
     const promiseEndIdx = findHeaderIndex(header, ['promise_date_end']);
     const rotaIdx = findHeaderIndex(header, ['n.º rota', 'numero rota', 'n° rota', 'rota', 'route_id', 'route']);
     const estArrivalIdx = findHeaderIndex(header, ['estimated_arrival', 'estimated arrival', 'horário estimado chegada', 'horario estimado chegada', 'eta']);
-    if(idIdx === -1) throw new Error('Não encontrei a coluna "unit_id" na aba PLANIFICATION.');
+    if(idIdx === -1) throw new Error('Não encontrei coluna de ID (unit_id / Id_Unidad / RTG_UNIT_EXTERNAL_ID) na aba PLANIFICATION.');
     if(statusIdx === -1) throw new Error('Não encontrei a coluna "status" na aba PLANIFICATION.');
 
     function parseTimeValue(v){
