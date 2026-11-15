@@ -839,7 +839,7 @@
       <div class="value" id="valD1">—</div>
       <div class="foot"><span class="pct" id="pctD1">0%</span></div>
       <div class="bar-track"><div class="bar-fill" id="barD1"></div></div>
-      <div id="d1Diagnostic" style="display:none; font-size:11px;line-height:1.45;margin-top:8px;color:#9a5100;overflow-wrap:anywhere;"></div>
+
     </div>
 
     <div class="card onway" style="--accent:var(--cyan)">
@@ -1336,8 +1336,6 @@
   }
   function atualizarD1Parcial(){
     if(!base1Data || base2Rows) return;
-    document.getElementById('d1Diagnostic').style.display='block';
-    document.getElementById('d1Diagnostic').textContent='Aguardando CSV atualizado para classificar D-1.';
     // A estrutura sozinha pode incluir pacotes já colocados no carrinho.
     // Não publicar contagem sem cruzamento com o CSV de faltantes.
     document.getElementById('valTotal').textContent = fmt(getEffectiveTotalGeral());
@@ -1360,22 +1358,13 @@
         if(ehStatusD1(raw)) d1Cruzados++;
       }
     }
-    const detalhe = document.getElementById('d1Diagnostic');
-    if(d1Cruzados) {
-      if(detalhe){ detalhe.style.display='none'; detalhe.textContent=''; }
-      syncNotice(''); return;
-    }
+    if(d1Cruzados) { syncNotice(''); return; }
     const maisComuns = Array.from(statusCounts.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5)
       .map(([st,n])=>st+' ('+fmt(n)+')').join(' · ');
     const antigosNoCSV = new Set(base2Rows.filter(r =>
       r.loc === 'Na estação' && r.inboundDate &&
       r.inboundDate.getTime() < new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()).getTime()
     ).map(r=>r.id)).size;
-    if(detalhe){
-      detalhe.style.display='block';
-      detalhe.textContent = 'D-1 não validado · '+fmt(cruzados)+' IDs cruzados · '+fmt(statusD1NaEstrutura)+' status D-1 na estrutura. Veja diagnóstico abaixo.';
-    }
-    document.getElementById('pctD1').textContent = '0% · conferir classificação';
     syncNotice('D-1 não identificado pelo cruzamento. IDs coincidentes: '+fmt(cruzados)+
       ' de '+fmt(csvIds.size)+' no CSV. Status D-1 na estrutura: '+fmt(statusD1NaEstrutura)+
       '. Recebidos na estação com inbound anterior a hoje: '+fmt(antigosNoCSV)+
