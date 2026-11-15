@@ -1358,14 +1358,25 @@
         if(ehStatusD1(raw)) d1Cruzados++;
       }
     }
-    if(d1Cruzados) { syncNotice(''); return; }
+    const totalCruzamento = csvIds.size ? cruzados / csvIds.size : 0;
+    if(d1Cruzados && totalCruzamento >= 0.5) { syncNotice(''); return; }
     const maisComuns = Array.from(statusCounts.entries()).sort((a,b)=>b[1]-a[1]).slice(0,5)
       .map(([st,n])=>st+' ('+fmt(n)+')').join(' · ');
     const antigosNoCSV = new Set(base2Rows.filter(r =>
       r.loc === 'Na estação' && r.inboundDate &&
       r.inboundDate.getTime() < new Date(new Date().getFullYear(),new Date().getMonth(),new Date().getDate()).getTime()
     ).map(r=>r.id)).size;
-    syncNotice('D-1 não identificado pelo cruzamento. IDs coincidentes: '+fmt(cruzados)+
+    const motivo = totalCruzamento < 0.5
+      ? 'ALERTA: as bases não correspondem ao mesmo conjunto de pacotes. '
+      : 'D-1 não identificado pelo cruzamento. ';
+    if(totalCruzamento < 0.5){
+      document.getElementById('valD1').textContent = '—';
+      document.getElementById('pctD1').textContent = 'bases incompatíveis';
+      document.getElementById('barD1').style.width = '0%';
+      document.getElementById('btnExtractData').disabled = true;
+      document.getElementById('exportHint').textContent = 'D-1 pendente: confira se XLSX e CSV são do mesmo ciclo';
+    }
+    syncNotice(motivo+'IDs coincidentes: '+fmt(cruzados)+
       ' de '+fmt(csvIds.size)+' no CSV. Status D-1 na estrutura: '+fmt(statusD1NaEstrutura)+
       '. Recebidos na estação com inbound anterior a hoje: '+fmt(antigosNoCSV)+
       ' (somente diagnóstico, não soma ao D-1). Status mais frequentes: '+maisComuns+
@@ -1796,7 +1807,7 @@
       const row = planRows[i];
       if(!row) continue;
       const id = normId(row[idIdx]);
-      if(id === null) continue;
+      if(id === null || id === '') continue;
       const statusMain = row[statusIdx] === null || row[statusIdx] === undefined ? '' : String(row[statusIdx]).trim();
       const statusSub = substatusIdx === -1 || row[substatusIdx] === null || row[substatusIdx] === undefined ? '' : String(row[substatusIdx]).trim();
       const status = statusSub && !statusMain.includes('|') ? statusMain + '|' + statusSub : statusMain;
