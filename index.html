@@ -836,15 +836,10 @@
     </div>
 
     <div class="card d1" style="--accent:var(--amber)">
-      <div class="label">D-1 · pendentes no CSV</div>
+      <div class="label">D-1</div>
       <div class="value" id="valD1">—</div>
       <div class="foot"><span class="pct" id="pctD1">0%</span></div>
       <div class="bar-track"><div class="bar-fill" id="barD1"></div></div>
-      <div style="font-size:12px;line-height:1.6;margin-top:9px;color:var(--text-mid);">
-        Na estrutura: <b id="valD1Estrutura">—</b>
-        <span style="margin:0 4px">·</span> Fora do CSV: <b id="valD1ForaCSV">—</b>
-      </div>
-
     </div>
 
     <div class="card onway" style="--accent:var(--cyan)">
@@ -1345,8 +1340,6 @@
     // Não publicar contagem sem cruzamento com o CSV de faltantes.
     document.getElementById('valTotal').textContent = fmt(getEffectiveTotalGeral());
     document.getElementById('valD1').textContent = '—';
-    document.getElementById('valD1Estrutura').textContent = fmt(Array.from(base1Data.statusMap.values()).filter(ehStatusD1).length);
-    document.getElementById('valD1ForaCSV').textContent = '—';
     document.getElementById('pctD1').textContent = 'aguardando CSV de faltantes';
     document.getElementById('barD1').style.width = '0%';
     lastMetricIds.d1 = [];
@@ -2453,8 +2446,6 @@
 
     document.getElementById('valTotal').textContent = fmt(d.totalGeral);
     document.getElementById('valD1').textContent = fmt(d.d1);
-    document.getElementById('valD1Estrutura').textContent = fmt(d.d1Estrutura);
-    document.getElementById('valD1ForaCSV').textContent = fmt(d.d1ForaCSV);
     document.getElementById('valOnWay').textContent = fmt(d.onWay);
     document.getElementById('valRecebido').textContent = fmt(d.recebido);
     document.getElementById('valCarrinho').textContent = fmt(d.noCarrinho);
@@ -2556,7 +2547,15 @@
       scale: Math.min(2, window.devicePixelRatio || 1.5),
       useCORS: true,
       logging: false,
-      imageTimeout: 12000
+      imageTimeout: 12000,
+      // html2canvas desenha box-shadow como retângulos cinzas na imagem exportada:
+      // remove as sombras só no clone usado para gerar a imagem (a tela não muda).
+      onclone: (doc) => {
+        doc.querySelectorAll('*').forEach(n => { if(n.style) n.style.boxShadow = 'none'; });
+        doc.querySelectorAll('.panel, .card').forEach(n => {
+          if(!n.style.border) n.style.border = '1px solid #D7E1EE';
+        });
+      }
     });
     return await new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Falha ao gerar PNG')), 'image/png'));
   }
